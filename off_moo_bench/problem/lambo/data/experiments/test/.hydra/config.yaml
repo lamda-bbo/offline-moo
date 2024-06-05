@@ -1,0 +1,118 @@
+logger:
+  _target_: upcycle.logging.DataFrameLogger
+  log_dir: ${log_dir}/${job_name}/${timestamp}
+task:
+  _target_: lambo.tasks.proxy_rfp.proxy_rfp.ProxyRFPTask
+  obj_dim: 2
+  log_prefix: proxy_rfp
+  batch_size: 16
+  max_len: 244
+  max_num_edits: null
+  max_ngram_size: 1
+  allow_len_change: false
+  num_start_examples: 512
+acquisition:
+  _target_: lambo.acquisitions.ehvi.NoisyEHVI
+  num_samples: 2
+  batch_size: ${task.batch_size}
+encoder:
+  _target_: lambo.models.lm_elements.LanguageModel
+  name: mlm_cnn
+  model:
+    _target_: lambo.models.shared_elements.mCNN
+    tokenizer: ${tokenizer}
+    max_len: ${task.max_len}
+    embed_dim: 64
+    latent_dim: 16
+    out_dim: 16
+    kernel_size: 5
+    p: 0.0
+    layernorm: true
+    max_len_delta: 0
+  batch_size: 32
+  num_epochs: 128
+  patience: 32
+  lr: 0.001
+  max_shift: 0
+  mask_ratio: 0.125
+optimizer:
+  _target_: lambo.optimizers.pymoo.ModelFreeGeneticOptimizer
+  _recursive_: false
+  num_rounds: 32
+  num_gens: 2
+  seed: ${seed}
+  concentrate_pool: 1
+  residue_sampler: uniform
+  resampling_weight: 1.0
+  algorithm:
+    _target_: pymoo.algorithms.moo.nsga2.NSGA2
+    pop_size: ${task.batch_size}
+    n_offsprings: null
+    sampling:
+      _target_: lambo.optimizers.sampler.CandidateSampler
+    crossover:
+      _target_: pymoo.factory.get_crossover
+      name: int_sbx
+      prob: 0.0
+      eta: 16
+    mutation:
+      _target_: lambo.optimizers.mutation.LocalMutation
+      prob: 1.0
+      eta: 16
+      safe_mut: false
+    eliminate_duplicates: true
+tokenizer:
+  _target_: lambo.utils.ResidueTokenizer
+surrogate:
+  _target_: lambo.models.gp_models.MultiTaskExactGP
+  max_shift: 0
+  mask_size: 0
+  bootstrap_ratio: null
+  min_num_train: 128
+  task_noise_init: 0.25
+  gp_lr: 0.005
+  enc_lr: 0.005
+  bs: ${encoder.batch_size}
+  eval_bs: ${task.batch_size}
+  num_epochs: 256
+  holdout_ratio: 0.2
+  early_stopping: true
+  patience: 32
+  eval_period: 2
+  out_dim: ${task.obj_dim}
+  feature_dim: 16
+  encoder_wd: 0.0001
+  rank: null
+  task_covar_prior:
+    _target_: gpytorch.priors.LKJCovariancePrior
+    'n': ${task.obj_dim}
+    eta: 2.0
+    sd_prior:
+      _target_: gpytorch.priors.SmoothedBoxPrior
+      a: 0.0001
+      b: 1.0
+  data_covar_module:
+    _target_: gpytorch.kernels.MaternKernel
+    ard_num_dims: ${surrogate.feature_dim}
+    lengthscale_prior:
+      _target_: gpytorch.priors.NormalPrior
+      loc: 0.7
+      scale: 0.01
+  likelihood:
+    _target_: gpytorch.likelihoods.MultitaskGaussianLikelihood
+    num_tasks: ${task.obj_dim}
+    has_global_noise: false
+    noise_constraint:
+      _target_: gpytorch.constraints.GreaterThan
+      lower_bound: 0.0001
+seed: ${trial_id}
+trial_id: 0
+project_name: lambo
+version: v0.2.1
+data_dir: data/experiments
+exp_name: test
+job_name: null
+timestamp: ${now:%Y-%m-%d_%H-%M-%S}
+log_dir: ${data_dir}/${exp_name}
+wandb_mode: online
+wandb_host: https://api.wandb.ai

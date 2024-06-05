@@ -1,0 +1,4 @@
+- optimizer=mf_genetic
+- optimizer/algorithm=nsga2
+- task=proxy_rfp
+- tokenizer=protein

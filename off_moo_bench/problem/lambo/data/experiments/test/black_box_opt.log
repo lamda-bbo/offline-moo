@@ -1,0 +1,451 @@
+[2024-01-23 15:51:56,460][root][ERROR] - Error instantiating 'lambo.tasks.tdc.docking.DockingTask' : cannot import name 'rmsd' from 'tdc.chem_utils.oracle.oracle' (/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/chem_utils/oracle/oracle.py)
+Traceback (most recent call last):
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/tdc/docking.py", line 56, in __init__
+    self.oracles = [Oracle(prop) for prop in obj_properties]
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/tdc/docking.py", line 56, in <listcomp>
+    self.oracles = [Oracle(prop) for prop in obj_properties]
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/oracles.py", line 58, in __init__
+    self.assign_evaluator()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/oracles.py", line 238, in assign_evaluator
+    from .chem_utils import PyScreener_meta
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/chem_utils/__init__.py", line 3, in <module>
+    from .oracle.oracle import PyScreener_meta, Vina_3d, Score_3d, Vina_smiles, molecule_one_retro, ibm_rxn, \
+ImportError: cannot import name 'rmsd' from 'tdc.chem_utils.oracle.oracle' (/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/chem_utils/oracle/oracle.py)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 40, in main
+    bb_task = hydra.utils.instantiate(config.task, tokenizer=tokenizer, candidate_pool=[])
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 180, in instantiate
+    return instantiate_node(config, *args, recursive=_recursive_, convert=_convert_)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 249, in instantiate_node
+    return _call_target(target, *args, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 64, in _call_target
+    raise type(e)(
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/tdc/docking.py", line 56, in __init__
+    self.oracles = [Oracle(prop) for prop in obj_properties]
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/tdc/docking.py", line 56, in <listcomp>
+    self.oracles = [Oracle(prop) for prop in obj_properties]
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/oracles.py", line 58, in __init__
+    self.assign_evaluator()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/oracles.py", line 238, in assign_evaluator
+    from .chem_utils import PyScreener_meta
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/chem_utils/__init__.py", line 3, in <module>
+    from .oracle.oracle import PyScreener_meta, Vina_3d, Score_3d, Vina_smiles, molecule_one_retro, ibm_rxn, \
+ImportError: Error instantiating 'lambo.tasks.tdc.docking.DockingTask' : cannot import name 'rmsd' from 'tdc.chem_utils.oracle.oracle' (/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/tdc/chem_utils/oracle/oracle.py)
+[2024-01-23 15:52:12,075][root][ERROR] - Provided FoldX directory (/home/ubuntu/foldx) is missing either rotabase.txt or foldx.
+These files are required for FoldX to run
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 43, in main
+    base_candidates, base_targets, all_seqs, all_targets = bb_task.task_setup(config, project_root=project_root)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/proxy_rfp.py", line 69, in task_setup
+    FoldedCandidate(work_dir, parent_pdb_path, [], self.tokenizer,
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/candidate.py", line 104, in __init__
+    foldx_manager = FoldxManager(wt_pdb=wild_pdb_path, work_dir=work_dir,
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/foldx.py", line 94, in __init__
+    self._check_files()
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/foldx.py", line 257, in _check_files
+    raise FileNotFoundError(
+FileNotFoundError: Provided FoldX directory (/home/ubuntu/foldx) is missing either rotabase.txt or foldx.
+These files are required for FoldX to run
+[2024-01-23 15:59:58,413][root][ERROR] - Error instantiating 'lambo.optimizers.pymoo.ModelFreeGeneticOptimizer' : 'SMILESTokenizer' object has no attribute 'set_sampling_vocab'
+Traceback (most recent call last):
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/pymoo.py", line 61, in __init__
+    tokenizer.set_sampling_vocab(None, bb_task.max_ngram_size)
+AttributeError: 'SMILESTokenizer' object has no attribute 'set_sampling_vocab'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 48, in main
+    optimizer = hydra.utils.instantiate(
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 180, in instantiate
+    return instantiate_node(config, *args, recursive=_recursive_, convert=_convert_)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 249, in instantiate_node
+    return _call_target(target, *args, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 64, in _call_target
+    raise type(e)(
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/pymoo.py", line 61, in __init__
+    tokenizer.set_sampling_vocab(None, bb_task.max_ngram_size)
+AttributeError: Error instantiating 'lambo.optimizers.pymoo.ModelFreeGeneticOptimizer' : 'SMILESTokenizer' object has no attribute 'set_sampling_vocab'
+[2024-01-23 16:00:10,025][root][ERROR] - high <= 0
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/pymoo.py", line 204, in optimize
+    res = minimize(
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/optimize.py", line 83, in minimize
+    res = algorithm.run()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 213, in run
+    self.next()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 229, in next
+    infills = self.infill()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 265, in infill
+    infills = self._initialize_infill()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/algorithms/base/genetic.py", line 75, in _initialize_infill
+    pop = self.initialization.do(self.problem, self.pop_size, algorithm=self)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/initialization.py", line 30, in do
+    pop = self.sampling.do(problem, n_samples, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/sampling.py", line 38, in do
+    val = self._do(problem, n_samples, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/sampler.py", line 49, in _do
+    x = _draw_samples(self.tokenizer, cand_pool, problem, n_samples, self.mlm_obj)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/sampler.py", line 22, in _draw_samples
+    x1.append(np.random.randint(0, num_tokens))
+  File "mtrand.pyx", line 748, in numpy.random.mtrand.RandomState.randint
+  File "_bounded_integers.pyx", line 1247, in numpy.random._bounded_integers._rand_int64
+ValueError: high <= 0
+[2024-01-23 16:06:14,645][root][ERROR] - Provided FoldX directory (/home/ubuntu/foldx) is missing either rotabase.txt or foldx.
+These files are required for FoldX to run
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 43, in main
+    base_candidates, base_targets, all_seqs, all_targets = bb_task.task_setup(config, project_root=project_root)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/proxy_rfp.py", line 69, in task_setup
+    FoldedCandidate(work_dir, parent_pdb_path, [], self.tokenizer,
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/candidate.py", line 104, in __init__
+    foldx_manager = FoldxManager(wt_pdb=wild_pdb_path, work_dir=work_dir,
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/foldx.py", line 94, in __init__
+    self._check_files()
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/foldx.py", line 257, in _check_files
+    raise FileNotFoundError(
+FileNotFoundError: Provided FoldX directory (/home/ubuntu/foldx) is missing either rotabase.txt or foldx.
+These files are required for FoldX to run
+[2024-01-23 16:23:09,732][root][ERROR] - [Errno 13] Permission denied: '/home/ubuntu/foldx/foldx'
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 43, in main
+    base_candidates, base_targets, all_seqs, all_targets = bb_task.task_setup(config, project_root=project_root)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/proxy_rfp.py", line 69, in task_setup
+    FoldedCandidate(work_dir, parent_pdb_path, [], self.tokenizer,
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/candidate.py", line 118, in __init__
+    metrics = foldx_manager(mutation_list, self.uuid)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/foldx.py", line 141, in __call__
+    tag = self.build_mutant(mutation_list, id)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/foldx.py", line 192, in build_mutant
+    self._run_foldx(cmd=foldx_cmd, cwd=self.work_dir, outfile=f"{subdir / 'buildFoldxMutant.out'}")
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/proxy_rfp/foldx.py", line 247, in _run_foldx
+    out, err = Popen(cmd, stdout=f, stderr=PIPE,  cwd=cwd).communicate()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/subprocess.py", line 858, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/subprocess.py", line 1720, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/ubuntu/foldx/foldx'
+[2024-01-23 18:50:36,740][root][ERROR] - Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/lambo.py", line 177, in optimize
+    records = self.surrogate_model.fit(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_models.py", line 329, in fit
+    return fit_gp_surrogate(**fit_kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_utils.py", line 244, in fit_gp_surrogate
+    gp_loss = gp_train_step(surrogate, gp_optimizer, inputs, targets, mll)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_utils.py", line 58, in gp_train_step
+    loss = -mll(output, targets).mean()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/module.py", line 31, in __call__
+    outputs = self.forward(*inputs, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/mlls/exact_marginal_log_likelihood.py", line 65, in forward
+    res = self._add_other_terms(res, params)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/mlls/exact_marginal_log_likelihood.py", line 44, in _add_other_terms
+    prior_term = prior.log_prob(closure(module))
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/lkj_prior.py", line 105, in log_prob
+    log_prob_corr = self.correlation_prior.log_prob(correlations)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/lkj_prior.py", line 62, in log_prob
+    return super().log_prob(X_cholesky)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/prior.py", line 27, in log_prob
+    return super(Prior, self).log_prob(self.transform(x))
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/torch/distributions/lkj_cholesky.py", line 131, in log_prob
+    unnormalized_log_pdf = torch.sum(order * diag_elems.log(), dim=-1)
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+[2024-01-23 18:54:12,039][root][ERROR] - 'MultitaskMultivariateNormal' object has no attribute 'device'
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/lambo.py", line 177, in optimize
+    records = self.surrogate_model.fit(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_models.py", line 329, in fit
+    return fit_gp_surrogate(**fit_kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_utils.py", line 245, in fit_gp_surrogate
+    gp_loss = gp_train_step(surrogate, gp_optimizer, inputs, targets, mll)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_utils.py", line 58, in gp_train_step
+    assert 0, (output.device, targets.device)
+AttributeError: 'MultitaskMultivariateNormal' object has no attribute 'device'
+[2024-01-23 19:04:24,758][root][ERROR] - Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/lambo.py", line 177, in optimize
+    records = self.surrogate_model.fit(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_models.py", line 329, in fit
+    return fit_gp_surrogate(**fit_kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_utils.py", line 244, in fit_gp_surrogate
+    gp_loss = gp_train_step(surrogate, gp_optimizer, inputs, targets, mll)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_utils.py", line 58, in gp_train_step
+    loss = -mll(output, targets).mean()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/module.py", line 31, in __call__
+    outputs = self.forward(*inputs, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/mlls/exact_marginal_log_likelihood.py", line 65, in forward
+    res = self._add_other_terms(res, params)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/mlls/exact_marginal_log_likelihood.py", line 44, in _add_other_terms
+    prior_term = prior.log_prob(closure(module))
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/lkj_prior.py", line 105, in log_prob
+    log_prob_corr = self.correlation_prior.log_prob(correlations)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/lkj_prior.py", line 62, in log_prob
+    return super().log_prob(X_cholesky)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/prior.py", line 27, in log_prob
+    return super(Prior, self).log_prob(self.transform(x))
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/torch/distributions/lkj_cholesky.py", line 131, in log_prob
+    unnormalized_log_pdf = torch.sum(order * diag_elems.log(), dim=-1)
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+[2024-01-23 19:26:54,444][root][ERROR] - [[14  8  6  2]
+ [11 20  1  2]
+ [ 3 23  5  2]
+ [14 18 10  2]
+ [13 17  0  1]
+ [14  7  8  1]
+ [11 14  1  0]
+ [ 3  8 13  1]
+ [10  2  2  2]
+ [ 9 13  7  1]
+ [15 19  2  0]
+ [ 0 20  0  2]
+ [ 1  0 18  1]
+ [ 9 21 11  2]
+ [ 9 29  6  1]
+ [ 9 13 13  0]]
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/pymoo.py", line 204, in optimize
+    res = minimize(
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/optimize.py", line 83, in minimize
+    res = algorithm.run()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 213, in run
+    self.next()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 233, in next
+    self.evaluator.eval(self.problem, infills, algorithm=self)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/evaluator.py", line 95, in eval
+    self._eval(problem, pop[I], evaluate_values_of=evaluate_values_of, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/evaluator.py", line 112, in _eval
+    out = problem.evaluate(pop.get("X"),
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/problem.py", line 124, in evaluate
+    self.do(X, out, *args, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/pymoo/core/problem.py", line 162, in do
+    self._evaluate(X, out, *args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/regex.py", line 51, in _evaluate
+    assert 0, x
+AssertionError: [[14  8  6  2]
+ [11 20  1  2]
+ [ 3 23  5  2]
+ [14 18 10  2]
+ [13 17  0  1]
+ [14  7  8  1]
+ [11 14  1  0]
+ [ 3  8 13  1]
+ [10  2  2  2]
+ [ 9 13  7  1]
+ [15 19  2  0]
+ [ 0 20  0  2]
+ [ 1  0 18  1]
+ [ 9 21 11  2]
+ [ 9 29  6  1]
+ [ 9 13 13  0]]
+[2024-01-23 19:28:37,671][root][ERROR] - Error instantiating 'lambo.tasks.regex.RegexTask' : (64, 3)
+Traceback (most recent call last):
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/regex.py", line 13, in __init__
+    super().__init__(tokenizer, candidate_pool, obj_dim, transform, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/base_task.py", line 31, in __init__
+    assert 0, (self.n_var, self.n_obj)
+AssertionError: (64, 3)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 40, in main
+    bb_task = hydra.utils.instantiate(config.task, tokenizer=tokenizer, candidate_pool=[])
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 180, in instantiate
+    return instantiate_node(config, *args, recursive=_recursive_, convert=_convert_)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 249, in instantiate_node
+    return _call_target(target, *args, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 64, in _call_target
+    raise type(e)(
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/regex.py", line 13, in __init__
+    super().__init__(tokenizer, candidate_pool, obj_dim, transform, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/tasks/base_task.py", line 31, in __init__
+    assert 0, (self.n_var, self.n_obj)
+AssertionError: Error instantiating 'lambo.tasks.regex.RegexTask' : (64, 3)
+[2024-01-23 20:06:14,730][root][ERROR] - 
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/pymoo.py", line 204, in optimize
+    assert 0
+AssertionError
+[2024-01-23 20:07:24,240][root][ERROR] - name 'pickle' is not defined
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/pymoo.py", line 205, in optimize
+    problem = pickle.load(f)
+NameError: name 'pickle' is not defined
+[2024-01-23 20:07:53,647][root][ERROR] - # name: ProxyRFPTask
+# n_var: 4
+# n_obj: 2
+# n_constr: 0
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/pymoo.py", line 207, in optimize
+    assert 0, problem
+AssertionError: # name: ProxyRFPTask
+# n_var: 4
+# n_obj: 2
+# n_constr: 0
+
+[2024-01-23 20:14:29,663][root][ERROR] - load() takes exactly 1 positional argument (2 given)
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/pymoo.py", line 206, in optimize
+    pickle.load(problem, f)
+TypeError: load() takes exactly 1 positional argument (2 given)
+[2024-01-23 20:24:03,557][root][ERROR] - Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/optimizers/lambo.py", line 177, in optimize
+    records = self.surrogate_model.fit(
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_models.py", line 329, in fit
+    return fit_gp_surrogate(**fit_kwargs)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_utils.py", line 244, in fit_gp_surrogate
+    gp_loss = gp_train_step(surrogate, gp_optimizer, inputs, targets, mll)
+  File "/home/ubuntu/zhanglichao/xk/lambo-main/lambo/models/gp_utils.py", line 58, in gp_train_step
+    loss = -mll(output, targets).mean()
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/module.py", line 31, in __call__
+    outputs = self.forward(*inputs, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/mlls/exact_marginal_log_likelihood.py", line 65, in forward
+    res = self._add_other_terms(res, params)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/mlls/exact_marginal_log_likelihood.py", line 44, in _add_other_terms
+    prior_term = prior.log_prob(closure(module))
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/lkj_prior.py", line 105, in log_prob
+    log_prob_corr = self.correlation_prior.log_prob(correlations)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/lkj_prior.py", line 62, in log_prob
+    return super().log_prob(X_cholesky)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/gpytorch/priors/prior.py", line 27, in log_prob
+    return super(Prior, self).log_prob(self.transform(x))
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/torch/distributions/lkj_cholesky.py", line 131, in log_prob
+    unnormalized_log_pdf = torch.sum(order * diag_elems.log(), dim=-1)
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+[2024-01-24 23:34:11,817][root][ERROR] - 
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/optimizers/pymoo.py", line 206, in optimize
+    assert 0
+AssertionError
+[2024-01-27 13:04:59,393][root][ERROR] - Error instantiating 'lambo.tasks.proxy_rfp.proxy_rfp.ProxyRFPTask' : (0.0, 1.0)
+Traceback (most recent call last):
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/proxy_rfp.py", line 14, in __init__
+    super().__init__(tokenizer, candidate_pool, obj_dim, transform, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/tasks/base_task.py", line 31, in __init__
+    assert 0, (xl, xu)
+AssertionError: (0.0, 1.0)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 40, in main
+    bb_task = hydra.utils.instantiate(config.task, tokenizer=tokenizer, candidate_pool=[])
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 180, in instantiate
+    return instantiate_node(config, *args, recursive=_recursive_, convert=_convert_)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 249, in instantiate_node
+    return _call_target(target, *args, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 64, in _call_target
+    raise type(e)(
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/proxy_rfp.py", line 14, in __init__
+    super().__init__(tokenizer, candidate_pool, obj_dim, transform, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/tasks/base_task.py", line 31, in __init__
+    assert 0, (xl, xu)
+AssertionError: Error instantiating 'lambo.tasks.proxy_rfp.proxy_rfp.ProxyRFPTask' : (0.0, 1.0)
+[2024-01-27 13:07:35,276][root][ERROR] - Error instantiating 'lambo.tasks.proxy_rfp.proxy_rfp.ProxyRFPTask' : 64
+Traceback (most recent call last):
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/proxy_rfp.py", line 14, in __init__
+    super().__init__(tokenizer, candidate_pool, obj_dim, transform, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/tasks/base_task.py", line 31, in __init__
+    assert 0, (n_var)
+AssertionError: 64
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 40, in main
+    bb_task = hydra.utils.instantiate(config.task, tokenizer=tokenizer, candidate_pool=[])
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 180, in instantiate
+    return instantiate_node(config, *args, recursive=_recursive_, convert=_convert_)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 249, in instantiate_node
+    return _call_target(target, *args, **kwargs)
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 64, in _call_target
+    raise type(e)(
+  File "/home/ubuntu/.conda/envs/lambo-env/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 62, in _call_target
+    return target(*args, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/proxy_rfp.py", line 14, in __init__
+    super().__init__(tokenizer, candidate_pool, obj_dim, transform, **kwargs)
+  File "/home/ubuntu/zhanglichao/xk/m2bo_new/m2bo_bench/problem/lambo/lambo/tasks/base_task.py", line 31, in __init__
+    assert 0, (n_var)
+AssertionError: Error instantiating 'lambo.tasks.proxy_rfp.proxy_rfp.ProxyRFPTask' : 64
+[2024-05-22 10:44:20,588][root][ERROR] - [Errno 13] Permission denied: '/home/xk/foldx/foldx'
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 43, in main
+    base_candidates, base_targets, all_seqs, all_targets = bb_task.task_setup(config, project_root=project_root)
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/proxy_rfp.py", line 69, in task_setup
+    FoldedCandidate(work_dir, parent_pdb_path, [], self.tokenizer,
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/candidate.py", line 118, in __init__
+    metrics = foldx_manager(mutation_list, self.uuid)
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/foldx.py", line 153, in __call__
+    tag = self.build_mutant(mutation_list, id)
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/foldx.py", line 204, in build_mutant
+    self._run_foldx(cmd=foldx_cmd, cwd=self.work_dir, outfile=f"{subdir / 'buildFoldxMutant.out'}")
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/foldx.py", line 259, in _run_foldx
+    out, err = Popen(cmd, stdout=f, stderr=PIPE,  cwd=cwd).communicate()
+  File "/home/xk/anaconda3/envs/off-moo/lib/python3.8/subprocess.py", line 858, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/home/xk/anaconda3/envs/off-moo/lib/python3.8/subprocess.py", line 1720, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/xk/foldx/foldx'
+[2024-05-22 10:44:45,986][root][ERROR] - [Errno 13] Permission denied: '/home/xk/foldx/foldx'
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 43, in main
+    base_candidates, base_targets, all_seqs, all_targets = bb_task.task_setup(config, project_root=project_root)
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/proxy_rfp.py", line 69, in task_setup
+    FoldedCandidate(work_dir, parent_pdb_path, [], self.tokenizer,
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/candidate.py", line 118, in __init__
+    metrics = foldx_manager(mutation_list, self.uuid)
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/foldx.py", line 153, in __call__
+    tag = self.build_mutant(mutation_list, id)
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/foldx.py", line 204, in build_mutant
+    self._run_foldx(cmd=foldx_cmd, cwd=self.work_dir, outfile=f"{subdir / 'buildFoldxMutant.out'}")
+  File "/home/xk/trx/Offline-MOO/m2bo_bench/problem/lambo/lambo/tasks/proxy_rfp/foldx.py", line 259, in _run_foldx
+    out, err = Popen(cmd, stdout=f, stderr=PIPE,  cwd=cwd).communicate()
+  File "/home/xk/anaconda3/envs/off-moo/lib/python3.8/subprocess.py", line 858, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/home/xk/anaconda3/envs/off-moo/lib/python3.8/subprocess.py", line 1720, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/xk/foldx/foldx'
