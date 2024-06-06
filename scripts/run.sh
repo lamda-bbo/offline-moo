@@ -1,15 +1,16 @@
 # python config_evoxbench.py
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mujoco210/bin
-for env_name in "regex"; do
+for env_name in "re21"; do
     for seed in 1; do
         for train_data_mode in "none"; do
             for train_mode in "none"; do
                 for output_size in 256; do
-                    python config_evoxbench.py &&  \
+                    python config_evoxbench.py 
                     CUDA_VISIBLE_DEVICES=0 \
                     python scripts/multi_obj_nn.py \
                     --env-name ${env_name} \
                     --seed ${seed} \
+                    --normalize-x \
                     --normalize-y \
                     --num-solutions ${output_size} \
                     --filter-type best \
