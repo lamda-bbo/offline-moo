@@ -646,7 +646,7 @@ class DatasetBuilder(abc.ABC):
         assert return_x or return_y, "invalid parameter setting."
         
         if regain_fronts or self.fronts is None:
-            self.fronts = regain_fronts(self.y)
+            self.fronts = self.regain_fronts(self.y)
         
         N_best_indexes = get_N_nondominated_indices(
             Y=self.y,

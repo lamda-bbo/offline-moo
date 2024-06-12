@@ -91,8 +91,9 @@ def get_N_nondominated_index(Y_all, num_ret, is_all_data=False) -> List[int]:
     return indices_select
 
 def get_quantile_solutions(Y_all: np.ndarray, quantile) -> np.ndarray:
+    assert 0 < quantile < 1
     n = len(Y_all)
-    n_remove = int(n * quantile)
+    n_remove = int(n * (1-quantile))
     indices_to_remove = get_N_nondominated_index(Y_all, n_remove)
     indices_to_keep = np.ones(n)
     indices_to_keep[indices_to_remove] = 0
@@ -227,11 +228,15 @@ def get_model_path(args, model_type, name):
     os.makedirs(save_dir, exist_ok=True)
     return os.path.join(save_dir, name + '.pth')
 
-def set_seed(seed):
+def set_seed(seed: int) -> None:
     import random
+    import numpy as np
+    import torch
     random.seed(seed)
     np.random.seed(seed)
-    torch.random.manual_seed(seed)
+    torch.manual_seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.determinstic = True
 
 def get_config_path(config_name):
     return os.path.join(base_path, 'configs', f'{config_name}.config')

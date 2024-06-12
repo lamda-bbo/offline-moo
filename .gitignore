@@ -1,5 +1,6 @@
 /data/
-/results/
+/results**/
+/ray_results/
 /model/
 /off_moo_bench/problem/mo_nas/data/
 /off_moo_bench/problem/mo_nas/database/
@@ -13,5 +14,6 @@
 /*.pkl
 /*.tar.gz
 /*.zip
+/test.py
 
 **/__pycache__

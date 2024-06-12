@@ -1,31 +1,32 @@
 import off_moo_bench as ob 
 import os 
 import wandb 
+import torch 
 import numpy as np 
 import datetime 
 import json 
 import matplotlib.pyplot as plt 
-
+from copy import deepcopy
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from utils import set_seed, get_quantile_solutions
-from off_moo_baselines.end2end.nets import End2EndModel
-from off_moo_baselines.end2end.trainer import get_trainer
-from off_moo_baselines.end2end.surrogate_problem import End2EndSurrogateProblem
+from off_moo_baselines.multiple.nets import MultipleModels
+from off_moo_baselines.multiple.trainer import get_trainer
+from off_moo_baselines.multiple.surrogate_problem import MultipleSurrogateProblem
 from off_moo_baselines.mo_solver.moea_solver import MOEASolver
 from off_moo_baselines.mo_solver.callback import RecordCallback
 from off_moo_baselines.data import tkwargs, get_dataloader
 from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.evaluation.plot import plot_y
 
-def end2end_run(config):
+def multiple_run(config):
     
     results_dir = os.path.join(config['results_dir'], 
-                               f"End2End-{config['train_mode']}-{config['task']}")
+                               f"{config['model']}-{config['train_mode']}-{config['task']}")
     config["results_dir"] = results_dir 
     
     ts = datetime.datetime.utcnow() + datetime.timedelta(hours=+8)
     ts_name = f"-ts-{ts.year}-{ts.month}-{ts.day}_{ts.hour}-{ts.minute}-{ts.second}"
-    run_name = f"End2End-{config['train_mode']}-seed{config['seed']}-{config['task']}"
+    run_name = f"{config['model']}-{config['train_mode']}-seed{config['seed']}-{config['task']}"
     
     logging_dir = os.path.join(config['results_dir'], run_name + ts_name)
     os.makedirs(logging_dir, exist_ok=True)
@@ -83,39 +84,50 @@ def end2end_run(config):
     model_save_dir = config['model_save_dir']
     os.makedirs(model_save_dir, exist_ok=True)
     
-    model_save_path = os.path.join(
-        model_save_dir,
-        f"{config['model']}-{config['train_mode']}-{config['task']}-{config['seed']}.pt"
-    )
-    
-    model = End2EndModel(
+    model = MultipleModels(
         n_dim=n_dim,
         n_obj=n_obj,
+        train_mode=config['train_mode'],
         hidden_size=[2048, 2048],
-        save_path=model_save_path,
-    ).to(**tkwargs)
+        save_dir=config['model_save_dir'],
+        save_prefix=f"{config['model']}-{config['train_mode']}-{config['task']}-{config['seed']}"
+    )
+    model.set_kwargs(**tkwargs)
     
     trainer_func = get_trainer(config["train_mode"])
     
-    trainer = trainer_func(
-        forward_model=model, 
-        config=config
-    )
+    for which_obj in range(n_obj):
+        
+        y0 = y[:, which_obj].copy().reshape(-1, 1)
+        y0_test = y_test[:, which_obj].copy().reshape(-1, 1)
+        
+        config["which_obj"] = which_obj
+        config["input_shape"] = X[0].shape
+        
+        indexs = np.argsort(y0.squeeze())
+        index = indexs[:config["num_solutions"]]
+        config["best_x"] = torch.from_numpy(deepcopy(X[index])).to(**tkwargs)
+        config["best_y"] = torch.from_numpy(deepcopy(y[index])).to(**tkwargs)
     
-    (
-        train_loader,
-        val_loader,
-        test_loader
-    ) = get_dataloader(X, y, X_test, y_test,
-                       val_ratio=0.9,
-                       batch_size=config["batch_size"])
-    
-    trainer.launch(
-        train_loader,
-        val_loader,
-        test_loader,
-        retrain_model=config["retrain_model"]
-    )
+        trainer = trainer_func(
+            model=list(model.obj2model.values())[which_obj], 
+            config=config,
+        )
+        
+        (
+            train_loader,
+            val_loader,
+            test_loader
+        ) = get_dataloader(X, y0, X_test, y0_test,
+                        val_ratio=0.9,
+                        batch_size=config["batch_size"])
+        
+        trainer.launch(
+            train_loader,
+            val_loader,
+            test_loader,
+            retrain_model=config["retrain_model"]
+        )
     
     # if config['use_wandb']:
     #     wandb.init(
@@ -129,7 +141,7 @@ def end2end_run(config):
     #         reinit=True
     #     )
     
-    surrogate_problem = End2EndSurrogateProblem(
+    surrogate_problem = MultipleSurrogateProblem(
         n_var=n_dim, n_obj=n_obj, model=model
     )
     

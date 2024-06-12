@@ -24,8 +24,7 @@ class ConservativeObjectiveModel(nn.Module):
 
         alpha = torch.tensor(alpha)
         self.log_alpha = torch.nn.Parameter(torch.log(alpha))
-        self.alpha = torch.exp(self.log_alpha)
-        self.alpha_optimizer = torch.optim.Adam([self.log_alpha], lr=alpha_lr)
+        self.alpha_opt = torch.optim.Adam([self.log_alpha], lr=alpha_lr)
 
         self.overestimation_limit = overestimation_limit
         self.particle_lr = particle_lr * np.sqrt(np.prod(input_shape))
@@ -34,6 +33,10 @@ class ConservativeObjectiveModel(nn.Module):
         self.noise_std = noise_std
 
         self.args = args
+        
+    @property
+    def alpha(self):
+        return torch.exp(self.log_alpha)
 
     def obtain_x_neg(self, x, steps, **kwargs):
 
@@ -114,8 +117,8 @@ class ConservativeObjectiveModel(nn.Module):
         # take gradient steps on the model
         with torch.no_grad():
             self.log_alpha.grad = alpha_grads
-            self.alpha_optimizer.step()
-            self.alpha_optimizer.zero_grad()
+            self.alpha_opt.step()
+            self.alpha_opt.zero_grad()
 
             for param, grad in zip(self.forward_model.parameters(), model_grads):
                 param.grad = grad

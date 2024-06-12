@@ -8,24 +8,24 @@ import matplotlib.pyplot as plt
 
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from utils import set_seed, get_quantile_solutions
-from off_moo_baselines.end2end.nets import End2EndModel
-from off_moo_baselines.end2end.trainer import get_trainer
-from off_moo_baselines.end2end.surrogate_problem import End2EndSurrogateProblem
+from off_moo_baselines.multi_head.nets import MultiHeadModel
+from off_moo_baselines.multi_head.trainer import get_trainer
+from off_moo_baselines.multi_head.surrogate_problem import MultiHeadSurrogateProblem
 from off_moo_baselines.mo_solver.moea_solver import MOEASolver
 from off_moo_baselines.mo_solver.callback import RecordCallback
 from off_moo_baselines.data import tkwargs, get_dataloader
 from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.evaluation.plot import plot_y
 
-def end2end_run(config):
+def multi_head_run(config):
     
     results_dir = os.path.join(config['results_dir'], 
-                               f"End2End-{config['train_mode']}-{config['task']}")
+                               f"{config['model']}-{config['train_mode']}-{config['task']}")
     config["results_dir"] = results_dir 
     
     ts = datetime.datetime.utcnow() + datetime.timedelta(hours=+8)
     ts_name = f"-ts-{ts.year}-{ts.month}-{ts.day}_{ts.hour}-{ts.minute}-{ts.second}"
-    run_name = f"End2End-{config['train_mode']}-seed{config['seed']}-{config['task']}"
+    run_name = f"{config['model']}-{config['train_mode']}-seed{config['seed']}-{config['task']}"
     
     logging_dir = os.path.join(config['results_dir'], run_name + ts_name)
     os.makedirs(logging_dir, exist_ok=True)
@@ -88,12 +88,13 @@ def end2end_run(config):
         f"{config['model']}-{config['train_mode']}-{config['task']}-{config['seed']}.pt"
     )
     
-    model = End2EndModel(
+    model = MultiHeadModel(
         n_dim=n_dim,
         n_obj=n_obj,
-        hidden_size=[2048, 2048],
+        hidden_size=2048,
         save_path=model_save_path,
-    ).to(**tkwargs)
+    )
+    model.set_kwargs(**tkwargs)
     
     trainer_func = get_trainer(config["train_mode"])
     
@@ -129,7 +130,7 @@ def end2end_run(config):
     #         reinit=True
     #     )
     
-    surrogate_problem = End2EndSurrogateProblem(
+    surrogate_problem = MultiHeadSurrogateProblem(
         n_var=n_dim, n_obj=n_obj, model=model
     )
     

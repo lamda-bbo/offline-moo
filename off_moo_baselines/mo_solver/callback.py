@@ -1,26 +1,28 @@
 import os
+import wandb 
 import numpy as np
-import matplotlib.pyplot as plt
-from utils import normalize_y, denormalize_y
+import matplotlib.pyplot as plt 
+from matplotlib import cm
+from matplotlib import cycler
+import matplotlib
+from off_moo_bench.evaluation.metrics import hv
 
 class RecordCallback:
-    def __init__(self, real_problem, surrogate_problem, args, iters_to_record=100):
-        self.args = args
+    def __init__(self, task, surrogate_problem, config,
+                 logging_dir, iters_to_record=1):
         self.iters_to_record = iters_to_record
+        self.config = config
         self.X = []
         self.Y = []
         self.Y_real = []
+        self.n_gen = 0
         self.surrogate_problem = surrogate_problem
-        self.real_problem = real_problem
-        # try:
-        #     self.pareto_front = real_problem.get_pareto_front()
-        #     if self.args.normalize_y:
-        #         self.pareto_front = normalize_y(self.args, self.pareto_front)
-        # except:
-        #     pass
-        self.save_dir = os.path.join(self.args.results_dir, 'runtime_record')
+        self.task = task
+        self.logging_dir = logging_dir
+        self.save_dir = os.path.join(logging_dir, 'pop_hist')
 
-    def _do(self, algorithm):
+    def __call__(self, algorithm):
+        self.n_gen += 1
         try:
             if algorithm.n_iter % self.iters_to_record != 0:
                 return 
@@ -31,34 +33,118 @@ class RecordCallback:
         x = algorithm.pop.get('X')
         y = algorithm.pop.get('F')
 
-        if self.args.normalize_y:
-            y = denormalize_y(self.args, y)
+        if self.config["normalize_ys"]:
+            y = self.task.denormalize_y(y)
 
-        if self.args.discrete:
-            from utils import to_integers
-            # res_x = res_x.reshape((-1,) + input_shape)
-            input_shape = self.args.input_shape
-            x = x.reshape((-1,) + input_shape)
-            x = to_integers(x)
+        if self.config["to_logits"]:
+            x = self.task.to_integer(x)    
 
         self.X.append(x)
         self.Y.append(y)
         
-        y_real = self.real_problem.evaluate(x)
+        y_real = self.task.predict(x)
         self.Y_real.append(y_real)
+        
+        if y_real.shape[1] <= 3:
+            nadir_point = self.task.nadir_point
+            if self.config["normalize_ys"]:
+                nadir_point = self.task.normalize_y(nadir_point)
+                y_real = self.task.normalize_y(y_real)
+            hv_value = hv(nadir_point=nadir_point, 
+                            y=y_real,
+                            task_name=self.config["task"])
+            if self.config["use_wandb"]:
+                wandb.log({"hypervolume/search_hist": hv_value,
+                           "search_step": self.n_gen})
 
         try:
             save_dir = os.path.join(self.save_dir, f'{algorithm.n_iter}')
         except:
             save_dir = os.path.join(self.save_dir, f'{algorithm.n_gen}')
+            
         os.makedirs(save_dir, exist_ok=True)
         np.save(arr=x, file=os.path.join(save_dir, 'x.npy'))
         np.save(arr=y, file=os.path.join(save_dir, 'y_surrogate.npy'))
         np.save(arr=y_real, file=os.path.join(save_dir, 'y_predict.npy'))
-
-        # self._plot(y, y_real, save_dir)
-        self.plot_all()
-        # self
+        
+        self.plot_hist(save_dir)
+        
+        
+    def plot_hist(self, save_dir):
+        n_obj = self.Y_real[0].shape[1]
+        if n_obj not in [2, 3]:
+            return 
+        
+        params = {
+            'lines.linewidth': 1.5,
+            'legend.fontsize': 18,
+            'axes.labelsize': 20,
+            'axes.titlesize': 25,
+            'xtick.labelsize': 17,
+            'ytick.labelsize': 17,
+        }
+        matplotlib.rcParams.update(params)
+        
+        plt.rc('font',family='Times New Roman')
+        colormap = cm.get_cmap(name='YlGnBu')
+        n_gen = self.n_gen
+        c = [colormap(i) for i in np.linspace(0, 1, n_gen)]
+        myCycler = cycler(color=c)
+        plt.gca().set_prop_cycle(myCycler)
+        
+        # figs, axes = plt.subplots(1, 2, figsize=(13, 6))
+        # ax1, ax2 = axes[0], axes[1]
+        
+        fig = plt.figure(figsize=(13, 6))
+        if n_obj == 2:
+            ax1 = fig.add_subplot(1, 2, 1)
+            ax2 = fig.add_subplot(1, 2, 2)
+        else:
+            ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+            ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+        
+        for i in range(n_gen):
+            alpha = i / n_gen 
+            y_true = self.Y_real[i][:, :]
+            y_pred = self.Y[i][:, :]
+            
+            if self.config["normalize_ys"]:
+                y_true = self.task.normalize_y(y_true)
+                y_pred = self.task.normalize_y(y_pred)
+                
+            ax1.scatter(y_pred[:, 0], y_pred[:, 1], color=colormap(alpha), alpha=1.0)
+            ax2.scatter(y_true[:, 0], y_true[:, 1], color=colormap(alpha), alpha=1.0)
+        
+        ax1.set_xlabel(r'$f_1$', fontdict={'family' : 'Times New Roman'})
+        ax1.set_ylabel(r'$f_2$', fontdict={'family' : 'Times New Roman'})
+        ax2.set_xlabel(r'$f_1$', fontdict={'family' : 'Times New Roman'})
+        ax2.set_ylabel(r'$f_2$', fontdict={'family' : 'Times New Roman'})
+        if n_obj == 3:
+            ax1.set_zlabel(r'$f_3$', fontdict={'family' : 'Times New Roman'})
+            ax2.set_zlabel(r'$f_3$', fontdict={'family' : 'Times New Roman'})
+        
+        ax1.set_title(f'{self.config["model"]}-{self.config["train_mode"]} Predictions', fontdict={'family' : 'Times New Roman'})
+        ax2.set_title(f'{self.config["model"]}-{self.config["train_mode"]} Score', fontdict={'family' : 'Times New Roman'})
+        
+        plt.savefig(os.path.join(save_dir,
+            f'{self.config["model"]}-{self.config["train_mode"]}-{self.n_gen}.png'))
+        plt.savefig(os.path.join(save_dir,
+            f'{self.config["model"]}-{self.config["train_mode"]}-{self.n_gen}.pdf'))
+        
+        plt.savefig(os.path.join(save_dir, "..", "..",
+            f'{self.config["model"]}-{self.config["train_mode"]}.png'))
+        plt.savefig(os.path.join(save_dir, "..", "..",
+            f'{self.config["model"]}-{self.config["train_mode"]}.pdf'))
+        
+    def plot_y(self, ax, y, color):
+        n_obj = len(y[0])
+        if n_obj == 2:
+            ax.scatter(y[:, 0], y[:, 1], color=color, alpha=1.0)
+        elif n_obj == 3:
+            ax.scatter(y[:, 0], y[:, 1], y[:, 2], color=color, alpha=1.0)
+        else:
+            raise NotImplementedError
+        
 
     def _plot(self, y, y_real, save_dir):
         n_obj = len(y[0])

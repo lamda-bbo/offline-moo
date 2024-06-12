@@ -235,19 +235,6 @@ register('VLMOP3-Exact-v0',
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
 
-register('OmniTest-Exact-v0',
-         'off_moo_bench.datasets.continuous.synthetic_function_dataset:OmniTestDataset',
-         'off_moo_bench.problem.synthetic_func:OmniTest',
-
-         # keyword arguments for building the dataset
-         dataset_kwargs=dict(
-             max_samples=None,
-             max_percentile=100,
-             min_percentile=0),
-
-         # keyword arguments for building the exact oracle
-         problem_kwargs=dict())
-
 register('ZDT1-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:ZDT1Dataset',
          'off_moo_bench.problem.synthetic_func:ZDT1',
@@ -303,6 +290,19 @@ register('ZDT4-Exact-v0',
 register('ZDT6-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:ZDT6Dataset',
          'off_moo_bench.problem.synthetic_func:ZDT6',
+
+         # keyword arguments for building the dataset
+         dataset_kwargs=dict(
+             max_samples=None,
+             max_percentile=100,
+             min_percentile=0),
+
+         # keyword arguments for building the exact oracle
+         problem_kwargs=dict())
+
+register('OmniTest-Exact-v0',
+         'off_moo_bench.datasets.continuous.synthetic_function_dataset:OmniTestDataset',
+         'off_moo_bench.problem.synthetic_func:OmniTest',
 
          # keyword arguments for building the dataset
          dataset_kwargs=dict(

@@ -1,6 +1,7 @@
 from off_moo_bench.disk_resource import DiskResource
 from off_moo_bench.datasets.discrete_dataset import DiscreteDataset
 from off_moo_bench.datasets.dataset_builder import DatasetBuilder
+from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.problem.base import BaseProblem
 from typing import Union
 import re
@@ -257,6 +258,24 @@ class Task(object):
         """
 
         return self.dataset.y
+    
+    @property
+    def x_test(self):
+        """the design values 'x' for a model-based optimization problem
+        represented as a numpy array of arbitrary type
+
+        """
+
+        return self.dataset.x_test
+
+    @property
+    def y_test(self):
+        """the prediction values 'y' for a model-based optimization problem
+        represented by a scalar floating point value per 'x'
+
+        """
+
+        return self.dataset.y_test
 
     @property
     def is_normalized_x(self):
@@ -279,6 +298,10 @@ class Task(object):
     @property
     def forbidden_normalize_x(self):
         return self.dataset.forbidden_normalize_x
+    
+    @property
+    def nadir_point(self):
+        return self.problem.get_nadir_point()
 
     @property
     def is_logits(self):
@@ -436,6 +459,9 @@ class Task(object):
         if not hasattr(self.dataset, "map_to_logits"):
             raise ValueError("only supported on discrete datasets")
         self.dataset.map_to_logits()
+        
+    def get_N_non_dominated_solutions(self, *args, **kwargs):
+        return self.dataset.get_N_non_dominated_solutions(*args, **kwargs)
 
     def normalize_x(self, x):
         """a function that standardizes the design values 'x' to have
