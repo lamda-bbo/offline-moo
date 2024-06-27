@@ -17,7 +17,7 @@ conda activate off-moo
 pip install -r requirements.txt
 pip install torchvision==0.11.1
 pip install torch==2.0.1 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
-cd m2bo_bench/problem/lambo
+cd off_moo_bench/problem/lambo
 pip install -e .
 cd ../../../
 pip install scipy==1.10.1
@@ -33,10 +33,13 @@ bash fix_contents.sh ${YOUR_PATH_TO_CONDA}/envs/off-moo/lib/python3.8/site-packa
 curl -H "Authorization: Bearer <Your Google Drive APIs>" https://drive.google.com/file/d/11bQ1paHEWHDnnTPtxs2OyVY_Re-38DiO/view?usp=sharing -o database.zip
 curl -H "Authorization: Bearer <Your Google Drive APIs>" https://drive.google.com/file/d/1r0iSCq1gLFs5xnmp1MDiqcqxNcY5q6Hp/view?usp=sharing -o data.zip
 
-unzip database.zip -d m2bo_bench/problems/mo_nas/
-unzip data.zip -d m2bo_bench/problems/mo_nas/
+unzip database.zip -d off_moo_bench/problems/mo_nas/
+unzip data.zip -d off_moo_bench/problems/mo_nas/
 
 conda env config vars set LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mujoco210/bin:/usr/lib/nvidia
+
+cd off_moo_bench/problem/lambo
+python scripts/black_box_opt.py optimizer=mf_genetic optimizer/algorithm=nsga2 task=proxy_rfp tokenizer=protein
 
 python config_evoxbench.py 
 python tests/test_mujoco.py
