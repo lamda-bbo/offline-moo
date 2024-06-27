@@ -181,7 +181,7 @@ def run(args):
             from pymoo.operators.sampling.rnd import PermutationRandomSampling
             from pymoo.operators.crossover.ox import OrderCrossover
             from pymoo.operators.mutation.inversion import InversionMutation
-            from collecter import StartFromZeroRepair
+            from off_moo_bench.collecter import StartFromZeroRepair
 
             solver = MOEASolver(n_gen=52, pop_init_method='nds', batch_size=args.num_solutions, 
                             algo=NSGA2, pop_size=args.num_solutions,
@@ -275,14 +275,13 @@ def run(args):
         res_y_50_percent = normalize_y(args, res_y_50_percent)
         # pareto_front = normalize_y(args.env_name, pareto_front)
     
-    indices_select = get_N_nondominated_index(y_np, args.num_solutions)
+    
+    indices_select = get_N_nondominated_index(y_np, args.num_solutions, is_all_data=True)
     d_best = y_np[indices_select]
-
-    print(res_y,  nadir_point, res_y_50_percent, d_best, sep='\n')
 
     np.save(arr=denormalize_y(args, d_best), file=os.path.join(results_dir, 'pop_init.npy'))
     
-    from plot import plot_y
+    from plot.plot import plot_y
     hv_value = hv(nadir_point, res_y)
     # igd_value = igd(pareto_front, res_y)
     print(hv_value)

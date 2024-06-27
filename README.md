@@ -151,7 +151,7 @@ for env_name in "zdt3" "re21"; do
                         --train-mode ${train_mode} \
                         --mo-solver ${solver} \
                         --reweight-mode none \
-                        --df-name "2-test-hv.csv"
+                        --df-name $seed-test-hv.csv
                     done
                 done
             done
@@ -165,4 +165,4 @@ done
 - If you want to implement your own algorithms, put ``model`` and ``trainer`` under ``algorithm`` folder, then choose one MO-solver as what is done in ``scripts/multi_obj_nn.py``.
 
 ## Contact 
-If you have any questions, feel free to contact XXX or raise an issue.
+If you have any questions, feel free to contact [Rongxi Tan](rongxitan@smail.nju.edu.cn) or raise an issue.
