@@ -10,6 +10,9 @@
 /off_moo_bench/problem/lambo/data/experiments/test/soft_infrared_0
 /off_moo_bench/problem/lambo/data/experiments/test/sour_plank_0
 /off_moo_bench/problem/lambo/data/experiments/test/parallel_poset_0
+/off_moo_bench/problem/lambo/data/experiments/test/achromatic_slab_0
+/off_moo_bench/problem/lambo/data/experiments/test/black_box_opt.log
+/off_moo_bench/problem/lambo/data/experiments/test/proxy_rfp_problem.pkl
 /*.npy
 /*.pkl
 /*.tar.gz

@@ -16,9 +16,23 @@ In order to run our Regex, RFP, and ZINC tasks, following LaMBO ([Paper](https:/
 
 [FoldX](https://foldxsuite.crg.eu/academic-license-info) is available under a free academic license. After creating an account you will be emailed a link to download the FoldX executable and supporting assets. Copy the contents of the downloaded archive to ``~/foldx``. You may also need to rename the FoldX executable (e.g. ``mv -v ~/foldx/foldx_20221231 ~/foldx/foldx``).
 
+After installing FoldX, generate an instance ``proxy_rfp_problem.pkl`` of RFP task by running
+```shell
+cd off_moo_bench/problem/lambo/
+python scripts/black_box_opt.py optimizer=mf_genetic optimizer/algorithm=nsga2 task=proxy_rfp tokenizer=protein
+```
+
+Make sure that the lines of saving instance of ``proxy_rfp_problem.pkl`` exist in line 203 of  ``off_moo_bench/problem/lambo/lambo/optimizers/pymoo.py`` such that 
+```python
+if round_idx == self.num_rounds:
+    import pickle
+    with open('proxy_rfp_problem.pkl', 'wb+') as f:
+        pickle.dump(problem, f)
+```
+
 ### Quick Installation
 
-After successfully installing [FoldX](https://foldxsuite.crg.eu/academic-license-info), you can run 
+After successfully installing [FoldX](https://foldxsuite.crg.eu/academic-license-info), run 
 ```shell
 bash install.sh
 ```
@@ -26,7 +40,7 @@ for a quick installation.
 
 ### EvoXBench
 
-To test with our offline MO-NAS problems, installing EvoXBench ([paper](https://arxiv.org/abs/2208.04321), [code](https://github.com/EMI-Group/evoxbench)) is needed. Before running ``pip install evoxbench``, you should first download their database via [Google Drive](https://drive.google.com/file/d/11bQ1paHEWHDnnTPtxs2OyVY_Re-38DiO/view?usp=sharing) or [Baidu Netdisk](https://pan.baidu.com/s/1PwWloA543-81O-GFkA7GKg), and data via [Google Drive](https://drive.google.com/file/d/1r0iSCq1gLFs5xnmp1MDiqcqxNcY5q6Hp/view?usp=sharing) or [Baidu Netdisk](https://pan.baidu.com/s/17dUpiIosSCZoSgKXwSBlVg), and save it to the path ``m2bo_bench/problem/mo_nas/database`` and ``m2bo_bench/problem/mo_nas/data``.
+To test with our offline MO-NAS problems, installing EvoXBench ([paper](https://arxiv.org/abs/2208.04321), [code](https://github.com/EMI-Group/evoxbench)) is needed. Before running ``pip install evoxbench``, you should first download their database via [Google Drive](https://drive.google.com/file/d/11bQ1paHEWHDnnTPtxs2OyVY_Re-38DiO/view?usp=sharing) or [Baidu Netdisk](https://pan.baidu.com/s/1PwWloA543-81O-GFkA7GKg), and data via [Google Drive](https://drive.google.com/file/d/1r0iSCq1gLFs5xnmp1MDiqcqxNcY5q6Hp/view?usp=sharing) or [Baidu Netdisk](https://pan.baidu.com/s/17dUpiIosSCZoSgKXwSBlVg), and save it to the path ``off_moo_bench/problem/mo_nas/database`` and ``off_moo_bench/problem/mo_nas/data``.
 >  Following [How to download from Google Drive](https://www.quora.com/How-do-I-download-a-very-large-file-from-Google-Drive/answer/Shane-F-Carr), we propose a more stable method for downloading in a commandline interface. Please first go to [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) to obtain your Google Drive download APIs, then download it with
 > ```shell
 > curl -H "Authorization: Bearer <Your Google Drive APIs>" https://drive.google.com/file/d/11bQ1paHEWHDnnTPtxs2OyVY_Re-38DiO/view?usp=sharing -o database.zip
@@ -50,7 +64,7 @@ Then configure the EvoXBench as:
     #    └─ mnv3/
     #    └─ ...
     # Then, execute:
-    # config("PATH_TO_M2BO/m2bo_bench/problem/mo_nas/database", "PATH_TO_M2BO/m2bo_bench/problem/mo_nas/data")
+    # config("PATH_TO_M2BO/off_moo_bench/problem/mo_nas/database", "PATH_TO_M2BO/off_moo_bench/problem/mo_nas/data")
 ```
 
 ### MuJoCo 
