@@ -17,6 +17,7 @@
 /*.pkl
 /*.tar.gz
 /*.zip
-/test.py
+/test.**
+/**.test-hv.csv
 
 **/__pycache__
