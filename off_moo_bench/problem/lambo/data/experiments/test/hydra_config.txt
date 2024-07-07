@@ -1,6 +1,6 @@
 logger:
   _target_: upcycle.logging.DataFrameLogger
-  log_dir: data/experiments/test/sour_plank_0/2024-05-22_11-08-56
+  log_dir: data/experiments/test/equilateral_application_0/2024-07-07_02-51-43
 task:
   _target_: lambo.tasks.proxy_rfp.proxy_rfp.ProxyRFPTask
   obj_dim: 2
@@ -112,8 +112,8 @@ project_name: lambo
 version: v0.2.1
 data_dir: data/experiments
 exp_name: test
-job_name: sour_plank_0
-timestamp: 2024-05-22_11-08-56
+job_name: equilateral_application_0
+timestamp: 2024-07-07_02-51-43
 log_dir: data/experiments/test
 wandb_mode: online
 wandb_host: https://api.wandb.ai

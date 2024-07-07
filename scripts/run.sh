@@ -1,12 +1,12 @@
 # python config_evoxbench.py
-# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mujoco210/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mujoco210/bin
 for env_name in "re21"; do
     for seed in 1; do
         for train_data_mode in "none"; do
             for train_mode in "none"; do
                 for output_size in 256; do
                     python config_evoxbench.py 
-                    CUDA_VISIBLE_DEVICES=0 \
+                    CUDA_VISIBLE_DEVICES=1 \
                     python scripts/multi_obj_nn.py \
                     --env-name ${env_name} \
                     --seed ${seed} \
@@ -17,7 +17,7 @@ for env_name in "re21"; do
                     --train-data-mode ${train_data_mode} \
                     --train-mode ${train_mode} \
                     --reweight-mode none \
-                    --df-name "test-test-hv.csv"
+                    --df-name $seed-test-hv.csv
                 done
             done
         done

@@ -565,20 +565,20 @@ def run(args):
         res_y_50_percent = normalize_y(args, res_y_50_percent)
         # pareto_front = normalize_y(args.env_name, pareto_front)
     
+    
     indices_select = get_N_nondominated_index(y_np, args.num_solutions)
     d_best = y_np[indices_select]
-
-    print(res_y,  nadir_point, res_y_50_percent, d_best, sep='\n')
 
     np.save(arr=denormalize_y(args, d_best), file=os.path.join(results_dir, 'pop_init.npy'))
     
     from plot.plot import plot_y
-    hv_value = hv(nadir_point, res_y)
+    from off_moo_bench.task_set import ALLTASKSDICT
+    hv_value = hv(nadir_point, res_y, task_name=ALLTASKSDICT[args.env_name])
     # igd_value = igd(pareto_front, res_y)
     print(hv_value)
-    hv_50percent_value = hv(nadir_point, res_y_50_percent)
+    hv_50percent_value = hv(nadir_point, res_y_50_percent, task_name=ALLTASKSDICT[args.env_name])
     print(hv_50percent_value)
-    d_best_hv = hv(nadir_point, d_best)
+    d_best_hv = hv(nadir_point, d_best, task_name=ALLTASKSDICT[args.env_name])
     print(d_best_hv)
     # print(igd_value)
     

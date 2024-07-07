@@ -266,8 +266,7 @@ def run(args):
     np.save(arr=res_y, file=os.path.join(results_dir, 'y_predict.npy'))
     # res_y = res_y[NonDominatedSorting().do(res_y)[0]]
 
-    nadir_point = 2 * problem.get_nadir_point() if args.env_name in ['mo_hopper_v2', 'mo_swimmer_v2'] \
-         else 1.1 * problem.get_nadir_point()
+    nadir_point = problem.get_nadir_point()
     # pareto_front = problem.get_pareto_front()
     if args.normalize_y:
         res_y = normalize_y(args, res_y)
@@ -276,18 +275,19 @@ def run(args):
         # pareto_front = normalize_y(args.env_name, pareto_front)
     
     
-    indices_select = get_N_nondominated_index(y_np, args.num_solutions, is_all_data=True)
+    indices_select = get_N_nondominated_index(y_np, args.num_solutions)
     d_best = y_np[indices_select]
 
     np.save(arr=denormalize_y(args, d_best), file=os.path.join(results_dir, 'pop_init.npy'))
     
     from plot.plot import plot_y
-    hv_value = hv(nadir_point, res_y)
+    from off_moo_bench.task_set import ALLTASKSDICT
+    hv_value = hv(nadir_point, res_y, task_name=ALLTASKSDICT[args.env_name])
     # igd_value = igd(pareto_front, res_y)
     print(hv_value)
-    hv_50percent_value = hv(nadir_point, res_y_50_percent)
+    hv_50percent_value = hv(nadir_point, res_y_50_percent, task_name=ALLTASKSDICT[args.env_name])
     print(hv_50percent_value)
-    d_best_hv = hv(nadir_point, d_best)
+    d_best_hv = hv(nadir_point, d_best, task_name=ALLTASKSDICT[args.env_name])
     print(d_best_hv)
     # print(igd_value)
     
