@@ -7,16 +7,26 @@
 # "re21 re22 re23 re24 re25 re31 re32 re33 re34 re35 re36 re37 re41 re42 re61"
 
 # MO-NAS
-# "nb201_test c10mop1 c10mop2 c10mop3 c10mop4"
+# "nb201_test c10mop1 c10mop2 c10mop3 c10mop4 c10mop5 c10mop6 c10mop7 c10mop8 c10mop9 in1kmop1 in1kmop2 in1kmop3 in1kmop4 in1kmop5 in1kmop6 in1kmop7 in1kmop8 in1kmop9"
+
+# MORL
+# "mo_hopper_v2 mo_swimmer_v2"
+
+# MOCO 
+# "bi_tsp_20 bi_tsp_50 bi_tsp_100 bi_tsp_500 tri_tsp_20 tri_tsp_50 tri_tsp_100 bi_cvrp_20 bi_cvrp_50 bi_cvrp_100 bi_kp_50 bi_kp_100 bi_kp_200"
+
+# Scientific Design
+# "zinc regex rfp molecule"
 
 seeds="1000 2000 3000 4000 5000"
-tasks="nb201_test"
+tasks="zdt1"
 model="End2End"
-train_modes="Vallina GradNorm PcGrad"
+train_modes="Vallina"
+batch_sizes="32"
 
 MAX_JOBS=16
 TOTAL_GPUS=2
-MAX_RETRIES=0
+MAX_RETRIES=1
 
 get_gpu_allocation() {
     local job_number=$1
@@ -67,6 +77,7 @@ for seed in $seeds; do
             --model=${model} \
             --train_mode=${train_mode} \
             --task=${task} \
+            --batch_size=32 \
             --use_wandb=False \
             --retrain_model=False \
             --seed=${seed}" \

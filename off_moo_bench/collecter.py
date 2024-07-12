@@ -8,6 +8,26 @@ from pymoo.algorithms.moo.nsga2 import RankAndCrowdingSurvival, calc_crowding_di
 from pymoo.util.randomized_argsort import randomized_argsort
 from pymoo.core.repair import Repair
 from pymoo.core.evaluator import Evaluator
+from pymoo.factory import get_crossover
+from pymoo.operators.crossover.ox import OrderCrossover
+from pymoo.operators.mutation.inversion import InversionMutation
+from off_moo_bench.problem.lambo.lambo.optimizers.mutation import LocalMutation
+from off_moo_bench.problem.lambo.lambo.utils import ResidueTokenizer
+from off_moo_bench.problem.mo_nas import get_genetic_operator
+
+_, evox_crossover, evox_mutation, evox_repair = get_genetic_operator()
+
+CROSSOVERS = {
+    "lambo_sbx": get_crossover(name='int_sbx', prob=0., eta=16),
+    "evox_crossover": evox_crossover,
+    "order": OrderCrossover(),
+}
+
+MUTATIONS = {
+    "lambo_local": LocalMutation(prob=1., eta=16, safe_mut=False, tokenizer=ResidueTokenizer()),
+    "evox_mutation": evox_mutation,
+    "inversion": InversionMutation(),
+}
 
 class StartFromZeroRepair(Repair):
 

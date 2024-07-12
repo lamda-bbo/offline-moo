@@ -1,3 +1,5 @@
 normalize_xs: False
 normalize_ys: True 
 to_logits: False
+
+record_hist: False

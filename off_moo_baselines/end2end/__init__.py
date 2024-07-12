@@ -15,7 +15,7 @@ from off_moo_baselines.end2end.surrogate_problem import End2EndSurrogateProblem
 from off_moo_baselines.mo_solver.moea_solver import MOEASolver
 from off_moo_baselines.mo_solver.callback import RecordCallback
 from off_moo_baselines.data import tkwargs, get_dataloader
-from off_moo_bench.task_set import ALLTASKSDICT
+from off_moo_bench.task_set import *
 from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.evaluation.plot import plot_y
 
@@ -131,6 +131,15 @@ def end2end_run(config: dict):
         n_var=n_dim * n_classes if config['to_logits'] else n_dim, n_obj=n_obj, model=model
     )
     
+    if config["task"] in ScientificDesignSequenceDict.values():
+        surrogate_problem.x_to_query_batches = task.problem.task_instance.x_to_query_batches
+        surrogate_problem.query_batches_to_x = task.problem.task_instance.query_batches_to_x
+        surrogate_problem.candidate_pool = task.problem.task_instance.candidate_pool
+        surrogate_problem.op_types = task.problem.task_instance.op_types
+    elif config["task"] in MONASSequenceDict.values():
+        surrogate_problem.xl = task.problem.xl
+        surrogate_problem.xu = task.problem.xu
+    
     callback = RecordCallback(
         task=task, surrogate_problem=surrogate_problem,
         config=config, logging_dir=logging_dir, iters_to_record=1
@@ -142,7 +151,7 @@ def end2end_run(config: dict):
         batch_size=config["num_solutions"],
         pop_size=config["num_solutions"],
         algo=NSGA2,
-        callback=callback,
+        callback=callback if config["record_hist"] else None,
         eliminate_duplicates=True,
     )
     
@@ -158,6 +167,7 @@ def end2end_run(config: dict):
         task.map_to_integers()
         res_x = task.to_integers(res_x)
     
+    assert 0, res_x
     res_y = task.predict(res_x)
     visible_masks = np.ones(len(res_y))
     visible_masks[np.where(np.logical_or(np.isinf(res_y), np.isnan(res_y)))[0]] = 0
@@ -202,7 +212,7 @@ def end2end_run(config: dict):
     }
     
     df = pd.DataFrame([hv_results])
-    filename = os.path.join(config["results_dir"], "hv_results.csv")
+    filename = os.path.join(logging_dir, "hv_results.csv")
     df.to_csv(filename, index=False)
     
     if config["use_wandb"]:
