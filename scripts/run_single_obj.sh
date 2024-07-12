@@ -6,7 +6,7 @@ for env_name in "zdt3"; do
             for train_mode in "tri_mentoring"; do
                 for output_size in 256; do
                     python config_evoxbench.py && \
-                    CUDA_VISIBLE_DEVICES=2 \
+                    CUDA_VISIBLE_DEVICES=0 \
                     python scripts/single_obj_nn.py \
                     --env-name ${env_name} \
                     --seed ${seed} \

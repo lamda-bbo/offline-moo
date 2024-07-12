@@ -13,6 +13,7 @@
 /*.pkl
 /*.tar.gz
 /*.zip
+/*.csv
 /test.**
 /**.test-hv.csv
 

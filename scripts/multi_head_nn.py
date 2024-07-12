@@ -432,16 +432,6 @@ def run(args):
     hv_df.loc[entry_desc, args.env_name] = hv_value
     hv_df.loc[f'{entry_desc}-50percentile', args.env_name] = hv_50percent_value
 
-    # if args.reweight_mode == 'sigmoid':
-    #     hv_df.loc[f'{args.model_name}-sigmoid-{args.sigmoid_quantile}', args.env_name] = hv_value
-    # elif args.train_mode != 'none':
-    #     hv_df.loc[f'{args.model_name}-{args.train_mode}', args.env_name] = hv_value
-    # elif args.mo_solver == 'mobo':
-    #     hv_df.loc[f'{args.model_name}-mobo', args.env_name] = hv_value
-    # elif args.train_data_mode != 'none':
-    #     hv_df.loc[f'{args.model_name}-{args.train_data_mode}-20%', args.env_name] = hv_value
-    # else:
-    #     hv_df.loc[args.model_name, args.env_name] = hv_value
     hv_df.to_csv(args.df_name, index=True, mode='w')
 
 

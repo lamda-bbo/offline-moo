@@ -7,7 +7,7 @@ for env_name in "re21"; do
                 for solver in "nsga2"; do
                     for output_size in 256 32; do 
                         python config_evoxbench.py
-                        CUDA_VISIBLE_DEVICES=2 \
+                        CUDA_VISIBLE_DEVICES=0 \
                         python scripts/multi_head_nn.py \
                         --env-name ${env_name} \
                         --seed ${seed} \
