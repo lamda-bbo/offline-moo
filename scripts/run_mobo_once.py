@@ -234,23 +234,23 @@ def run(args):
     indices_select = get_N_nondominated_index(y_np, args.num_solutions)
     d_best = y_np[indices_select]
 
-    print(res_y,  nadir_point, res_y_50_percent, d_best, sep='\n')
-
     np.save(arr=denormalize_y(args, d_best), file=os.path.join(results_dir, 'pop_init.npy'))
     
     from plot.plot import plot_y
-    hv_value = hv(nadir_point, res_y)
+    from off_moo_bench.task_set import ALLTASKSDICT
+    hv_value = hv(nadir_point, res_y, task_name=ALLTASKSDICT[args.env_name])
     # igd_value = igd(pareto_front, res_y)
     print(hv_value)
-    hv_50percent_value = hv(nadir_point, res_y_50_percent)
+    hv_50percent_value = hv(nadir_point, res_y_50_percent, task_name=ALLTASKSDICT[args.env_name])
     print(hv_50percent_value)
-    d_best_hv = hv(nadir_point, d_best)
+    d_best_hv = hv(nadir_point, d_best, task_name=ALLTASKSDICT[args.env_name])
     print(d_best_hv)
     # print(igd_value)
     
     plot_y(res_y, save_dir=results_dir, nadir_point=nadir_point, d_best=d_best)
     with open(os.path.join(results_dir, 'results.txt'), 'w+') as f:
         f.write(f"hv = {hv_value}" + '\n' + f"D(best) hv = {d_best_hv}")
+
 
     # args.df_name = '1-test-hv.csv'
 
@@ -274,16 +274,6 @@ def run(args):
     hv_df.loc[entry_desc, args.env_name] = hv_value
     hv_df.loc[f'{entry_desc}-50percentile', args.env_name] = hv_50percent_value
 
-    # if args.reweight_mode == 'sigmoid':
-    #     hv_df.loc[f'{args.model_name}-sigmoid-{args.sigmoid_quantile}', args.env_name] = hv_value
-    # elif args.train_mode != 'none':
-    #     hv_df.loc[f'{args.model_name}-{args.train_mode}', args.env_name] = hv_value
-    # elif args.mo_solver == 'mobo':
-    #     hv_df.loc[f'{args.model_name}-mobo', args.env_name] = hv_value
-    # elif args.train_data_mode != 'none':
-    #     hv_df.loc[f'{args.model_name}-{args.train_data_mode}-20%', args.env_name] = hv_value
-    # else:
-    #     hv_df.loc[args.model_name, args.env_name] = hv_value
     hv_df.to_csv(args.df_name, index=True, mode='w')
 
 if __name__ == "__main__":
