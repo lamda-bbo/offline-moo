@@ -449,3 +449,119 @@ Traceback (most recent call last):
   File "/home/xk/anaconda3/envs/off-moo/lib/python3.8/subprocess.py", line 1720, in _execute_child
     raise child_exception_type(errno_num, err_msg, err_filename)
 PermissionError: [Errno 13] Permission denied: '/home/xk/foldx/foldx'
+[2024-07-07 00:52:40,793][root][ERROR] - Encountered error: `No module named 'Levenshtein'` when loading module 'lambo.utils.ResidueTokenizer'
+Traceback (most recent call last):
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/utils.py", line 572, in _locate
+    import_module(mod)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/trx/code/offline-moo/off_moo_bench/problem/lambo/lambo/utils.py", line 8, in <module>
+    from Levenshtein._levenshtein import distance as edit_distance, editops as edit_ops
+ModuleNotFoundError: No module named 'Levenshtein'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 39, in main
+    tokenizer = hydra.utils.instantiate(config.tokenizer)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 180, in instantiate
+    return instantiate_node(config, *args, recursive=_recursive_, convert=_convert_)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 240, in instantiate_node
+    target = _resolve_target(node.get(_Keys.TARGET))
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 104, in _resolve_target
+    return _locate(target)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/utils.py", line 574, in _locate
+    raise ImportError(
+ImportError: Encountered error: `No module named 'Levenshtein'` when loading module 'lambo.utils.ResidueTokenizer'
+[2024-07-07 00:53:54,187][root][ERROR] - Encountered error: `No module named 'Levenshtein._levenshtein'` when loading module 'lambo.utils.ResidueTokenizer'
+Traceback (most recent call last):
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/utils.py", line 572, in _locate
+    import_module(mod)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/trx/code/offline-moo/off_moo_bench/problem/lambo/lambo/utils.py", line 8, in <module>
+    from Levenshtein._levenshtein import distance as edit_distance, editops as edit_ops
+ModuleNotFoundError: No module named 'Levenshtein._levenshtein'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 39, in main
+    tokenizer = hydra.utils.instantiate(config.tokenizer)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 180, in instantiate
+    return instantiate_node(config, *args, recursive=_recursive_, convert=_convert_)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 240, in instantiate_node
+    target = _resolve_target(node.get(_Keys.TARGET))
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 104, in _resolve_target
+    return _locate(target)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/hydra/_internal/utils.py", line 574, in _locate
+    raise ImportError(
+ImportError: Encountered error: `No module named 'Levenshtein._levenshtein'` when loading module 'lambo.utils.ResidueTokenizer'
+[2024-07-07 00:54:42,173][root][ERROR] - module 'numpy' has no attribute 'int'.
+`np.int` was a deprecated alias for the builtin `int`. To avoid this error in existing code, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
+The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 43, in main
+    base_candidates, base_targets, all_seqs, all_targets = bb_task.task_setup(config, project_root=project_root)
+  File "/home/trx/code/offline-moo/off_moo_bench/problem/lambo/lambo/tasks/proxy_rfp/proxy_rfp.py", line 69, in task_setup
+    FoldedCandidate(work_dir, parent_pdb_path, [], self.tokenizer,
+  File "/home/trx/code/offline-moo/off_moo_bench/problem/lambo/lambo/candidate.py", line 133, in __init__
+    self.wild_surface_area = sasa_fn(self.uuid, self.wild_pdb_path)
+  File "/home/trx/code/offline-moo/off_moo_bench/problem/lambo/lambo/tasks/proxy_rfp/sasa.py", line 32, in __call__
+    self.structure_computer.compute(struct, level="S")
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/Bio/PDB/SASA.py", line 206, in compute
+    asa_array = np.zeros((n_atoms, 1), dtype=np.int)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/numpy/__init__.py", line 305, in __getattr__
+    raise AttributeError(__former_attrs__[attr])
+AttributeError: module 'numpy' has no attribute 'int'.
+`np.int` was a deprecated alias for the builtin `int`. To avoid this error in existing code, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
+The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+[2024-07-07 00:57:00,620][root][ERROR] - module 'numpy' has no attribute 'float'.
+`np.float` was a deprecated alias for the builtin `float`. To avoid this error in existing code, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/trx/code/offline-moo/off_moo_bench/problem/lambo/lambo/optimizers/pymoo.py", line 210, in optimize
+    res = minimize(
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/optimize.py", line 83, in minimize
+    res = algorithm.run()
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 213, in run
+    self.next()
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 229, in next
+    infills = self.infill()
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 269, in infill
+    infills = self._infill()
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/algorithms/base/genetic.py", line 86, in _infill
+    off = self.mating.do(self.problem, self.pop, self.n_offsprings, algorithm=self)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/core/infill.py", line 34, in do
+    _off = self._do(problem, pop, n_remaining, **kwargs)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/core/mating.py", line 31, in _do
+    _off = self.crossover.do(problem, pop, parents, **kwargs)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/core/crossover.py", line 56, in do
+    _X = self._do(problem, X, **kwargs)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/operators/integer_from_float_operator.py", line 46, in _do
+    return apply_float_operation(problem, fun)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/pymoo/operators/integer_from_float_operator.py", line 14, in apply_float_operation
+    xl, xu = problem.xl.astype(np.float), problem.xu.astype(np.float)
+  File "/home/trx/.conda/envs/off-moo/lib/python3.8/site-packages/numpy/__init__.py", line 305, in __getattr__
+    raise AttributeError(__former_attrs__[attr])
+AttributeError: module 'numpy' has no attribute 'float'.
+`np.float` was a deprecated alias for the builtin `float`. To avoid this error in existing code, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations

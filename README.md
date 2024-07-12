@@ -6,6 +6,8 @@ Benchmark and baselines for offline multi-objective optimization.
 
 ## Benchmark Installation
 
+For a stable installation and usage, we suggest that you use a machine with ``CUDA version 11.7`` or higher.
+
 ### Data Downloading
 
 Our proposed offline collected data can be accessed and downloaded via [Google Drive](https://drive.google.com/drive/folders/1SvU-p4Q5KAjPlHrDJ0VGiU2Te_v9g3rT?usp=drive_link).
@@ -122,9 +124,12 @@ print(sim.data.qpos)
 3. We provide serveral test suites under ``tests/`` folder to check for successful installation.
 4. If you meet up with ``libstdc++.so.6: version `GLIBCXX_3.4.29' not found`` issue, since the reasons can be various, we recommend that you refer to [StackOverflow: Where can I find GLIBCXX_3.4.29?](https://stackoverflow.com/questions/65349875/where-can-i-find-glibcxx-3-4-29) or [GitHub: libstdc++.so.6: version `GLIBCXX_3.4.29' not found](https://github.com/pybind/pybind11/discussions/3453) for further advice to solve this issue.
 5. We have test different hardware environments, including:
+    - Ubuntu 22.04, 4x4090, CUDA 12.3
     - Ubuntu 22.04, 4x4090, CUDA 12.1
     - Ubuntu 22.04, 8xV100(32G), CUDA 12.1
+    - Ubuntu 22.04, 1x3090, CUDA 12.0
     - Ubuntu 20.04, 2x3090, CUDA 11.8
+    - Ubuntu 20.04, 2xA6000, CUDA 11.8
 
 
 

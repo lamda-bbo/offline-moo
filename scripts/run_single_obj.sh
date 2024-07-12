@@ -1,27 +1,28 @@
 python config_evoxbench.py
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mujoco210/bin
-# for env_name in "in1kmop9"; do
-#     for seed in 1; do
-#         for train_data_mode in "onlybest_1"; do
-#             for train_mode in "roma"; do
-#                 for output_size in 256; do
-#                     python config_evoxbench.py && \ 
-#                     CUDA_VISIBLE_DEVICES=1 \
-#                     python scripts/single_obj_nn.py \
-#                     --env-name ${env_name} \
-#                     --seed ${seed} \
-#                     --normalize-y \
-#                     --num-solutions ${output_size} \
-#                     --filter-type best \
-#                     --train-mode ${train_mode} \
-#                     --train-data-mode ${train_data_mode} \
-#                     --reweight-mode none \
-#                     --df-name "1-test-hv.csv"
-#                 done
-#             done
-#         done
-#     done
-# done
+for env_name in "zdt3"; do
+    for seed in 1; do
+        for train_data_mode in "onlybest_1"; do
+            for train_mode in "tri_mentoring"; do
+                for output_size in 256; do
+                    python config_evoxbench.py && \
+                    CUDA_VISIBLE_DEVICES=0 \
+                    python scripts/single_obj_nn.py \
+                    --env-name ${env_name} \
+                    --seed ${seed} \
+                    --normalize-x \
+                    --normalize-y \
+                    --num-solutions ${output_size} \
+                    --filter-type best \
+                    --train-mode ${train_mode} \
+                    --train-data-mode ${train_data_mode} \
+                    --reweight-mode none \
+                    --df-name "1-test-hv.csv"
+                done
+            done
+        done
+    done
+done
 
 # for env_name in "c10mop1" "c10mop2" "c10mop3" "c10mop4" "c10mop5" "c10mop6" "c10mop7" "c10mop8" "c10mop9"; do
 #     for seed in 1; do
@@ -254,189 +255,189 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mujoco210/bin
 #     done
 # done
 
-for env_name in "mokp_100" "mokp_50"; do
-    for seed in 1; do
-        for train_data_mode in "none"; do
-            for train_mode in "none"; do
-                for output_size in 256; do
-                    python config_evoxbench.py &&  \
-                    CUDA_VISIBLE_DEVICES=1 \
-                    python scripts/single_obj_nn.py \
-                    --env-name ${env_name} \
-                    --seed ${seed} \
-                    --normalize-y \
-                    --num-solutions ${output_size} \
-                    --filter-type best \
-                    --train-data-mode ${train_data_mode} \
-                    --train-mode ${train_mode} \
-                    --reweight-mode none \
-                    --df-name "1-test-hv.csv"
-                done
-            done
-        done
-    done
-done
+# for env_name in "mokp_100" "mokp_50"; do
+#     for seed in 1; do
+#         for train_data_mode in "none"; do
+#             for train_mode in "none"; do
+#                 for output_size in 256; do
+#                     python config_evoxbench.py &&  \
+#                     CUDA_VISIBLE_DEVICES=1 \
+#                     python scripts/single_obj_nn.py \
+#                     --env-name ${env_name} \
+#                     --seed ${seed} \
+#                     --normalize-y \
+#                     --num-solutions ${output_size} \
+#                     --filter-type best \
+#                     --train-data-mode ${train_data_mode} \
+#                     --train-mode ${train_mode} \
+#                     --reweight-mode none \
+#                     --df-name "1-test-hv.csv"
+#                 done
+#             done
+#         done
+#     done
+# done
 
-for env_name in "mokp_100" "mokp_50"; do
-    for seed in 1; do
-        for train_data_mode in "onlybest_1"; do
-            for train_mode in "com" "iom" "roma"; do
-                for output_size in 256; do
-                    python config_evoxbench.py &&  \
-                    CUDA_VISIBLE_DEVICES=1 \
-                    python scripts/single_obj_nn.py \
-                    --env-name ${env_name} \
-                    --seed ${seed} \
-                    --normalize-y \
-                    --num-solutions ${output_size} \
-                    --filter-type best \
-                    --train-data-mode ${train_data_mode} \
-                    --train-mode ${train_mode} \
-                    --reweight-mode none \
-                    --df-name "1-test-hv.csv"
-                done
-            done
-        done
-    done
-done
+# for env_name in "mokp_100" "mokp_50"; do
+#     for seed in 1; do
+#         for train_data_mode in "onlybest_1"; do
+#             for train_mode in "com" "iom" "roma"; do
+#                 for output_size in 256; do
+#                     python config_evoxbench.py &&  \
+#                     CUDA_VISIBLE_DEVICES=1 \
+#                     python scripts/single_obj_nn.py \
+#                     --env-name ${env_name} \
+#                     --seed ${seed} \
+#                     --normalize-y \
+#                     --num-solutions ${output_size} \
+#                     --filter-type best \
+#                     --train-data-mode ${train_data_mode} \
+#                     --train-mode ${train_mode} \
+#                     --reweight-mode none \
+#                     --df-name "1-test-hv.csv"
+#                 done
+#             done
+#         done
+#     done
+# done
 
-for env_name in "mokp_100" "mokp_50"; do
-    for seed in 1; do
-        for train_data_mode in "onlybest_1"; do
-            for train_mode in "tri_mentoring" "ict"; do
-                for output_size in 256 32; do
-                    python config_evoxbench.py &&  \
-                    CUDA_VISIBLE_DEVICES=1 \
-                    python scripts/single_obj_nn.py \
-                    --env-name ${env_name} \
-                    --seed ${seed} \
-                    --normalize-y \
-                    --num-solutions ${output_size} \
-                    --filter-type best \
-                    --train-data-mode ${train_data_mode} \
-                    --train-mode ${train_mode} \
-                    --reweight-mode none \
-                    --df-name "1-test-hv.csv"
-                done
-            done
-        done
-    done
-done
+# for env_name in "mokp_100" "mokp_50"; do
+#     for seed in 1; do
+#         for train_data_mode in "onlybest_1"; do
+#             for train_mode in "tri_mentoring" "ict"; do
+#                 for output_size in 256 32; do
+#                     python config_evoxbench.py &&  \
+#                     CUDA_VISIBLE_DEVICES=1 \
+#                     python scripts/single_obj_nn.py \
+#                     --env-name ${env_name} \
+#                     --seed ${seed} \
+#                     --normalize-y \
+#                     --num-solutions ${output_size} \
+#                     --filter-type best \
+#                     --train-data-mode ${train_data_mode} \
+#                     --train-mode ${train_mode} \
+#                     --reweight-mode none \
+#                     --df-name "1-test-hv.csv"
+#                 done
+#             done
+#         done
+#     done
+# done
 
-for env_name in "mokp_100" "mokp_50"; do
-    for seed in 1; do
-        for train_data_mode in "none"; do
-            for train_mode in "none"; do
-                for output_size in 256 32; do
-                    python config_evoxbench.py &&  \
-                    CUDA_VISIBLE_DEVICES=1 \
-                    python scripts/single_obj_nn.py \
-                    --env-name ${env_name} \
-                    --seed ${seed} \
-                    --normalize-y \
-                    --num-solutions ${output_size} \
-                    --filter-type best \
-                    --train-data-mode ${train_data_mode} \
-                    --train-mode ${train_mode} \
-                    --reweight-mode none \
-                    --df-name "1-test-hv.csv"
-                done
-            done
-        done
-    done
-done
+# for env_name in "mokp_100" "mokp_50"; do
+#     for seed in 1; do
+#         for train_data_mode in "none"; do
+#             for train_mode in "none"; do
+#                 for output_size in 256 32; do
+#                     python config_evoxbench.py &&  \
+#                     CUDA_VISIBLE_DEVICES=1 \
+#                     python scripts/single_obj_nn.py \
+#                     --env-name ${env_name} \
+#                     --seed ${seed} \
+#                     --normalize-y \
+#                     --num-solutions ${output_size} \
+#                     --filter-type best \
+#                     --train-data-mode ${train_data_mode} \
+#                     --train-mode ${train_mode} \
+#                     --reweight-mode none \
+#                     --df-name "1-test-hv.csv"
+#                 done
+#             done
+#         done
+#     done
+# done
 
-for env_name in "mokp_100" "mokp_50"; do
-    for seed in 2; do
-        for train_data_mode in "onlybest_1"; do
-            for train_mode in "tri_mentoring" "ict"; do
-                for output_size in 256 32; do
-                    python config_evoxbench.py &&  \
-                    CUDA_VISIBLE_DEVICES=1 \
-                    python scripts/single_obj_nn.py \
-                    --env-name ${env_name} \
-                    --seed ${seed} \
-                    --normalize-y \
-                    --num-solutions ${output_size} \
-                    --filter-type best \
-                    --train-data-mode ${train_data_mode} \
-                    --train-mode ${train_mode} \
-                    --reweight-mode none \
-                    --df-name "2-test-hv.csv"
-                done
-            done
-        done
-    done
-done
+# for env_name in "mokp_100" "mokp_50"; do
+#     for seed in 2; do
+#         for train_data_mode in "onlybest_1"; do
+#             for train_mode in "tri_mentoring" "ict"; do
+#                 for output_size in 256 32; do
+#                     python config_evoxbench.py &&  \
+#                     CUDA_VISIBLE_DEVICES=1 \
+#                     python scripts/single_obj_nn.py \
+#                     --env-name ${env_name} \
+#                     --seed ${seed} \
+#                     --normalize-y \
+#                     --num-solutions ${output_size} \
+#                     --filter-type best \
+#                     --train-data-mode ${train_data_mode} \
+#                     --train-mode ${train_mode} \
+#                     --reweight-mode none \
+#                     --df-name "2-test-hv.csv"
+#                 done
+#             done
+#         done
+#     done
+# done
 
-for env_name in "mokp_100" "mokp_50"; do
-    for seed in 2; do
-        for train_data_mode in "none"; do
-            for train_mode in "none"; do
-                for output_size in 256 32; do
-                    python config_evoxbench.py &&  \
-                    CUDA_VISIBLE_DEVICES=1 \
-                    python scripts/single_obj_nn.py \
-                    --env-name ${env_name} \
-                    --seed ${seed} \
-                    --normalize-y \
-                    --num-solutions ${output_size} \
-                    --filter-type best \
-                    --train-data-mode ${train_data_mode} \
-                    --train-mode ${train_mode} \
-                    --reweight-mode none \
-                    --df-name "2-test-hv.csv"
-                done
-            done
-        done
-    done
-done
+# for env_name in "mokp_100" "mokp_50"; do
+#     for seed in 2; do
+#         for train_data_mode in "none"; do
+#             for train_mode in "none"; do
+#                 for output_size in 256 32; do
+#                     python config_evoxbench.py &&  \
+#                     CUDA_VISIBLE_DEVICES=1 \
+#                     python scripts/single_obj_nn.py \
+#                     --env-name ${env_name} \
+#                     --seed ${seed} \
+#                     --normalize-y \
+#                     --num-solutions ${output_size} \
+#                     --filter-type best \
+#                     --train-data-mode ${train_data_mode} \
+#                     --train-mode ${train_mode} \
+#                     --reweight-mode none \
+#                     --df-name "2-test-hv.csv"
+#                 done
+#             done
+#         done
+#     done
+# done
 
-for env_name in "mokp_100" "mokp_50"; do
-    for seed in 1; do
-        for train_data_mode in "onlybest_1"; do
-            for train_mode in "com" "iom" "roma"; do
-                for output_size in 256 32; do
-                    python config_evoxbench.py &&  \
-                    CUDA_VISIBLE_DEVICES=1 \
-                    python scripts/single_obj_nn.py \
-                    --env-name ${env_name} \
-                    --seed ${seed} \
-                    --normalize-y \
-                    --num-solutions ${output_size} \
-                    --filter-type best \
-                    --train-data-mode ${train_data_mode} \
-                    --train-mode ${train_mode} \
-                    --reweight-mode none \
-                    --df-name "1-test-hv.csv"
-                done
-            done
-        done
-    done
-done
+# for env_name in "mokp_100" "mokp_50"; do
+#     for seed in 1; do
+#         for train_data_mode in "onlybest_1"; do
+#             for train_mode in "com" "iom" "roma"; do
+#                 for output_size in 256 32; do
+#                     python config_evoxbench.py &&  \
+#                     CUDA_VISIBLE_DEVICES=1 \
+#                     python scripts/single_obj_nn.py \
+#                     --env-name ${env_name} \
+#                     --seed ${seed} \
+#                     --normalize-y \
+#                     --num-solutions ${output_size} \
+#                     --filter-type best \
+#                     --train-data-mode ${train_data_mode} \
+#                     --train-mode ${train_mode} \
+#                     --reweight-mode none \
+#                     --df-name "1-test-hv.csv"
+#                 done
+#             done
+#         done
+#     done
+# done
 
-for env_name in "mokp_100" "mokp_50"; do
-    for seed in 2; do
-        for train_data_mode in "onlybest_1"; do
-            for train_mode in "com" "iom" "roma"; do
-                for output_size in 256 32; do
-                    python config_evoxbench.py &&  \
-                    CUDA_VISIBLE_DEVICES=1 \
-                    python scripts/single_obj_nn.py \
-                    --env-name ${env_name} \
-                    --seed ${seed} \
-                    --normalize-y \
-                    --num-solutions ${output_size} \
-                    --filter-type best \
-                    --train-data-mode ${train_data_mode} \
-                    --train-mode ${train_mode} \
-                    --reweight-mode none \
-                    --df-name "2-test-hv.csv"
-                done
-            done
-        done
-    done
-done
+# for env_name in "mokp_100" "mokp_50"; do
+#     for seed in 2; do
+#         for train_data_mode in "onlybest_1"; do
+#             for train_mode in "com" "iom" "roma"; do
+#                 for output_size in 256 32; do
+#                     python config_evoxbench.py &&  \
+#                     CUDA_VISIBLE_DEVICES=1 \
+#                     python scripts/single_obj_nn.py \
+#                     --env-name ${env_name} \
+#                     --seed ${seed} \
+#                     --normalize-y \
+#                     --num-solutions ${output_size} \
+#                     --filter-type best \
+#                     --train-data-mode ${train_data_mode} \
+#                     --train-mode ${train_mode} \
+#                     --reweight-mode none \
+#                     --df-name "2-test-hv.csv"
+#                 done
+#             done
+#         done
+#     done
+# done
 
 
 # for env_name in "re41"; do
