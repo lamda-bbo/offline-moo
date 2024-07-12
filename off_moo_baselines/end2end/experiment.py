@@ -1,5 +1,5 @@
-import ray 
 import os 
+import sys 
 import psutil
 import torch 
 import datetime 
@@ -9,6 +9,22 @@ BASE_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "..", ".."
 )
+
+sys.path.append(BASE_PATH)
+
+def run():
+    from utils import process_args 
+    from off_moo_baselines.end2end import end2end_run 
+    config = process_args(return_dict=True)
+    
+    results_dir = os.path.join(BASE_PATH, "results")
+    model_save_dir = os.path.join(BASE_PATH, "model")
+    
+    config["results_dir"] = results_dir
+    config["model_save_dir"] = model_save_dir
+    
+    end2end_run(config)
+    
 
 def SyntheticFunction(train_mode: str = "Vallina",
                       tasks: List[str] = [],
@@ -56,7 +72,7 @@ def SyntheticFunction(train_mode: str = "Vallina",
             'results_dir': results_dir,
             'model_save_dir': model_dir,
             'use_wandb': False,
-            'wandb_api': '9f59486bed008c431a4a5804c35bb3c065d0b658',
+            # 'wandb_api': '9f59486bed008c431a4a5804c35bb3c065d0b658',
             'run_type': 'debug',
             'seed': ray.tune.grid_search(seeds),
             'model': 'End2End',
@@ -666,3 +682,6 @@ def ScientificDesignSequence(train_mode: str = "Vallina",
                              'gpu': gpus / num_parallel - 0.01 if gpus / num_parallel < 1 \
                                  else gpus // num_parallel}
     )
+    
+if __name__ == "__main__":
+    run()

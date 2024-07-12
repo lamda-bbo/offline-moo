@@ -312,7 +312,7 @@ index_to_op_str = {
     4: 'none',
 }
 
-class NasBench201Test(BaseProblem):
+class NASBench201Test(BaseProblem):
     def __init__(self, n_obj=3, nadir_point=None, ideal_point=None):
         super().__init__(
             name=self.__class__.__name__,
@@ -323,11 +323,11 @@ class NasBench201Test(BaseProblem):
             ideal_point=ideal_point,
         )
 
-        from evoxbench.database.init import config
-        mo_nas_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "m2bo_bench", "problem", "mo_nas")
-        data_path = os.path.join(mo_nas_path, "data")
-        database_path = os.path.join(mo_nas_path, "datapath")
-        config(data_path=data_path, database_path=database_path)
+        # from evoxbench.database.init import config
+        # mo_nas_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "m2bo_bench", "problem", "mo_nas")
+        # data_path = os.path.join(mo_nas_path, "data")
+        # database_path = os.path.join(mo_nas_path, "datapath")
+        # config(data_path=data_path, database_path=database_path)
 
         self.objs = "err&params&edgegpu_latency"
         self.benchmark = NASBench201Benchmark(objs=self.objs, normalized_objectives=False)

@@ -56,6 +56,20 @@ MOCOPermutationDict = {
     "mokp_50": "BiKP50-Exact-v0",
     "mokp_100": "BiKP100-Exact-v0",
     "mokp_200": "BiKP200-Exact-v0",
+    
+    "bi_tsp_20": "BiTSP20-Exact-v0",
+    "bi_tsp_50": "BiTSP50-Exact-v0",
+    "bi_tsp_100": "BiTSP100-Exact-v0",
+    "bi_tsp_500": "BiTSP500-Exact-v0",
+    "tri_tsp_20": "TriTSP20-Exact-v0",
+    "tri_tsp_50": "TriTSP50-Exact-v0",
+    "tri_tsp_100": "TriTSP100-Exact-v0",
+    "bi_cvrp_20": "BiCVRP20-Exact-v0",
+    "bi_cvrp_50": "BiCVRP50-Exact-v0",
+    "bi_cvrp_100": "BiCVRP100-Exact-v0",
+    "bi_kp_50": "BiKP50-Exact-v0",
+    "bi_kp_100": "BiKP100-Exact-v0",
+    "bi_kp_200": "BiKP200-Exact-v0",
 }
 
 MOCOContinuousDict = {

@@ -2,6 +2,7 @@ import off_moo_bench as ob
 import os 
 import wandb 
 import numpy as np 
+import pandas as pd 
 import datetime 
 import json 
 import matplotlib.pyplot as plt 
@@ -14,10 +15,14 @@ from off_moo_baselines.end2end.surrogate_problem import End2EndSurrogateProblem
 from off_moo_baselines.mo_solver.moea_solver import MOEASolver
 from off_moo_baselines.mo_solver.callback import RecordCallback
 from off_moo_baselines.data import tkwargs, get_dataloader
+from off_moo_bench.task_set import ALLTASKSDICT
 from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.evaluation.plot import plot_y
 
-def end2end_run(config):
+def end2end_run(config: dict):
+    
+    if config["task"] in ALLTASKSDICT.keys():
+        config["task"] = ALLTASKSDICT[config["task"]]
     
     results_dir = os.path.join(config['results_dir'], 
                                f"End2End-{config['train_mode']}-{config['task']}")
@@ -41,7 +46,7 @@ def end2end_run(config):
             group=f"{config['model']}-{config['train_mode']}",
             job_type=config['run_type'],
             mode="online",
-            dir=config['results_dir']
+            dir=os.path.join(config['results_dir'], '..')
         )
     
     with open(os.path.join(logging_dir, "params.json"), "w") as f:
@@ -63,21 +68,26 @@ def end2end_run(config):
     X_test = task.x_test.copy()
     y_test = task.y_test.copy()
     
-    if config['normalize_xs']:
-        task.map_normalize_x()
-        X = task.normalize_x(X)
-        X_test = task.normalize_x(X_test)
     if config['to_logits']:
         assert task.is_discrete 
         task.map_to_logits()
         X = task.to_logits(X)
         X_test = task.to_logits(X_test)
+    if config['normalize_xs']:
+        task.map_normalize_x()
+        X = task.normalize_x(X)
+        X_test = task.normalize_x(X_test)
     if config['normalize_ys']:
         task.map_normalize_y()
         y = task.normalize_y(y)
         y_test = task.normalize_y(y_test)
     
-    data_size, n_dim = tuple(X.shape)
+    if config['to_logits']:
+        data_size, n_dim, n_classes = tuple(X.shape)
+        X = X.reshape(-1, n_dim * n_classes)
+        X_test = X_test.reshape(-1, n_dim * n_classes)
+    else:
+        data_size, n_dim = tuple(X.shape)
     n_obj = y.shape[1]
         
     model_save_dir = config['model_save_dir']
@@ -89,7 +99,7 @@ def end2end_run(config):
     )
     
     model = End2EndModel(
-        n_dim=n_dim,
+        n_dim=n_dim * n_classes if config['to_logits'] else n_dim,
         n_obj=n_obj,
         hidden_size=[2048, 2048],
         save_path=model_save_path,
@@ -117,20 +127,8 @@ def end2end_run(config):
         retrain_model=config["retrain_model"]
     )
     
-    # if config['use_wandb']:
-    #     wandb.init(
-    #         project="Offline-MOO",
-    #         name=run_name + ts_name,
-    #         config=config,
-    #         group=f"End2End-{config['train_mode']}",
-    #         job_type="search",
-    #         mode="online",
-    #         dir=logging_dir,
-    #         reinit=True
-    #     )
-    
     surrogate_problem = End2EndSurrogateProblem(
-        n_var=n_dim, n_obj=n_obj, model=model
+        n_var=n_dim * n_classes if config['to_logits'] else n_dim, n_obj=n_obj, model=model
     )
     
     callback = RecordCallback(
@@ -151,9 +149,14 @@ def end2end_run(config):
     res = solver.solve(surrogate_problem, X=X, Y=y)
     
     res_x = res["x"]
+    if config['to_logits']:
+        res_x = res_x.reshape(-1, n_dim, n_classes)
     if config['normalize_xs']:
         task.map_denormalize_x()
         res_x = task.denormalize_x(res_x)
+    if config['to_logits']:
+        task.map_to_integers()
+        res_x = task.to_integers(res_x)
     
     res_y = task.predict(res_x)
     visible_masks = np.ones(len(res_y))
@@ -197,6 +200,10 @@ def end2end_run(config):
         "hypervolume/50th": hv_value_50_percentile,
         "evaluation_step": 1,
     }
+    
+    df = pd.DataFrame([hv_results])
+    filename = os.path.join(config["results_dir"], "hv_results.csv")
+    df.to_csv(filename, index=False)
     
     if config["use_wandb"]:
         wandb.log(hv_results)
