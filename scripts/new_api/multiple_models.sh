@@ -19,12 +19,12 @@
 # "zinc regex rfp molecule"
 
 seeds="1000 2000"
-tasks="nb201_test"
+tasks="re21"
 model="MultipleModels"
-train_modes="TriMentoring"
+train_modes="ICT"
 
 MAX_JOBS=18
-AVAILABLE_GPUS="1 2 3"
+AVAILABLE_GPUS="1 3"
 MAX_RETRIES=1
 
 get_gpu_allocation() {

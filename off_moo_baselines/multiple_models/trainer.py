@@ -1,6 +1,7 @@
 import os 
 import wandb 
 import torch
+import higher 
 import numpy as np 
 import torch.nn as nn 
 import torch.nn.functional as F
@@ -20,6 +21,8 @@ def get_trainer(train_mode):
         trainer = RoMATrainer
     elif train_mode.lower() == "trimentoring":
         trainer = TriMentoringTrainer
+    elif train_mode.lower() == "ict":
+        trainer = ICTTrainer
     else:
         trainer = SingleModelBaseTrainer
     return trainer
@@ -1005,3 +1008,260 @@ class TriMentoringTrainer(SingleModelBaseTrainer):
             # if self.use_wandb:
             #     statistics[f"model_{self.which_obj}/finetune_epoch"] = x_i
             #     wandb.log(statistics)
+            
+class ICTTrainer(TriMentoringTrainer):
+    def __init__(self, model, config):
+        super(TriMentoringTrainer, self).__init__(model, config)
+        self.reweight_mode = config["reweight_mode"]
+        self.topk = config["topk"]
+        self.ft_lr = config["ft_lr"]
+        self.alpha = config["alpha"]
+        self.wd = config["wd"]
+        self.Tmax = config["Tmax"]
+        self.K = config["K"]
+        self.noise_coefficient = config["noise_coefficient"]
+        self.mu = config["mu"]
+        self.std = config["std"]
+        self.num_coteaching = config["num_coteaching"]
+        self.clamp_norm = config["clamp_norm"]
+        self.clamp_min = config["clamp_min"]
+        self.clamp_max = config["clamp_max"]
+        self.beta = config["beta"]
+        
+        from utils import now_seed
+        self.initial_seed = now_seed
+        
+    # Unpacked Co-teaching Loss function
+    def loss_coteaching(self, y_1, y_2, t, num_remember):
+        # ind, noise_or_not
+        loss_1 = F.mse_loss(y_1, t, reduction='none').view(128)
+        ind_1_sorted = np.argsort(loss_1.cpu().data).cuda()
+        loss_1_sorted = loss_1[ind_1_sorted]
+
+        loss_2 = F.mse_loss(y_2, t, reduction='none').view(128)
+        ind_2_sorted = np.argsort(loss_2.cpu().data).cuda()
+        loss_2_sorted = loss_2[ind_2_sorted]
+
+        ind_1_update = ind_1_sorted[:num_remember]
+        ind_2_update = ind_2_sorted[:num_remember]
+        # exchange
+        loss_1_update = F.mse_loss(y_1[ind_2_update], t[ind_2_update], reduction='none')
+        loss_2_update = F.mse_loss(y_2[ind_1_update], t[ind_1_update], reduction='none')
+
+        return loss_1_update, loss_2_update
+    
+    def launch(self, 
+               train_loader: Optional[DataLoader] = None,
+               val_loader: Optional[DataLoader] = None,
+               test_loader: Optional[DataLoader] = None,
+               retrain_model: bool = True):
+        
+        if not retrain_model and os.path.exists(self.model.save_path):
+            self.model.load()
+            return 
+        
+        assert train_loader is not None 
+        assert val_loader is not None 
+        
+        self.n_obj = None 
+        self.min_mse = float("inf")
+        statistics = {}
+        
+        for model in self.model.models:
+            self.train_single_model(model, train_loader, val_loader, test_loader)
+        
+        best_x = self.config["best_x"]
+        best_y = self.config["best_y"]
+        indexs = torch.argsort(best_y.squeeze())
+        
+        # get top k candidates
+        if self.reweight_mode == "top128":
+            index_val = indexs[-self.topk:]
+        elif self.reweight_mode == "half":
+            index_val = indexs[-(len(indexs) // 2):]
+        else:
+            index_val = indexs
+            
+        x_val = deepcopy(best_x[index_val])
+        label_val = deepcopy(best_y[index_val])
+        x_init = deepcopy(best_x[indexs[:1]])
+        
+        models = self.model.models
+        f1, f2, f3 = models[0], models[1], models[2]
+        
+        candidate = x_init[0]  # i.e., x_0
+        candidate.requires_grad = True
+        candidate_opt = Adam([candidate], lr=self.ft_lr)
+        optimizer1 = torch.optim.Adam(f1.parameters(), lr=self.alpha, weight_decay=self.wd)
+        optimizer2 = torch.optim.Adam(f2.parameters(), lr=self.alpha, weight_decay=self.wd)
+        optimizer3 = torch.optim.Adam(f3.parameters(), lr=self.alpha, weight_decay=self.wd)
+        for i in range(1, self.Tmax + 1):
+            loss = 1.0 / 3.0 * (f1(candidate) + f2(candidate) + f3(candidate))
+            # Reverse since minimization
+            candidate_opt.zero_grad()
+            loss.backward()
+            candidate_opt.step()
+            x_train = []
+            y1_label = []
+            y2_label = []
+            y3_label = []
+            # sample K points around current candidate
+            for k in range(self.K):
+                temp_x = candidate.data + self.noise_coefficient * np.random.normal(self.mu,
+                                                                                    self.std)  # add gaussian noise
+                x_train.append(temp_x)
+                temp_y1 = f1(temp_x)
+                y1_label.append(temp_y1)
+
+                temp_y2 = f2(temp_x)
+                y2_label.append(temp_y2)
+
+                temp_y3 = f3(temp_x)
+                y3_label.append(temp_y3)
+
+            x_train = torch.stack(x_train)
+            y1_label = torch.Tensor(y1_label).to(**tkwargs)
+            y1_label = torch.reshape(y1_label, (self.K, 1))
+            y2_label = torch.Tensor(y2_label).to(**tkwargs)
+            y2_label = torch.reshape(y2_label, (self.K, 1))
+            y3_label = torch.Tensor(y3_label).to(**tkwargs)
+            y3_label = torch.reshape(y3_label, (self.K, 1))
+
+            # Round 1, use f3 to update f1 and f2
+            weight_1 = torch.ones(self.num_coteaching).to(**tkwargs)
+            weight_1.requires_grad = True
+            weight_2 = torch.ones(self.num_coteaching).to(**tkwargs)
+            weight_2.requires_grad = True
+
+            with higher.innerloop_ctx(f1, optimizer1) as (model1, opt1):
+                with higher.innerloop_ctx(f2, optimizer2) as (model2, opt2):
+                    l1, l2 = self.loss_coteaching(model1(x_train), model2(x_train), y3_label, self.num_coteaching)
+
+                    l1_t = weight_1 * l1
+                    l1_t = torch.sum(l1_t) / self.num_coteaching
+                    opt1.step(l1_t)
+
+                    logit1 = model1(x_val)
+                    loss1_v = F.mse_loss(logit1, label_val)
+                    g1 = torch.autograd.grad(loss1_v, weight_1)[0].data
+                    g1 = F.normalize(g1, p=self.clamp_norm, dim=0)
+                    g1 = torch.clamp(g1, min=self.clamp_min, max=self.clamp_max)
+                    weight_1 = weight_1 - self.beta * g1
+                    weight_1 = torch.clamp(weight_1, min=0, max=2)
+
+                    l2_t = weight_2 * l2
+                    l2_t = torch.sum(l2_t) / self.num_coteaching
+                    opt2.step(l2_t)
+
+                    logit2 = model2(x_val)
+                    loss2_v = F.mse_loss(logit2, label_val)
+                    g2 = torch.autograd.grad(loss2_v, weight_2)[0].data
+                    g2 = F.normalize(g2, p=self.clamp_norm, dim=0)
+                    g2 = torch.clamp(g2, min=self.clamp_min, max=self.clamp_max)
+                    weight_2 = weight_2 - self.beta * g2
+                    weight_2 = torch.clamp(weight_2, min=0, max=2)
+
+            loss1 = weight_1 * F.mse_loss(f1(x_train), y3_label, reduction='none')
+            loss1 = torch.sum(loss1) / self.num_coteaching
+            optimizer1.zero_grad()
+            loss1.backward()
+            optimizer1.step()
+
+            loss2 = weight_2 * F.mse_loss(f2(x_train), y3_label, reduction='none')
+            loss2 = torch.sum(loss2) / self.num_coteaching
+            optimizer2.zero_grad()
+            loss2.backward()
+            optimizer2.step()
+
+            # Round 2, use f2 to update f1 and f3
+            weight_1 = torch.ones(self.num_coteaching).to(**tkwargs)
+            weight_1.requires_grad = True
+            weight_3 = torch.ones(self.num_coteaching).to(**tkwargs)
+            weight_3.requires_grad = True
+
+            with higher.innerloop_ctx(f1, optimizer1) as (model1, opt1):
+                with higher.innerloop_ctx(f3, optimizer3) as (model3, opt3):
+                    l1, l3 = self.loss_coteaching(model1(x_train), model3(x_train), y2_label, self.num_coteaching)
+
+                    l1_t = weight_1 * l1
+                    l1_t = torch.sum(l1_t) / self.num_coteaching
+                    opt1.step(l1_t)
+
+                    logit1 = model1(x_val)
+                    loss1_v = F.mse_loss(logit1, label_val)
+                    g1 = torch.autograd.grad(loss1_v, weight_1)[0].data
+                    g1 = F.normalize(g1, p=self.clamp_norm, dim=0)
+                    g1 = torch.clamp(g1, min=self.clamp_min, max=self.clamp_max)
+                    weight_1 = weight_1 - self.beta * g1
+                    weight_1 = torch.clamp(weight_1, min=0, max=2)
+
+                    l3_t = weight_3 * l3
+                    l3_t = torch.sum(l3_t) / self.num_coteaching
+                    opt3.step(l3_t)
+
+                    logit3 = model3(x_val)
+                    loss3_v = F.mse_loss(logit3, label_val)
+                    g3 = torch.autograd.grad(loss3_v, weight_3)[0].data
+                    g3 = F.normalize(g3, p=self.clamp_norm, dim=0)
+                    g3 = torch.clamp(g3, min=self.clamp_min, max=self.clamp_max)
+                    weight_3 = weight_3 - self.beta * g3
+                    weight_3 = torch.clamp(weight_3, min=0, max=2)
+
+            loss1 = weight_1 * F.mse_loss(f1(x_train), y2_label, reduction='none')
+            loss1 = torch.sum(loss1) / self.num_coteaching
+            optimizer1.zero_grad()
+            loss1.backward()
+            optimizer1.step()
+
+            loss3 = weight_3 * F.mse_loss(f3(x_train), y2_label, reduction='none')
+            loss3 = torch.sum(loss3) / self.num_coteaching
+            optimizer3.zero_grad()
+            loss3.backward()
+            optimizer3.step()
+
+            # Round 3, use f1 to update f2 and f3
+            weight_2 = torch.ones(self.num_coteaching).to(**tkwargs)
+            weight_2.requires_grad = True
+            weight_3 = torch.ones(self.num_coteaching).to(**tkwargs)
+            weight_3.requires_grad = True
+            with higher.innerloop_ctx(f2, optimizer2) as (model2, opt2):
+                with higher.innerloop_ctx(f3, optimizer3) as (model3, opt3):
+                    l2, l3 = self.loss_coteaching(model2(x_train), model3(x_train), y1_label, self.num_coteaching)
+
+                    l2_t = weight_2 * l2
+                    l2_t = torch.sum(l2_t) / self.num_coteaching
+                    opt2.step(l2_t)
+
+                    logit2 = model2(x_val)
+                    loss2_v = F.mse_loss(logit2, label_val)
+                    g2 = torch.autograd.grad(loss2_v, weight_2)[0].data
+                    g2 = F.normalize(g2, p=self.clamp_norm, dim=0)
+                    g2 = torch.clamp(g2, min=self.clamp_min, max=self.clamp_max)
+                    weight_2 = weight_2 - self.beta * g2
+                    weight_2 = torch.clamp(weight_2, min=0, max=2)
+
+                    l3_t = weight_3 * l3
+                    l3_t = torch.sum(l3_t) / self.num_coteaching
+                    opt3.step(l3_t)
+
+                    logit3 = model3(x_val)
+                    loss3_v = F.mse_loss(logit3, label_val)
+                    g3 = torch.autograd.grad(loss3_v, weight_3)[0].data
+                    g3 = F.normalize(g3, p=self.clamp_norm, dim=0)
+                    g3 = torch.clamp(g3, min=self.clamp_min, max=self.clamp_max)
+                    weight_3 = weight_3 - self.beta * g3
+                    weight_3 = torch.clamp(weight_3, min=0, max=2)
+
+            loss2 = weight_2 * F.mse_loss(f2(x_train), y1_label, reduction='none')
+            loss2 = torch.sum(loss2) / self.num_coteaching
+            optimizer2.zero_grad()
+            loss2.backward()
+            optimizer2.step()
+
+            loss3 = weight_3 * F.mse_loss(f3(x_train), y1_label, reduction='none')
+            loss3 = torch.sum(loss3) / self.num_coteaching
+            optimizer3.zero_grad()
+            loss3.backward()
+            optimizer3.step()
+
+        

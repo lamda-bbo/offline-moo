@@ -16,6 +16,7 @@ def get_model(model_type: str):
         'com': ConservativeObjectiveModel,
         'roma': RoMAModel,
         'trimentoring': TriMentoringModel,
+        'ict': ICTModel,
     }
     assert model_type in type2model.keys(), f"model {model_type} not found"
     return type2model[model_type]
@@ -481,3 +482,30 @@ class TriMentoringModel(nn.Module):
         valid_mse = checkpoint["valid_mse"]
         print(f"Successfully load trained model from {save_path} " 
                 f"with valid MSE = {valid_mse}")
+        
+class ICTBaseModel(TriMentoringBaseModel):
+    pass 
+
+class ICTModel(TriMentoringModel):
+    def __init__(self, n_dim, hidden_size, which_obj, 
+                 train_seeds=[2024, 2025, 2026], 
+                 save_dir=None, save_prefix=None):
+        super().__init__(n_dim, hidden_size, which_obj, train_seeds, save_dir, save_prefix)
+        from utils import now_seed, set_seed
+        initial_seed = now_seed
+        self.models = []
+        self.train_seeds = train_seeds
+        for seed in train_seeds:
+            set_seed(seed)
+            self.models.append(
+                TriMentoringBaseModel(
+                    seed=seed,
+                    input_size=n_dim,
+                    hidden_size=hidden_size,
+                    which_obj=which_obj,
+                    save_dir=save_dir,
+                    save_prefix=save_prefix
+                )
+            )
+        set_seed(initial_seed)
+        
