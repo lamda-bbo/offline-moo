@@ -3,3 +3,5 @@ normalize_ys: True
 to_logits: False
 
 record_hist: True
+
+repair: portfolio

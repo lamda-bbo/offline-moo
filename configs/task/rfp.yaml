@@ -3,3 +3,6 @@ normalize_ys: True
 to_logits: False
 
 record_hist: False
+
+crossover: lambo_sbx
+mutation: lambo_local

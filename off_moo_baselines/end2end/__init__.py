@@ -15,6 +15,7 @@ from off_moo_baselines.end2end.surrogate_problem import End2EndSurrogateProblem
 from off_moo_baselines.mo_solver.moea_solver import MOEASolver
 from off_moo_baselines.mo_solver.callback import RecordCallback
 from off_moo_baselines.data import tkwargs, get_dataloader
+from off_moo_bench.collecter import get_operator_dict
 from off_moo_bench.task_set import *
 from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.evaluation.plot import plot_y
@@ -30,7 +31,7 @@ def end2end_run(config: dict):
     
     ts = datetime.datetime.utcnow() + datetime.timedelta(hours=+8)
     ts_name = f"-ts-{ts.year}-{ts.month}-{ts.day}_{ts.hour}-{ts.minute}-{ts.second}"
-    run_name = f"End2End-{config['train_mode']}-seed{config['seed']}-{config['task']}"
+    run_name = f"End2End-{config['train_mode']}-seed{config['seed']}-{config['task']}-{config['batch_size']}"
     
     logging_dir = os.path.join(config['results_dir'], run_name + ts_name)
     os.makedirs(logging_dir, exist_ok=True)
@@ -145,6 +146,8 @@ def end2end_run(config: dict):
         config=config, logging_dir=logging_dir, iters_to_record=1
     )
     
+    genetic_operators = get_operator_dict(config)
+    
     solver = MOEASolver(
         n_gen=config["solver_n_gen"],
         pop_init_method=config["solver_init_method"],
@@ -153,6 +156,7 @@ def end2end_run(config: dict):
         algo=NSGA2,
         callback=callback if config["record_hist"] else None,
         eliminate_duplicates=True,
+        **genetic_operators,
     )
     
     res = solver.solve(surrogate_problem, X=X, Y=y)
@@ -167,7 +171,6 @@ def end2end_run(config: dict):
         task.map_to_integers()
         res_x = task.to_integers(res_x)
     
-    assert 0, res_x
     res_y = task.predict(res_x)
     visible_masks = np.ones(len(res_y))
     visible_masks[np.where(np.logical_or(np.isinf(res_y), np.isnan(res_y)))[0]] = 0

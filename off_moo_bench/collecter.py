@@ -14,6 +14,19 @@ from pymoo.operators.mutation.inversion import InversionMutation
 from off_moo_bench.problem.lambo.lambo.optimizers.mutation import LocalMutation
 from off_moo_bench.problem.lambo.lambo.utils import ResidueTokenizer
 from off_moo_bench.problem.mo_nas import get_genetic_operator
+from off_moo_bench.problem.comb_opt.mo_portfolio import PortfolioRepair
+
+class StartFromZeroRepair(Repair):
+
+    def _do(self, problem, pop, **kwargs):
+        X = pop.get("X")
+        I = np.where(X == 0)[1]
+
+        for k in range(len(X)):
+            i = I[k]
+            X[k] = np.concatenate([X[k, i:], X[k, :i]])
+        pop.set("X", X)
+        return pop
 
 _, evox_crossover, evox_mutation, evox_repair = get_genetic_operator()
 
@@ -29,17 +42,31 @@ MUTATIONS = {
     "inversion": InversionMutation(),
 }
 
-class StartFromZeroRepair(Repair):
+REPAIRS = {
+    "start_from_zero": StartFromZeroRepair(),
+    "evox_repair": evox_repair,
+    "portfolio": PortfolioRepair(),
+}
 
-    def _do(self, problem, pop, **kwargs):
-        X = pop.get("X")
-        I = np.where(X == 0)[1]
-
-        for k in range(len(X)):
-            i = I[k]
-            X[k] = np.concatenate([X[k, i:], X[k, :i]])
-        pop.set("X", X)
-        return pop
+def get_operator_dict(config: dict) -> dict:
+    operator_dict = {} 
+    if "crossover" in config.keys():
+        assert config["crossover"] in CROSSOVERS.keys(), \
+            "Crossover {crossover} not found".format(crossover=config["crossover"])
+        operator_dict["crossover"] = CROSSOVERS[config["crossover"]]
+        
+    if "mutation" in config.keys():
+        assert config["mutation"] in MUTATIONS.keys(), \
+            "Mutation {mutation} not found".format(mutation=config["mutation"])
+        operator_dict["mutation"] = MUTATIONS[config["mutation"]]
+    
+    if "repair" in config.keys():
+        assert config["repair"] in REPAIRS.keys(), \
+            "Repair {repair} not found".format(repair=config["repair"])
+        operator_dict["repair"] = REPAIRS[config["repair"]]
+        
+    return operator_dict
+        
 
 class AmateurRankAndCrowdSurvival(RankAndCrowdingSurvival):
     def __init__(self, p=0.6, nds=None) -> None:

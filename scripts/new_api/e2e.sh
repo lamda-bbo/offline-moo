@@ -18,20 +18,21 @@
 # Scientific Design
 # "zinc regex rfp molecule"
 
-seeds="1000 2000 3000 4000 5000"
-tasks="zdt1"
+seeds="1000 2000"
+tasks="c10mop1 in1kmop8"
 model="End2End"
-train_modes="Vallina"
-batch_sizes="32"
+train_modes="PcGrad"
 
 MAX_JOBS=16
-TOTAL_GPUS=2
+AVAILABLE_GPUS="2 3"
 MAX_RETRIES=1
 
 get_gpu_allocation() {
     local job_number=$1
-    local gpu_id=$((job_number % TOTAL_GPUS)) # Calculate which GPU to allocate
-    echo $gpu_id+1
+    local gpus=($AVAILABLE_GPUS)
+    local num_gpus=${#gpus[@]}
+    local gpu_id=$((job_number % num_gpus))
+    echo ${gpus[gpu_id]}
 }
 
 check_jobs() {
@@ -77,7 +78,6 @@ for seed in $seeds; do
             --model=${model} \
             --train_mode=${train_mode} \
             --task=${task} \
-            --batch_size=32 \
             --use_wandb=False \
             --retrain_model=False \
             --seed=${seed}" \

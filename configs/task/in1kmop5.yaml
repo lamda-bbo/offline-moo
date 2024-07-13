@@ -1,0 +1,9 @@
+normalize_xs: False
+normalize_ys: True 
+to_logits: False
+
+record_hist: True
+
+crossover: evox_crossover
+mutation: evox_mutation
+repair: evox_repair
