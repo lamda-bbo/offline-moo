@@ -2,6 +2,8 @@ normalize_xs: False
 normalize_ys: True 
 to_logits: False
 
+is_discrete: True
+
 record_hist: True
 
 crossover: evox_crossover

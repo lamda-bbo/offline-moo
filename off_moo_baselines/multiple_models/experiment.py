@@ -1,10 +1,12 @@
 import os 
 import sys 
 import wandb 
+import torch 
 import numpy as np 
 import pandas as pd 
 import datetime 
 import json 
+from copy import deepcopy
 
 BASE_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -15,9 +17,9 @@ sys.path.append(BASE_PATH)
 import off_moo_bench as ob
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from utils import set_seed, get_quantile_solutions
-from off_moo_baselines.multi_head.nets import MultiHeadModel
-from off_moo_baselines.multi_head.trainer import get_trainer
-from off_moo_baselines.multi_head.surrogate_problem import MultiHeadSurrogateProblem
+from off_moo_baselines.multiple_models.nets import MultipleModels
+from off_moo_baselines.multiple_models.trainer import get_trainer
+from off_moo_baselines.multiple_models.surrogate_problem import MultipleSurrogateProblem
 from off_moo_baselines.mo_solver.moea_solver import MOEASolver
 from off_moo_baselines.mo_solver.callback import RecordCallback
 from off_moo_baselines.data import tkwargs, get_dataloader
@@ -100,42 +102,55 @@ def run(config: dict):
     model_save_dir = config['model_save_dir']
     os.makedirs(model_save_dir, exist_ok=True)
     
-    model_save_path = os.path.join(
-        model_save_dir,
-        f"{config['model']}-{config['train_mode']}-{config['task']}-{config['seed']}.pt"
-    )
-    
-    model = MultiHeadModel(
+    model = MultipleModels(
         n_dim=n_dim * n_classes if config['to_logits'] else n_dim,
         n_obj=n_obj,
-        hidden_size=2048,
-        save_path=model_save_path,
+        train_mode=config['train_mode'],
+        hidden_size=[2048, 2048],
+        save_dir=config['model_save_dir'],
+        save_prefix=f"{config['model']}-{config['train_mode']}-{config['task']}-{config['seed']}"
     )
     model.set_kwargs(**tkwargs)
     
     trainer_func = get_trainer(config["train_mode"])
     
-    trainer = trainer_func(
-        forward_model=model, 
-        config=config
-    )
+    for which_obj in range(n_obj):
+        
+        y0 = y[:, which_obj].copy().reshape(-1, 1)
+        y0_test = y_test[:, which_obj].copy().reshape(-1, 1)
+        
+        config["which_obj"] = which_obj
+        config["input_shape"] = X[0].shape
+        
+        indexs = np.argsort(y0.squeeze())
+        index = indexs[:config["num_solutions"]]
+        config["best_x"] = torch.from_numpy(deepcopy(X[index])).to(**tkwargs)
+        config["best_y"] = torch.from_numpy(deepcopy(y0[index])).to(**tkwargs)
+        
+        config["x"] = torch.from_numpy(deepcopy(X)).to(**tkwargs)
+        config["y"] = torch.from_numpy(deepcopy(y0)).to(**tkwargs)
     
-    (
-        train_loader,
-        val_loader,
-        test_loader
-    ) = get_dataloader(X, y, X_test, y_test,
-                       val_ratio=0.9,
-                       batch_size=config["batch_size"])
+        trainer = trainer_func(
+            model=list(model.obj2model.values())[which_obj], 
+            config=config,
+        )
+        
+        (
+            train_loader,
+            val_loader,
+            test_loader
+        ) = get_dataloader(X, y0, X_test, y0_test,
+                        val_ratio=0.9,
+                        batch_size=config["batch_size"])
+        
+        trainer.launch(
+            train_loader,
+            val_loader,
+            test_loader,
+            retrain_model=config["retrain_model"]
+        )
     
-    trainer.launch(
-        train_loader,
-        val_loader,
-        test_loader,
-        retrain_model=config["retrain_model"]
-    )
-    
-    surrogate_problem = MultiHeadSurrogateProblem(
+    surrogate_problem = MultipleSurrogateProblem(
         n_var=n_dim * n_classes if config['to_logits'] else n_dim, 
         n_obj=n_obj, model=model
     )

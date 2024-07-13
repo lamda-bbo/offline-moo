@@ -8,6 +8,7 @@ from torch.autograd import Variable
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from typing import Optional
+from copy import deepcopy
 from off_moo_baselines.data import tkwargs, spearman_correlation
 
 def get_trainer(train_mode):
@@ -17,6 +18,8 @@ def get_trainer(train_mode):
         trainer = InvariantObjectiveTrainer
     elif train_mode.lower() == "roma":
         trainer = RoMATrainer
+    elif train_mode.lower() == "trimentoring":
+        trainer = TriMentoringTrainer
     else:
         trainer = SingleModelBaseTrainer
     return trainer
@@ -39,8 +42,13 @@ class SingleModelBaseTrainer(nn.Module):
         
         self.which_obj = config["which_obj"]
         
-        self.forward_opt = Adam(model.parameters(),
-                                lr=config["forward_lr"])
+        ################## TODO: to be fixed ################
+        try:
+            self.forward_opt = Adam(model.parameters(),
+                                    lr=config["forward_lr"])
+        except:
+            pass
+        #####################################################
         self.train_criterion = \
             lambda yhat, y: torch.sum(torch.mean((yhat-y)**2, dim=1)) * (1 / config["data_preserved_ratio"]) \
                 if config["data_pruning"] else torch.sum(torch.mean((yhat-y)**2, dim=1))
@@ -344,7 +352,7 @@ class InvariantObjectiveTrainer(SingleModelBaseTrainer):
         self.rep_opt = Adam(self.rep_model.parameters(), lr=config["rep_lr"])
         self.discriminator_opt = Adam(self.discriminator_model.parameters(),
                                       lr=config["discriminator_lr"],
-                                      betas=config["discriminator_betas"])
+                                      betas=eval(config["discriminator_betas"]))
         
         # Initialize the alpha parameter and its optimizer
         self.log_alpha = nn.Parameter(torch.log(torch.tensor(config["alpha"]).float()))
@@ -547,7 +555,7 @@ class RoMATrainer(SingleModelBaseTrainer):
         self.forward_opt = Adam(self.forward_model.parameters(), 
                                 lr=config["forward_lr"])
         
-        self.is_discrete = config["is_discrete"]
+        self.is_discrete = "is_discrete" in config.keys() and config["is_discrete"]
         if not self.is_discrete:
             self.perturb_fn = lambda x: x + 0.2 * torch.randn_like(x)
         else:
@@ -557,7 +565,7 @@ class RoMATrainer(SingleModelBaseTrainer):
         self.sol_x = config["best_x"].clone().detach().to(**tkwargs).requires_grad_(True)
         self.sol_x_opt = Adam([self.sol_x], lr=config["sol_x_opt_lr"])
         
-        from off_moo_baselines.multiple.nets import RoMAModel
+        from off_moo_baselines.multiple_models.nets import RoMAModel
         self.temp_model = RoMAModel(n_dim=self.model.n_dim,
                                     hidden_size=64,
                                     which_obj=self.model.which_obj,
@@ -799,11 +807,201 @@ class RoMATrainer(SingleModelBaseTrainer):
             statistics = self.fix_step(statistics)
             statistics = self.update_step(statistics)
             
-            self._evaluate_performance(statistics, update,
-                                        train_loader,
-                                        val_loader,
-                                        test_loader)
+            # self._evaluate_performance(statistics, update,
+            #                             train_loader,
+            #                             val_loader,
+            #                             test_loader)
             
             update += 1
+            # if self.use_wandb:
+            #     statistics[f"model_{self.which_obj}/update_epoch"] = update
+            #     wandb.log(statistics)
             if update + 1 > self.updates:
                 break 
+            
+class TriMentoringTrainer(SingleModelBaseTrainer):
+    def __init__(self, model, config):
+        super(TriMentoringTrainer, self).__init__(model, config)
+        self.soft_label = config["soft_label"]
+        self.majority_voting = config["majority_voting"]
+        self.Tmax = config["Tmax"]
+        self.ft_lr = config["ft_lr"]
+        self.topk = config["topk"]
+        self.interval = config["interval"]
+        self.K = config["K"]
+        self.method = config["method"]
+        
+        from utils import now_seed
+        self.initial_seed = now_seed
+        
+    def train_single_model(self, model, 
+                           train_loader: Optional[DataLoader] = None,
+                            val_loader: Optional[DataLoader] = None,
+                            test_loader: Optional[DataLoader] = None):
+        from off_moo_baselines.multiple_models.external.tri_mentoring_utils import adjust_learning_rate
+        from utils import set_seed
+        set_seed(model.seed)
+        
+        lr = self.config["forward_lr"]
+        forward_opt = Adam(model.parameters(), lr=lr)
+        statistics = {}
+        min_mse = float("inf")
+        best_state_dict = None
+        self.n_obj = None 
+        for epoch in range(self.n_epochs):
+            adjust_learning_rate(forward_opt, lr, epoch, self.n_epochs)
+            
+            model.train()
+            losses = []
+            for batch_x, batch_y in train_loader:
+                batch_x = batch_x.to(**tkwargs)
+                batch_y = batch_y.to(**tkwargs)
+                if self.n_obj is None:
+                    self.n_obj = batch_y.shape[1]
+                
+                forward_opt.zero_grad() 
+                outputs = model(batch_x)
+                loss = self.train_criterion(outputs, batch_y)
+                losses.append(loss.item() / batch_x.size(0))
+                loss.backward()
+                forward_opt.step() 
+                
+            statistics[f"model_{self.which_obj}_{model.seed}/train/loss/mean"] = np.array(losses).mean()
+            statistics[f"model_{self.which_obj}_{model.seed}/train/loss/std"] = np.array(losses).std()
+            statistics[f"model_{self.which_obj}_{model.seed}/train/loss/max"] = np.array(losses).max()
+            
+            model.eval()
+            with torch.no_grad():
+                y_all = torch.zeros((0, 1)).to(**tkwargs)
+                outputs_all = torch.zeros((0, 1)).to(**tkwargs)
+                for batch_x, batch_y, in train_loader:
+                    batch_x = batch_x.to(**tkwargs)
+                    batch_y = batch_y.to(**tkwargs)
+
+                    y_all = torch.cat((y_all, batch_y), dim=0)
+                    outputs = model(batch_x)
+                    outputs_all = torch.cat((outputs_all, outputs), dim=0)
+
+                train_mse = self.mse_criterion(outputs_all, y_all)
+                train_corr = spearman_correlation(outputs_all, y_all)
+                
+                statistics[f"model_{self.which_obj}_{model.seed}/train/mse"] = train_mse.item() 
+                for i in range(self.n_obj):
+                    statistics[f"model_{self.which_obj}_{model.seed}/train/rank_corr_{i + 1}"] = train_corr[i].item()
+                    
+                print('Epoch [{}/{}], MSE: {:}'
+                    .format(epoch+1, self.n_epochs, train_mse.item()))
+            
+            with torch.no_grad():
+                y_all = torch.zeros((0, 1)).to(**tkwargs)
+                outputs_all = torch.zeros((0, 1)).to(**tkwargs)
+
+                for batch_x, batch_y in val_loader:
+                    batch_x = batch_x.to(**tkwargs)
+                    batch_y = batch_y.to(**tkwargs)
+
+                    y_all = torch.cat((y_all, batch_y), dim=0)
+                    outputs = model(batch_x)
+                    outputs_all = torch.cat((outputs_all, outputs))
+                
+                val_mse = self.mse_criterion(outputs_all, y_all)
+                val_corr = spearman_correlation(outputs_all, y_all)
+                
+                statistics[f"model_{self.which_obj}_{model.seed}/valid/mse"] = val_mse.item() 
+                for i in range(self.n_obj):
+                    statistics[f"model_{self.which_obj}_{model.seed}/valid/rank_corr_{i + 1}"] = val_corr[i].item()
+                    
+                print ('Valid MSE: {:}'.format(val_mse.item()))
+                
+                if len(test_loader) != 0:
+                    y_all = torch.zeros((0, 1)).to(**tkwargs)
+                    outputs_all = torch.zeros((0, 1)).to(**tkwargs)
+
+                    for batch_x, batch_y in test_loader:
+                        batch_x = batch_x.to(**tkwargs)
+                        batch_y = batch_y.to(**tkwargs)
+
+                        y_all = torch.cat((y_all, batch_y), dim=0)
+                        outputs = model(batch_x)
+                        outputs_all = torch.cat((outputs_all, outputs))
+                    
+                    test_mse = self.mse_criterion(outputs_all, y_all)
+                    test_corr = spearman_correlation(outputs_all, y_all)
+                    
+                    statistics[f"model_{self.which_obj}_{model.seed}/test/mse"] = test_mse.item() 
+                    for i in range(self.n_obj):
+                        statistics[f"model_{self.which_obj}_{model.seed}/test/rank_corr_{i + 1}"] = test_corr[i].item()
+                        
+                    print ('Test MSE: {:}'.format(test_mse.item()))
+                
+                if val_mse.item() < min_mse:
+                    print("🌸 New best epoch! 🌸")
+                    min_mse = val_mse.item()
+                    best_state_dict = model.state_dict()
+                    
+            statistics[f"model_{self.which_obj}_{model.seed}/train/lr"] = forward_opt.param_groups[0]["lr"]
+            
+            if self.use_wandb:
+                statistics[f"model_{self.which_obj}_{model.seed}/train_epoch"] = epoch
+                wandb.log(statistics)
+                    
+        model.load_state_dict(best_state_dict)    
+        set_seed(self.initial_seed)
+        
+        
+    def launch(self, 
+               train_loader: Optional[DataLoader] = None,
+               val_loader: Optional[DataLoader] = None,
+               test_loader: Optional[DataLoader] = None,
+               retrain_model: bool = True):
+        
+        if not retrain_model and os.path.exists(self.model.save_path):
+            self.model.load()
+            return 
+        
+        assert train_loader is not None 
+        assert val_loader is not None 
+        
+        self.n_obj = None 
+        self.min_mse = float("inf")
+        statistics = {}
+        
+        from off_moo_baselines.multiple_models.external.tri_mentoring_utils import adjust_proxy
+        
+        for model in self.model.models:
+            self.train_single_model(model, train_loader, val_loader, test_loader)
+        
+        best_x = self.config["best_x"]
+        best_y = self.config["best_y"]
+        indexs = torch.argsort(best_y.squeeze())
+        index = indexs[:self.topk]
+        x_init = deepcopy(best_x[index])
+        
+        models = self.model.models
+        proxy1, proxy2, proxy3 = models[0], models[1], models[2]
+        
+        self.n_epochs = x_init.shape[0]
+        
+        for x_i in range(x_init.shape[0]):
+            candidate = x_init[x_i:x_i+1]
+            candidate.requires_grad = True
+            candidate_opt = Adam([candidate], lr=self.ft_lr)
+            
+            for i in range(1, self.Tmax + 1):
+                adjust_proxy(proxy1, proxy2, proxy3, candidate.data, x0=self.config["x"], y0=self.config["y"], \
+                K=self.K, majority_voting = self.majority_voting, soft_label=self.soft_label)
+                loss = 1.0/3.0*(proxy1(candidate) + proxy2(candidate) + proxy3(candidate))
+                # Reverse since minimization
+                
+                candidate_opt.zero_grad()
+                loss.backward()
+                candidate_opt.step()
+
+            # self._evaluate_performance(statistics, x_i,
+            #                            train_loader,
+            #                            val_loader,
+            #                            test_loader)
+            
+            # if self.use_wandb:
+            #     statistics[f"model_{self.which_obj}/finetune_epoch"] = x_i
+            #     wandb.log(statistics)

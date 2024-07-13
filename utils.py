@@ -14,6 +14,7 @@ tkwargs = {
 }
 
 now_fronts = None
+now_seed = None
 
 def calc_crowding_distance(F) -> np.ndarray:
 
@@ -240,6 +241,8 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.determinstic = True
+    global now_seed
+    now_seed = seed
 
 def get_config_path(config_name):
     return os.path.join(base_path, 'configs', f'{config_name}.config')

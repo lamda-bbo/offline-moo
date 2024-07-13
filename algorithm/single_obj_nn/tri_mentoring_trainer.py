@@ -225,7 +225,7 @@ def tri_mentoring_train_models(
         y_test = torch.Tensor(y_test).to(**tkwargs)
 
     indexs = torch.argsort(y.squeeze())
-    index = indexs[-1:]
+    index = indexs[-args.topk:]
     x_init = deepcopy(x[index])
 
     for x_i in range(x_init.shape[0]):

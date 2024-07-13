@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from utils import set_seed, get_quantile_solutions
-from off_moo_baselines.multiple.nets import MultipleModels
-from off_moo_baselines.multiple.trainer import get_trainer
-from off_moo_baselines.multiple.surrogate_problem import MultipleSurrogateProblem
+from off_moo_baselines.multiple_models.nets import MultipleModels
+from off_moo_baselines.multiple_models.trainer import get_trainer
+from off_moo_baselines.multiple_models.surrogate_problem import MultipleSurrogateProblem
 from off_moo_baselines.mo_solver.moea_solver import MOEASolver
 from off_moo_baselines.mo_solver.callback import RecordCallback
 from off_moo_baselines.data import tkwargs, get_dataloader
@@ -92,6 +92,7 @@ def multiple_run(config):
         save_dir=config['model_save_dir'],
         save_prefix=f"{config['model']}-{config['train_mode']}-{config['task']}-{config['seed']}"
     )
+    assert 0, model.obj2model[0].models
     model.set_kwargs(**tkwargs)
     
     trainer_func = get_trainer(config["train_mode"])

@@ -19,12 +19,12 @@
 # "zinc regex rfp molecule"
 
 seeds="1000 2000"
-tasks="c10mop1 in1kmop8"
-model="End2End"
-train_modes="PcGrad"
+tasks="nb201_test"
+model="MultipleModels"
+train_modes="TriMentoring"
 
-MAX_JOBS=16
-AVAILABLE_GPUS="2 3"
+MAX_JOBS=18
+AVAILABLE_GPUS="1 2 3"
 MAX_RETRIES=1
 
 get_gpu_allocation() {
@@ -74,12 +74,12 @@ for seed in $seeds; do
         check_jobs
         gpu_allocation=$(get_gpu_allocation $job_number)
         ((job_number++))
-        run_with_retry "off_moo_baselines/end2end/experiment.py \
+        run_with_retry "off_moo_baselines/multiple_models/experiment.py \
             --model=${model} \
             --train_mode=${train_mode} \
             --task=${task} \
             --use_wandb=False \
-            --retrain_model=False \
+            --retrain_model=True \
             --seed=${seed}" \
             "$gpu_allocation" & 
 
