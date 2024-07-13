@@ -11,6 +11,8 @@ from pymoo.core.evaluator import Evaluator
 from pymoo.factory import get_crossover
 from pymoo.operators.crossover.ox import OrderCrossover
 from pymoo.operators.mutation.inversion import InversionMutation
+from pymoo.operators.sampling.rnd import FloatRandomSampling
+from pymoo.operators.sampling.rnd import PermutationRandomSampling
 from off_moo_bench.problem.lambo.lambo.optimizers.mutation import LocalMutation
 from off_moo_bench.problem.lambo.lambo.utils import ResidueTokenizer
 from off_moo_bench.problem.mo_nas import get_genetic_operator
@@ -27,8 +29,22 @@ class StartFromZeroRepair(Repair):
             X[k] = np.concatenate([X[k, i:], X[k, :i]])
         pop.set("X", X)
         return pop
+    
+class RoundingRepair(Repair):
 
-_, evox_crossover, evox_mutation, evox_repair = get_genetic_operator()
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def _do(self, problem, X, **kwargs):
+        return np.around(X).astype(int)
+    
+class IntegerRandomSampling(FloatRandomSampling):
+
+    def _do(self, problem, n_samples, **kwargs):
+        X = super()._do(problem, n_samples, **kwargs)
+        return np.around(X).astype(int)
+
+evox_sampling, evox_crossover, evox_mutation, evox_repair = get_genetic_operator()
 
 CROSSOVERS = {
     "lambo_sbx": get_crossover(name='int_sbx', prob=0., eta=16),
@@ -46,6 +62,13 @@ REPAIRS = {
     "start_from_zero": StartFromZeroRepair(),
     "evox_repair": evox_repair,
     "portfolio": PortfolioRepair(),
+    "rounding": RoundingRepair(),
+}
+
+SAMPLINGS = {
+    "evox_sampling": evox_sampling,
+    "int_rnd": IntegerRandomSampling(),
+    "perm_rnd": PermutationRandomSampling(),
 }
 
 def get_operator_dict(config: dict) -> dict:
@@ -64,6 +87,11 @@ def get_operator_dict(config: dict) -> dict:
         assert config["repair"] in REPAIRS.keys(), \
             "Repair {repair} not found".format(repair=config["repair"])
         operator_dict["repair"] = REPAIRS[config["repair"]]
+        
+    if "sampling" in config.keys():
+        assert config["sampling"] in SAMPLINGS.keys(), \
+            "Sampling {sampling} not found".format(sampling=config["sampling"])
+        operator_dict["sampling"] = SAMPLINGS[config["sampling"]]
         
     return operator_dict
         

@@ -136,3 +136,7 @@ ALLTASKSDICT = {
     **ScientificDesignSequenceDict,
     **RESuiteDict,
 }
+
+CONTINUOUSTASKS = SyntheticFunction + MONASLogits + MOCOContinuous + MORL + ScientificDesignContinuous + RESuite
+PERMUTATIONTASKS = MOCOPermutation
+SEQUENCETASKS = MONASSequence + ScientificDesignSequence

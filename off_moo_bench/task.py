@@ -276,6 +276,7 @@ class Task(object):
         """
 
         return self.dataset.y_test
+        
 
     @property
     def is_normalized_x(self):
@@ -298,6 +299,14 @@ class Task(object):
     @property
     def forbidden_normalize_x(self):
         return self.dataset.forbidden_normalize_x
+    
+    @property
+    def xl(self):
+        return self.problem.xl 
+    
+    @property
+    def xu(self):
+        return self.problem.xu 
     
     @property
     def nadir_point(self):
