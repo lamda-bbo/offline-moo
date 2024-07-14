@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import gpytorch
-import warnings
 from torch import Tensor
 from botorch import fit_gpytorch_mll
 from botorch.models import FixedNoiseGP
@@ -325,7 +324,7 @@ class MOBOParEGO:
         assert task_name in ALLTASKS, f"task {task_name} not supported in offline-moo-bench"
         if task_name in CONTINUOUSTASKS:
             if task_name in MORL:
-                warnings.warn("MOBO-qNEHVI is not suggested to run on MORL tasks", UserWarning)
+                raise ValueError("MOBO-qParEGO is not suggested to run on MORL tasks")
             self.solver_type = TYPE2SOLVER["continuous"]
         elif task_name in PERMUTATIONTASKS:
             self.solver_type = TYPE2SOLVER["permutation"]
