@@ -149,6 +149,12 @@ class DiscreteDataset(DatasetBuilder):
                 self.input_dtype = x0.dtype
                 break
             
+            for x0 in self.iterate_test_samples(return_y=False):
+                assert self.input_shape == x0.shape
+                assert self.input_size == int(np.prod(x0.shape))
+                assert self.input_dtype == x0.dtype
+                break
+            
     def map_to_integers(self):
 
         # check that statistics are not frozen for this dataset
@@ -170,4 +176,10 @@ class DiscreteDataset(DatasetBuilder):
                 self.input_shape = x0.shape
                 self.input_size = int(np.prod(x0.shape))
                 self.input_dtype = x0.dtype
+                break
+            
+            for x0 in self.iterate_test_samples(return_y=False):
+                assert self.input_shape == x0.shape
+                assert self.input_size == int(np.prod(x0.shape))
+                assert self.input_dtype == x0.dtype
                 break

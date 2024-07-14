@@ -1,3 +1,9 @@
+# Config EvoXBench
+from evoxbench.database.init import config
+import os
+base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'problem', 'mo_nas')
+config(os.path.join(base_path, 'database'), os.path.join(base_path, 'data'))
+
 from off_moo_bench.registration import registry, register, make, spec
 import numpy as np 
 
@@ -456,9 +462,9 @@ register('Molecule-Exact-v0',
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
 
-register('NasBench201Test-Exact-v0',
+register('NASBench201Test-Exact-v0',
          'off_moo_bench.datasets.discrete.nb201_test_dataset:NB201TestDataset',
-         'off_moo_bench.problem.mo_nas.mo_nas:NasBench201Test',
+         'off_moo_bench.problem.mo_nas.mo_nas:NASBench201Test',
 
          # keyword arguments for building the dataset
          dataset_kwargs=dict(

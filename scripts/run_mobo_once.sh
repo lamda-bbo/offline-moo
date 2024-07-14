@@ -3,15 +3,15 @@
 # python config_evoxbench.py
 # "c10mop1" "c10mop2" "c10mop3" "c10mop4" "c10mop5" "c10mop6" "c10mop7" "c10mop8" "c10mop9" "c10mop10"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mujoco210/bin
-for env_name in "re37"; do
-    for seed in 1 2; do
+for env_name in "regex"; do
+    for seed in 1; do
         for output_size in 256; do
-            for train_mode in "none"; do
-                python config_evoxbench.py && \
+            for train_mode in "parego"; do
+                python config_evoxbench.py 
                 CUDA_VISIBLE_DEVICES=1 \
                 python scripts/run_mobo_once.py \
                 --env-name ${env_name} \
-                --normalize-x \
+                --sequence \
                 --normalize-y \
                 --num-solutions ${output_size} \
                 --train-mode ${train_mode} \

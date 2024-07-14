@@ -36,8 +36,8 @@ class RecordCallback:
         if self.config["normalize_ys"]:
             y = self.task.denormalize_y(y)
 
-        if self.config["to_logits"]:
-            x = self.task.to_integer(x)    
+        # if self.config["to_logits"]:
+        #     x = self.task.to_integers(x)    
 
         self.X.append(x)
         self.Y.append(y)

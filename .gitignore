@@ -15,6 +15,6 @@
 /*.zip
 /*.csv
 /test.**
-/**.test-hv.csv
+/**-test-hv.csv
 
 **/__pycache__

@@ -12,10 +12,10 @@ from pymoo.algorithms.moo.moead import MOEAD
 from pymoo.operators.sampling.rnd import PermutationRandomSampling
 from pymoo.operators.crossover.ox import OrderCrossover
 from pymoo.operators.mutation.inversion import InversionMutation
-from collecter import StartFromZeroRepair
+from off_moo_bench.collecter import StartFromZeroRepair
 from pymoo.optimize import minimize
 from off_moo_bench.problem import get_problem
-from collecter import AmateurRankAndCrowdSurvival, MoleculeEvaluator, molecule_callback
+from off_moo_bench.collecter import AmateurRankAndCrowdSurvival, MoleculeEvaluator, molecule_callback
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--env-name', type=str, default='dtlz2')
@@ -35,7 +35,7 @@ env_names = [ "vlmop1", "vlmop2", "vlmop3", "dtlz1", "dtlz2", "dtlz3", "dtlz4", 
                "re34", "re35", "re36" "re37", "re41", "re42", "re61", "re91", "nb201_test",  "mo_tsp_3obj",
              "mo_swimmer_v2", "mo_hopper_v2", "mo_tsp", "mo_kp", "mo_cvrp", "molecule", "regex", "rfp", "zinc",
              "mo_tsp_500", "mo_tsp_100", "mo_tsp_50", "mo_tsp_20", "mo_kp_200", "mo_kp_100", "mo_kp_50",
-               "mo_cvrp_100", "mo_cvrp_50", "mo_cvrp_20", "motsp3obj_500", "mo_tsp_3obj_100", 
+               "mo_cvrp_100", "mo_cvrp_50", "mo_cvrp_20", "motsp3obj_500", "mo_tsp_3obj_100", "portfolio",
                "mo_tsp_3obj_50", "mo_tsp_3obj_20", "c10mop1", "c10mop2", "c10mop3", "c10mop4", "c10mop5", "c10mop6", "c10mop7", 
              "c10mop8", "c10mop9", "in1kmop1", "in1kmop2", "in1kmop3", "in1kmop4", "in1kmop5",
              "in1kmop6", "in1kmop7", "in1kmop8", "in1kmop9", "nb201_test"]
@@ -46,7 +46,7 @@ synthetic_envs = ["vlmop1", "vlmop2", "vlmop3", "dtlz1", "dtlz2", "dtlz3", "dtlz
              "re23", "re24", "re25", "re31", "re32", "re33",
                "re34", "re35", "re36" "re37", "re41", "re42", "re61", "re91", "molecule", "regex", "rfp", "zinc"]
 
-moco_envs = ["mo_tsp_500", "mo_tsp_100", "mo_tsp_50", "mo_tsp_20", "mo_kp_200", "mo_kp_100", "mo_kp_50", 
+moco_envs = ["mo_tsp_500", "mo_tsp_100", "mo_tsp_50", "mo_tsp_20", "mo_kp_200", "mo_kp_100", "mo_kp_50", "portfolio",
              "mo_cvrp_100", "mo_cvrp_50", "mo_cvrp_20", "motsp3obj_500", "mo_tsp_3obj_100", "mo_tsp_3obj_50",
                "mo_tsp_3obj_20"]
 
@@ -89,6 +89,7 @@ env_name_n_gens = {
     "re42": 30, 
     "re61": 30, 
     're91': 30,
+    "portfolio": 30,
     "mo_tsp_500": 80000,
     "mo_tsp_100": 16000,
     "mo_tsp_50": 8000,
@@ -123,6 +124,7 @@ env_name_perturb_proba = {
     "kursawe": 0.45,
     "omnitest": 0.45, 
     "sympart": 0.45,
+    "portfolio": 0.45,
     "zdt1": 0.45, 
     "zdt2": 0.45, 
     "zdt3": 0.45, 

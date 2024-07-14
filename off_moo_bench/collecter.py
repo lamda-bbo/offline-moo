@@ -8,6 +8,15 @@ from pymoo.algorithms.moo.nsga2 import RankAndCrowdingSurvival, calc_crowding_di
 from pymoo.util.randomized_argsort import randomized_argsort
 from pymoo.core.repair import Repair
 from pymoo.core.evaluator import Evaluator
+from pymoo.factory import get_crossover
+from pymoo.operators.crossover.ox import OrderCrossover
+from pymoo.operators.mutation.inversion import InversionMutation
+from pymoo.operators.sampling.rnd import FloatRandomSampling
+from pymoo.operators.sampling.rnd import PermutationRandomSampling
+from off_moo_bench.problem.lambo.lambo.optimizers.mutation import LocalMutation
+from off_moo_bench.problem.lambo.lambo.utils import ResidueTokenizer
+from off_moo_bench.problem.mo_nas import get_genetic_operator
+from off_moo_bench.problem.comb_opt.mo_portfolio import PortfolioRepair
 
 class StartFromZeroRepair(Repair):
 
@@ -20,6 +29,72 @@ class StartFromZeroRepair(Repair):
             X[k] = np.concatenate([X[k, i:], X[k, :i]])
         pop.set("X", X)
         return pop
+    
+class RoundingRepair(Repair):
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def _do(self, problem, X, **kwargs):
+        return np.around(X).astype(int)
+    
+class IntegerRandomSampling(FloatRandomSampling):
+
+    def _do(self, problem, n_samples, **kwargs):
+        X = super()._do(problem, n_samples, **kwargs)
+        return np.around(X).astype(int)
+
+evox_sampling, evox_crossover, evox_mutation, evox_repair = get_genetic_operator()
+
+CROSSOVERS = {
+    "lambo_sbx": get_crossover(name='int_sbx', prob=0., eta=16),
+    "evox_crossover": evox_crossover,
+    "order": OrderCrossover(),
+}
+
+MUTATIONS = {
+    "lambo_local": LocalMutation(prob=1., eta=16, safe_mut=False, tokenizer=ResidueTokenizer()),
+    "evox_mutation": evox_mutation,
+    "inversion": InversionMutation(),
+}
+
+REPAIRS = {
+    "start_from_zero": StartFromZeroRepair(),
+    "evox_repair": evox_repair,
+    "portfolio": PortfolioRepair(),
+    "rounding": RoundingRepair(),
+}
+
+SAMPLINGS = {
+    "evox_sampling": evox_sampling,
+    "int_rnd": IntegerRandomSampling(),
+    "perm_rnd": PermutationRandomSampling(),
+}
+
+def get_operator_dict(config: dict) -> dict:
+    operator_dict = {} 
+    if "crossover" in config.keys():
+        assert config["crossover"] in CROSSOVERS.keys(), \
+            "Crossover {crossover} not found".format(crossover=config["crossover"])
+        operator_dict["crossover"] = CROSSOVERS[config["crossover"]]
+        
+    if "mutation" in config.keys():
+        assert config["mutation"] in MUTATIONS.keys(), \
+            "Mutation {mutation} not found".format(mutation=config["mutation"])
+        operator_dict["mutation"] = MUTATIONS[config["mutation"]]
+    
+    if "repair" in config.keys():
+        assert config["repair"] in REPAIRS.keys(), \
+            "Repair {repair} not found".format(repair=config["repair"])
+        operator_dict["repair"] = REPAIRS[config["repair"]]
+        
+    if "sampling" in config.keys():
+        assert config["sampling"] in SAMPLINGS.keys(), \
+            "Sampling {sampling} not found".format(sampling=config["sampling"])
+        operator_dict["sampling"] = SAMPLINGS[config["sampling"]]
+        
+    return operator_dict
+        
 
 class AmateurRankAndCrowdSurvival(RankAndCrowdingSurvival):
     def __init__(self, p=0.6, nds=None) -> None:

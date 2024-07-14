@@ -276,6 +276,7 @@ class Task(object):
         """
 
         return self.dataset.y_test
+        
 
     @property
     def is_normalized_x(self):
@@ -298,6 +299,14 @@ class Task(object):
     @property
     def forbidden_normalize_x(self):
         return self.dataset.forbidden_normalize_x
+    
+    @property
+    def xl(self):
+        return self.problem.xl 
+    
+    @property
+    def xu(self):
+        return self.problem.xu 
     
     @property
     def nadir_point(self):
@@ -622,10 +631,20 @@ class Task(object):
             value 'x' in a model-based optimization problem
 
         """
+        
+        if self.is_discrete and self.is_logits:
+            if len(x_batch.shape) == 2:
+                x_batch = x_batch.reshape(x_batch.shape[0], -1, self.dataset.num_classes - 1)
+            
         if not self.forbidden_normalize_x:
             if self.problem.requires_normalized_x and not self.is_normalized_x:
                 x_batch = self.normalize_x(x_batch)
             elif not self.problem.requires_normalized_x and self.is_normalized_x:
                 x_batch = self.denormalize_x(x_batch)
+            
+        if self.is_discrete and self.is_logits:
+            self.map_to_integers()
+            x_batch = self.to_integers(x_batch)
+            self.map_to_logits()
 
         return self.problem.evaluate(x_batch, **kwargs)

@@ -82,6 +82,7 @@ def get_problem(env_name, *args, **kwargs):
         'mokp_200': BiKP200,
         'mokp_100': BiKP100,
         'mokp_50': BiKP50,
+        'portfolio': MOPortfolio,
         'mocvrp_100': BiCVRP100,
         'mocvrp_50': BiCVRP50,
         'mocvrp_20': BiCVRP20,
@@ -94,7 +95,7 @@ def get_problem(env_name, *args, **kwargs):
     }
 
     if load_nas:
-        PROBLEMS['nb201_test'] = NasBench201Test
+        PROBLEMS['nb201_test'] = NASBench201Test
         
         PROBLEMS['c10mop1'] = C10MOP1
         PROBLEMS['c10mop2'] = C10MOP2

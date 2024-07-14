@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch.nn.functional as F
 import torch 
 import os 
 import numpy as np 
@@ -14,6 +15,8 @@ def get_model(model_type: str):
         'iom': InvariantObjectiveModel,
         'com': ConservativeObjectiveModel,
         'roma': RoMAModel,
+        'trimentoring': TriMentoringModel,
+        'ict': ICTModel,
     }
     assert model_type in type2model.keys(), f"model {model_type} not found"
     return type2model[model_type]
@@ -46,6 +49,7 @@ class MultipleModels(nn.Module):
         
     def set_kwargs(self, device=None, dtype=None):
         for model in self.obj2model.values():
+            model.set_kwargs(device=device, dtype=dtype)
             model.to(device=device, dtype=dtype)
 
     def forward(self, x, forward_objs=None):
@@ -62,6 +66,7 @@ class SingleModel(nn.Module):
         self.n_dim = input_size
         self.n_obj = 1
         self.which_obj = which_obj
+        self.activate_functions = activate_functions
 
         layers = []
         layers.append(nn.Linear(input_size, hidden_size[0]))
@@ -77,7 +82,7 @@ class SingleModel(nn.Module):
     def forward(self, x):
         for i in range(len(self.hidden_size)):
             x = self.layers[i](x)
-            x = activate_functions[i](x)
+            x = self.activate_functions[i](x)
         
         x = self.layers[len(self.hidden_size)](x)
         out = x
@@ -381,5 +386,126 @@ class RoMAModel(nn.Module):
         valid_mse = checkpoint["valid_mse"]
         print(f"Successfully load trained model from {save_path} " 
                 f"with valid MSE = {valid_mse}")
+
+class TriMentoringBaseModel(SingleModel):
+    def __init__(self, seed, input_size, hidden_size, which_obj, 
+                 save_dir=None, save_prefix=None):
+        super(TriMentoringBaseModel, self).__init__(
+            input_size, hidden_size, which_obj, save_dir, save_prefix
+        )
+        self.seed = seed
+        self.activate_functions = [F.relu, F.relu]
         
+class TriMentoringModel(nn.Module):
+    def __init__(self, n_dim, hidden_size, which_obj, 
+                 train_seeds=[2024, 2025, 2026],
+                 save_dir=None, save_prefix=None):
+        super(TriMentoringModel, self).__init__()
+        self.n_dim = n_dim
+        self.which_obj = which_obj
+        
+        self.save_dir = save_dir
+        self.save_prefix = save_prefix
+        if self.save_dir is not None:
+            os.makedirs(self.save_dir, exist_ok=True)
+        self.save_path = os.path.join(self.save_dir, f"{save_prefix}-{which_obj}.pt")
+        
+        from utils import now_seed, set_seed
+        initial_seed = now_seed
+        self.models = []
+        self.train_seeds = train_seeds
+        for seed in train_seeds:
+            set_seed(seed)
+            self.models.append(
+                TriMentoringBaseModel(
+                    seed=seed,
+                    input_size=n_dim,
+                    hidden_size=hidden_size,
+                    which_obj=which_obj,
+                    save_dir=save_dir,
+                    save_prefix=save_prefix
+                )
+            )
+        set_seed(initial_seed)
+        
+    def set_kwargs(self, device=None, dtype=None):
+        for model in self.models:
+            model.to(device=device, dtype=dtype)
     
+    def forward(self, x):
+        y = torch.cat([model(x) for model in self.models], dim=1)
+        return y.mean(dim=1).reshape(-1, 1)
+    
+    def train(self, mode: bool = True):
+        for model in self.models:
+            model.train(mode)
+        return super().train(mode)
+    
+    def eval(self):
+        for model in self.models:
+            model.eval()
+        return super().eval()
+    
+    def check_model_path_exist(self, save_path=None):
+        assert self.save_path is not None or save_path is not None, "save path should be specified"
+        if save_path is None:
+            save_path = self.save_path
+        return os.path.exists(save_path)  
+    
+    def save(self, val_mse=None, save_path=None):
+        assert self.save_path is not None or save_path is not None, "save path should be specified"
+        if save_path is None:
+            save_path = self.save_path
+            
+        from off_moo_baselines.data import tkwargs
+        
+        checkpoint = {}
+        self.set_kwargs(device='cpu')
+        for seed, model in zip(self.train_seeds, self.models):
+            checkpoint[seed] = model.state_dict() 
+            
+        if val_mse is not None:
+            checkpoint["valid_mse"] = val_mse
+        
+        torch.save(checkpoint, save_path)
+        self.set_kwargs(**tkwargs)
+        
+    def load(self, save_path=None):
+        assert self.save_path is not None or save_path is not None, "save path should be specified"
+        if save_path is None:
+            save_path = self.save_path
+        
+        checkpoint = torch.load(save_path)
+        for seed, model in zip(self.train_seeds, self.models):
+            model.load_state_dict(checkpoint[seed])
+        
+        valid_mse = checkpoint["valid_mse"]
+        print(f"Successfully load trained model from {save_path} " 
+                f"with valid MSE = {valid_mse}")
+        
+class ICTBaseModel(TriMentoringBaseModel):
+    pass 
+
+class ICTModel(TriMentoringModel):
+    def __init__(self, n_dim, hidden_size, which_obj, 
+                 train_seeds=[2024, 2025, 2026], 
+                 save_dir=None, save_prefix=None):
+        super().__init__(n_dim, hidden_size, which_obj, train_seeds, save_dir, save_prefix)
+        from utils import now_seed, set_seed
+        initial_seed = now_seed
+        self.models = []
+        self.train_seeds = train_seeds
+        for seed in train_seeds:
+            set_seed(seed)
+            self.models.append(
+                TriMentoringBaseModel(
+                    seed=seed,
+                    input_size=n_dim,
+                    hidden_size=hidden_size,
+                    which_obj=which_obj,
+                    save_dir=save_dir,
+                    save_prefix=save_prefix
+                )
+            )
+        set_seed(initial_seed)
+        

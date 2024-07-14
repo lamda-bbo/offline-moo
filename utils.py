@@ -1,7 +1,10 @@
 import os
 import numpy as np
 import torch
+import sys 
+import yaml 
 from typing import List, Optional
+from types import SimpleNamespace
 
 base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 
@@ -11,6 +14,7 @@ tkwargs = {
 }
 
 now_fronts = None
+now_seed = None
 
 def calc_crowding_distance(F) -> np.ndarray:
 
@@ -237,6 +241,8 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.determinstic = True
+    global now_seed
+    now_seed = seed
 
 def get_config_path(config_name):
     return os.path.join(base_path, 'configs', f'{config_name}.config')
@@ -378,6 +384,82 @@ def plot_and_save_mse(model, mse, which_loss='val'):
         plt.savefig(os.path.join(model.results_dir, f'model_{which_loss}_loss.pdf'))       
         np.save(arr=np.array(mse), file=os.path.join(model.results_dir, f'model_{which_loss}_loss.npy'))
 
+
+def process_args(return_dict=False):
+    params = [arg.lstrip("--") for arg in sys.argv if arg.startswith("--")]
+    cmd_config_dict = {} 
+    for arg in params:
+        key, value = arg.split('=')
+        try:
+            cmd_config_dict[key] = eval(value)
+        except:
+            cmd_config_dict[key] = value 
+            
+    # default config
+    config_path = os.path.join(
+        base_path,
+        "configs",
+        "default.yaml"
+    )
+    assert os.path.exists(config_path), f"Config {config_path} not found"
+    with open(config_path, 'r') as f:
+        config_dict = yaml.load(f, Loader=yaml.FullLoader)
+    
+    for key, value in cmd_config_dict.items():
+        config_dict[key] = value
+        
+    # model config
+    model_config_path =  os.path.join(
+        base_path,
+        "configs",
+        "algorithm",
+        f"{config_dict['model']}-{config_dict['train_mode']}.yaml"
+    )
+    assert os.path.exists(model_config_path), \
+        f"Model config {model_config_path} not found"
+    with open(model_config_path, 'r') as f:
+        try:
+            config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
+        except:
+            pass
+
+    # task config
+    task_config_path =  os.path.join(
+        base_path,
+        "configs",
+        "task",
+        f"{config_dict['task']}.yaml"
+    )
+    
+    default_task_config_path =  os.path.join(
+        base_path,
+        "configs",
+        "task",
+        f"default.yaml"
+    )
+    assert os.path.exists(task_config_path) or \
+        os.path.exists(default_task_config_path), \
+        f"Problem config {task_config_path} or {default_task_config_path} not found"
+    try:
+        with open(task_config_path, 'r') as f:
+            try:
+                config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
+            except:
+                pass
+    except:
+        with open(default_task_config_path, 'r') as f:
+            try:
+                config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
+            except:
+                pass
+
+    for key, value in cmd_config_dict.items():
+        config_dict[key] = value 
+    
+    print("All config:", config_dict)
+    
+    return config_dict if return_dict else SimpleNamespace(**config_dict)
+    
 
 if __name__ == "__main__":
     _, y, _ = read_data(env_name='re21', filter_type='best', return_x=False, return_rank=False)

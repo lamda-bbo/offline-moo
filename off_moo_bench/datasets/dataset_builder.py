@@ -423,6 +423,18 @@ class DatasetBuilder(abc.ABC):
                 y_sliced = y_shard_data[shard_position:(shard_position + target_size)] 
                 
                 samples_read = y_sliced.shape[0]
+                
+                if not self._disable_subsample:
+                    indices = np.where(self.dataset_visible_mask[
+                        sample_id:sample_id + y_sliced.shape[0]])[0]
+                    
+                    x_sliced = x_sliced[indices] if return_x else None
+                    y_sliced = y_sliced[indices] if return_y else None
+
+                if not self._disable_transform:
+                    x_sliced, y_sliced = self.batch_transform(
+                        x_sliced, y_sliced, 
+                        return_x=return_x, return_y=return_y)
 
                 shard_position += target_size
                 sample_id += samples_read
@@ -467,7 +479,6 @@ class DatasetBuilder(abc.ABC):
         x_max = None
         y_min = None
         y_max = None
-        
         for x, y in self.iterate_samples():
             if x_min is None:
                 x_min = x.copy()
@@ -534,6 +545,10 @@ class DatasetBuilder(abc.ABC):
         self.x_standard_dev = np.where(
             self.x_standard_dev == 0.0, 1.0, self.x_standard_dev)
         
+        (
+            self.x_min, self.x_max, self.y_min, self.y_max
+        ) = self.get_xy_min_max()
+        
         # reset the normalized state to what it originally was
         self.is_normalized_x = original_is_normalized_x
         
@@ -573,6 +588,10 @@ class DatasetBuilder(abc.ABC):
         # remove zero standard deviations to prevent singularities
         self.y_standard_dev = np.where(
             self.y_standard_dev == 0.0, 1.0, self.y_standard_dev)
+        
+        (
+            self.x_min, self.x_max, self.y_min, self.y_max
+        ) = self.get_xy_min_max()
         
         # reset the normalized state to what it originally was
         self.is_normalized_y = original_is_normalized_y
