@@ -3,7 +3,7 @@ import torch
 import numpy as np 
 
 class FeatureCache:
-    def __init__(self, input_type='torch', max_size=2000):
+    def __init__(self, input_type='torch', max_size=2500):
         self.input_type = input_type
         self.cache = OrderedDict()
         self.max_size = max_size

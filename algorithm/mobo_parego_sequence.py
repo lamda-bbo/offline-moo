@@ -361,6 +361,7 @@ class AcqfProblem(Problem):
     def _evaluate(self, x, out, *args, **kwargs):
         if isinstance(x, (np.ndarray, list)):
             x = torch.tensor(x).to(**tkwargs)
+        assert 0, x.shape
         # print(x.shape, x, x.unsqueeze(1).shape)
         out["F"] = self.acq_func(x.unsqueeze(1)).reshape(-1, 1).detach().cpu().numpy() * (-1)
 
