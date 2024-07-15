@@ -144,6 +144,8 @@ def run(config: dict):
         return_x=False, return_y=True
     )
     
+    np.save(file=os.path.join(logging_dir, "res_x.npy"), arr=res_x)
+    np.save(file=os.path.join(logging_dir, "res_y.npy"), arr=res_y)
     plot_y(res_y, save_dir=logging_dir, config=config,
            nadir_point=nadir_point, d_best=d_best)
         

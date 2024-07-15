@@ -4,8 +4,8 @@ from pymoo.indicators.igd import IGD
 from off_moo_bench.task_set import MORL
 
 def hv(nadir_point, y, task_name):
-    nadir_point = nadir_point * 2.2 if task_name not in MORL \
-        else nadir_point * 4
+    nadir_point = nadir_point * 2.2 # if task_name not in MORL \
+        # else nadir_point * 4
     if task_name == "Molecule-Exact-v0":
         index_to_remove = np.all(y == [1., 1.], axis=1)
         y = y[~index_to_remove]
