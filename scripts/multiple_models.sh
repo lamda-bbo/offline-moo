@@ -18,13 +18,13 @@
 # Scientific Design
 # "zinc regex rfp molecule"
 
-seeds="1000"
-tasks="re21"
-model="MOBO"
-train_modes="JES"
+seeds="1000 2000"
+tasks="re21 bi_tsp_20 regex c10mop3"
+model="MultipleModels"
+train_modes="Vallina"
 
-MAX_JOBS=16
-AVAILABLE_GPUS="2"
+MAX_JOBS=18
+AVAILABLE_GPUS="1 3"
 MAX_RETRIES=1
 
 get_gpu_allocation() {
@@ -74,12 +74,12 @@ for seed in $seeds; do
         check_jobs
         gpu_allocation=$(get_gpu_allocation $job_number)
         ((job_number++))
-        run_with_retry "off_moo_baselines/mobo/experiment.py \
+        run_with_retry "off_moo_baselines/multiple_models/experiment.py \
             --model=${model} \
             --train_mode=${train_mode} \
             --task=${task} \
             --use_wandb=False \
-            --retrain_model=False \
+            --retrain_model=True \
             --seed=${seed}" \
             "$gpu_allocation" & 
 
