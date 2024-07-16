@@ -89,6 +89,9 @@ class SingleModel(nn.Module):
 
         return out
     
+    def set_kwargs(self, device=None, dtype=None):
+        self.to(device=device, dtype=dtype)
+    
     def check_model_path_exist(self, save_path=None):
         assert self.save_path is not None or save_path is not None, "save path should be specified"
         if save_path is None:

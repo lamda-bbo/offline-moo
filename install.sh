@@ -4,7 +4,6 @@ YOUR_PATH_TO_CONDA=~/anaconda3
 sudo apt update
 sudo apt install g++
 sudo apt-get upgrade libstdc++6
-sudo apt-get dist-upgrade
 sudo apt install libosmesa6-dev libgl1-mesa-glx libglfw3 libghc-x11-dev
 sudo apt install libcairo2-dev pkg-config python3-dev
 sudo apt-get install patchelf
@@ -47,6 +46,7 @@ conda env config vars set LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mujoco210/b
 conda activate off-moo
 
 cd off_moo_bench/problem/lambo
+# It will take some time
 python scripts/black_box_opt.py optimizer=mf_genetic optimizer/algorithm=nsga2 task=proxy_rfp tokenizer=protein 
 cd ../../../
 

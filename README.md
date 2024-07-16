@@ -135,39 +135,13 @@ print(sim.data.qpos)
 
 ## Baselines
 
-To reproduce the performance of baseline algorithms reported in our work, you may then run ``run_multi_head.sh/run.sh/run_single_obj.sh/run_mobo_once.sh``, or run the following series of commands in a bash terminal. Also, please ensure that the conda environment ``off-moo`` is activated in the bash session.
-```shell
-for env_name in "zdt3" "re21"; do
-    for seed in 2024; do
-        for train_data_mode in "onlybest_1"; do
-            for train_mode in "grad_norm" "pcgrad"; do
-                for solver in "nsga2"; do
-                    for output_size in 256; do 
-                        python config_evoxbench.py
-                        CUDA_VISIBLE_DEVICES=0 \
-                        python scripts/multi_head_nn.py \
-                        --env-name ${env_name} \
-                        --seed ${seed} \
-                        --normalize-x \
-                        --normalize-y \
-                        --num-solutions ${output_size} \
-                        --filter-type best \
-                        --train-data-mode ${train_data_mode} \
-                        --train-mode ${train_mode} \
-                        --mo-solver ${solver} \
-                        --reweight-mode none \
-                        --df-name $seed-test-hv.csv
-                    done
-                done
-            done
-        done
-    done
-done
-```
+To reproduce the performance of baseline algorithms reported in our work, you may then run ``end2end.sh/multi_head.sh/multiple_models.sh/mobo.sh``, or run the following series of commands in a bash terminal. Also, please ensure that the conda environment ``off-moo`` is activated in the bash session.
 
-### Notes for baselines
+> If you want to change some configurations, fix it in the script or in ``./config/``.
+
+<!-- ### Notes for baselines
 - For running special models (``GradNorm``, ``COMs``, etc), data pruning is needed, which corresponds to ``onlybest_1`` in ``--train-data-mode``.
-- If you want to implement your own algorithms, put ``model`` and ``trainer`` under ``algorithm`` folder, then choose one MO-solver as what is done in ``scripts/multi_obj_nn.py``.
+- If you want to implement your own algorithms, put ``model`` and ``trainer`` under ``algorithm`` folder, then choose one MO-solver as what is done in ``scripts/multi_obj_nn.py``. -->
 
 ## Contact 
-If you have any questions, feel free to contact [Rongxi Tan](rongxitan@smail.nju.edu.cn) or raise an issue.
+If you have any questions, feel free to contact [Rongxi Tan](https://trxcc.github.io/) or raise an issue.
