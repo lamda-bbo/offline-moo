@@ -18,14 +18,13 @@
 # Scientific Design
 # "zinc regex rfp molecule"
 
-seeds="1000 2000"
-tasks="re21 re22 re23 re24 re25 re31 re32 re33 re34 re35 re36 re37 re41 re42 re61"
+seeds="1000"
+tasks="re21 bi_tsp_20 regex c10mop3"
 model="MultiHead"
 train_modes="Vallina"
-# "Vallina GradNorm PcGrad"
 
-MAX_JOBS=24
-AVAILABLE_GPUS="0 1 2 3"
+MAX_JOBS=8
+AVAILABLE_GPUS="0"
 MAX_RETRIES=1
 
 get_gpu_allocation() {
@@ -79,6 +78,7 @@ for seed in $seeds; do
             --model=${model} \
             --train_mode=${train_mode} \
             --task=${task} \
+            --n_epochs=10 \
             --use_wandb=False \
             --retrain_model=False \
             --seed=${seed}" \

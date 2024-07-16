@@ -191,3 +191,35 @@ def process_args(return_dict=False):
     
     return config_dict if return_dict else SimpleNamespace(**config_dict)
     
+
+def read_data(env_name, filter_type='best', return_x=True, return_y=True, return_rank=True):
+    try:
+        assert return_x or return_y or return_rank, "Illegal params."
+        env_name = env_name.lower()
+        data_path = os.path.join(base_path, "data", env_name)
+        x_file = os.path.join(data_path, f"{env_name}-x-0.npy") if return_x else None
+        y_file = os.path.join(data_path, f"{env_name}-y-0.npy") if return_y else None
+        rank_file = os.path.join(data_path, f"{env_name}-rank-0.npy") if return_rank else None
+        
+        x = np.load(x_file) if return_x else None
+        y = np.load(y_file) if return_y else None
+        rank = np.load(rank_file) if return_rank else None
+
+        return (x if return_x else None,
+                y if return_y else None, 
+                rank if return_rank else None)
+    except:
+        assert return_x or return_y or return_rank, "Illegal params."
+        env_name = env_name.lower()
+        data_path = os.path.join(base_path, "data", env_name, filter_type)
+        x_file = os.path.join(data_path, f"{env_name}-x-0.npy") if return_x else None
+        y_file = os.path.join(data_path, f"{env_name}-y-0.npy") if return_y else None
+        rank_file = os.path.join(data_path, f"{env_name}-rank-0.npy") if return_rank else None
+        
+        x = np.load(x_file) if return_x else None
+        y = np.load(y_file) if return_y else None
+        rank = np.load(rank_file) if return_rank else None
+
+        return (x if return_x else None,
+                y if return_y else None, 
+                rank if return_rank else None)

@@ -31,12 +31,12 @@ MODEL2MODES = {
 }
 
 TASK_SET_PARTITION = {
-    "Sci-Design": ScientificDesign,
-    # "Synthetic": SyntheticFunction,
-    # "MONAS": MONAS,
+    "Synthetic": SyntheticFunction,
+    "MONAS": MONAS,
     "MORL": MORL,
-    # "MOCO": MOCO,
-    # "RE Suite": RESuite,
+    "MOCO": MOCO,
+    "Sci-Design": ScientificDesign,
+    "RE Suite": RESuite,
 }
 
 def find_and_read_latest_csv(root_dir, target_filename="hv_results.csv"):
@@ -65,6 +65,8 @@ def get_statistics(hv_array: np.ndarray):
     return hv_array.mean(), hv_array.std() 
 
 def highlight_within_one_std(s, ascending: bool=True):
+    if s.isna().all():
+        return s
     s_copy = s.dropna().copy()
     tmp = s.dropna().apply(lambda x: float(x.split('$\pm$')[0].strip()) +
                            (1 if ascending else -1) * float(x.split('$\pm$')[1].strip()))
@@ -89,6 +91,8 @@ def highlight_within_one_std(s, ascending: bool=True):
     return new_s
 
 def highlight_best_two(s, ascending: bool=True):
+    if s.isna().all():
+        return s
     s_copy = s.dropna().copy()
     tmp = s.dropna().apply(lambda x: float(x.split('$\pm$')[0].strip()) +
                            (1 if ascending else -1) * float(x.split('$\pm$')[1].strip()))

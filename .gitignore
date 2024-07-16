@@ -9,6 +9,7 @@
 /off_moo_bench/problem/lambo/data/experiments/test/*/
 /off_moo_bench/problem/lambo/data/experiments/test/black_box_opt.log
 /off_moo_bench/problem/lambo/data/experiments/test/hydra_config.txt
+/off_moo_bench/problem/lambo/data/experiments/test/proxy_rfp_problem.pkl
 /*.npy
 /*.pkl
 /*.tar.gz

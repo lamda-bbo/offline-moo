@@ -22,9 +22,10 @@ seeds="1000"
 tasks="re21 bi_tsp_20 regex c10mop3"
 model="MOBO"
 train_modes="Vallina"
+# "Vallina ParEGO JES"
 
-MAX_JOBS=16
-AVAILABLE_GPUS="2"
+MAX_JOBS=8
+AVAILABLE_GPUS="0 1 2 3"
 MAX_RETRIES=1
 
 get_gpu_allocation() {

@@ -19,12 +19,13 @@
 # "zinc regex rfp molecule"
 
 seeds="1000 2000"
-tasks="re21 bi_tsp_20 regex c10mop3"
+tasks="re21 re22 re23 re24 re25 re31 re32 re33 re34 re35 re36 re37 re41 re42 re61"
 model="MultipleModels"
 train_modes="Vallina"
+# "Vallina COM IOM RoMA ICT TriMentoring"
 
-MAX_JOBS=18
-AVAILABLE_GPUS="1 3"
+MAX_JOBS=24
+AVAILABLE_GPUS="0 1 2 3"
 MAX_RETRIES=1
 
 get_gpu_allocation() {
@@ -79,7 +80,7 @@ for seed in $seeds; do
             --train_mode=${train_mode} \
             --task=${task} \
             --use_wandb=False \
-            --retrain_model=True \
+            --retrain_model=False \
             --seed=${seed}" \
             "$gpu_allocation" & 
 

@@ -1,9 +1,16 @@
 import os 
 os.system(
-    '''
-        bash scripts/end2end2.sh
-        bash scripts/multi_head.sh
-        bash scripts/multiple_models.sh
-        bash scripts/mobo.sh
-    '''
+    "bash scripts/end2end_test.sh"
+)
+
+os.system(
+    "bash scripts/multi_head_test.sh"
+)
+
+os.system(
+    "bash scripts/multiple_models_test.sh"
+)
+
+os.system(
+    "bash scripts/mobo.sh"
 )
