@@ -194,8 +194,8 @@ def calculate_mean_std(seed2rank_df: dict):
                 elif len(is_valid) == 1:
                     result_df.at[i, col] = f"{vals[is_valid].item()} $\pm$ 0.00"
                 else:
-                    mean = np.mean(vals)
-                    std = np.std(vals)
+                    mean = np.mean(vals[is_valid])
+                    std = np.std(vals[is_valid])
                     result_df.at[i, col] = f"{mean} $\pm$ {std}"
                     
     return result_df
@@ -221,6 +221,10 @@ def calculate_mean_rank():
     seed2rank_100th = {}
     seed2rank_75th = {}
     seed2rank_50th = {}
+    
+    seed2allhv_100th = {}
+    seed2allhv_75th = {}
+    seed2allhv_50th = {}
     
     for task_type, task_set in TASK_SET_PARTITION.items():
         task_set_short = [task.split('-')[0] for task in task_set]
@@ -266,24 +270,51 @@ def calculate_mean_rank():
         
         for seed, df in seed2hv_100th.items():
             if seed not in seed2rank_100th.keys():
-                seed2rank_100th[seed] = pd.DataFrame(index=algo_entries, columns=list(TASK_SET_PARTITION.keys()))
+                seed2rank_100th[seed] = pd.DataFrame(index=algo_entries, columns=list(TASK_SET_PARTITION.keys()) + ["Avg. Rank"])
                 seed2rank_100th[seed].index.name = "Methods"
             rank_df = calculate_avg_rank_for_single_df(df)
             seed2rank_100th[seed][task_type] = rank_df
+            
+            if seed not in seed2allhv_100th.keys():
+                seed2allhv_100th[seed] = pd.DataFrame(index=algo_entries)
+                seed2allhv_100th[seed].index.name = "Methods"
+            seed2allhv_100th[seed] = pd.concat([seed2allhv_100th[seed], df], axis=1)
         
         for seed, df in seed2hv_75th.items():
             if seed not in seed2rank_75th.keys():
-                seed2rank_75th[seed] = pd.DataFrame(index=algo_entries, columns=list(TASK_SET_PARTITION.keys()))
+                seed2rank_75th[seed] = pd.DataFrame(index=algo_entries, columns=list(TASK_SET_PARTITION.keys()) + ["Avg. Rank"])
                 seed2rank_75th[seed].index.name = "Methods"
             rank_df = calculate_avg_rank_for_single_df(df)
             seed2rank_75th[seed][task_type] = rank_df
             
+            if seed not in seed2allhv_75th.keys():
+                seed2allhv_75th[seed] = pd.DataFrame(index=algo_entries)
+                seed2allhv_75th[seed].index.name = "Methods"
+            seed2allhv_75th[seed] = pd.concat([seed2allhv_75th[seed], df], axis=1)
+            
         for seed, df in seed2hv_50th.items():
             if seed not in seed2rank_50th.keys():
-                seed2rank_50th[seed] = pd.DataFrame(index=algo_entries, columns=list(TASK_SET_PARTITION.keys()))
+                seed2rank_50th[seed] = pd.DataFrame(index=algo_entries, columns=list(TASK_SET_PARTITION.keys()) + ["Avg. Rank"])
                 seed2rank_50th[seed].index.name = "Methods"
             rank_df = calculate_avg_rank_for_single_df(df)
             seed2rank_50th[seed][task_type] = rank_df
+            
+            if seed not in seed2allhv_50th.keys():
+                seed2allhv_50th[seed] = pd.DataFrame(index=algo_entries)
+                seed2allhv_50th[seed].index.name = "Methods"
+            seed2allhv_50th[seed] = pd.concat([seed2allhv_50th[seed], df], axis=1)
+
+    for seed, df in seed2allhv_100th.items():
+        all_avg_rank_100th = calculate_avg_rank_for_single_df(df)
+        seed2rank_100th[seed]["Avg. Rank"] = all_avg_rank_100th
+    
+    for seed, df in seed2allhv_75th.items():
+        all_avg_rank_75th = calculate_avg_rank_for_single_df(df)
+        seed2rank_75th[seed]["Avg. Rank"] = all_avg_rank_75th
+        
+    for seed, df in seed2allhv_50th.items():
+        all_avg_rank_50th = calculate_avg_rank_for_single_df(df)
+        seed2rank_50th[seed]["Avg. Rank"] = all_avg_rank_50th
     
     avg_rank_100th = calculate_mean_std(seed2rank_100th)
     avg_rank_100th = avg_rank_100th.apply(highlight_best_two, ascending=True)
