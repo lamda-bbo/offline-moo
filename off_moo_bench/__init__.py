@@ -1,13 +1,17 @@
-# Config EvoXBench
-from evoxbench.database.init import config
-import os
-base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'problem', 'mo_nas')
-config(os.path.join(base_path, 'database'), os.path.join(base_path, 'data'))
+try:
+    # Config EvoXBench
+    from evoxbench.database.init import config
+    import os
+    base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'problem', 'mo_nas')
+    config(os.path.join(base_path, 'database'), os.path.join(base_path, 'data'))
+except:
+    pass
 
 from off_moo_bench.registration import registry, register, make, spec
 import numpy as np 
 
-register('RE21-Exact-v0',
+try:
+    register('RE21-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE21Dataset',
          'off_moo_bench.problem.synthetic_func:RE21',
 
@@ -19,8 +23,12 @@ register('RE21-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE22-Exact-v0',
+try:
+    register('RE22-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE22Dataset',
          'off_moo_bench.problem.synthetic_func:RE22',
 
@@ -32,8 +40,12 @@ register('RE22-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE23-Exact-v0',
+try:
+    register('RE23-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE23Dataset',
          'off_moo_bench.problem.synthetic_func:RE23',
 
@@ -45,8 +57,12 @@ register('RE23-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE24-Exact-v0',
+try:
+    register('RE24-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE24Dataset',
          'off_moo_bench.problem.synthetic_func:RE24',
 
@@ -58,8 +74,12 @@ register('RE24-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE25-Exact-v0',
+try:
+    register('RE25-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE25Dataset',
          'off_moo_bench.problem.synthetic_func:RE25',
 
@@ -71,8 +91,12 @@ register('RE25-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE31-Exact-v0',
+try:
+    register('RE31-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE31Dataset',
          'off_moo_bench.problem.synthetic_func:RE31',
 
@@ -84,8 +108,12 @@ register('RE31-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE32-Exact-v0',
+try:
+    register('RE32-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE32Dataset',
          'off_moo_bench.problem.synthetic_func:RE32',
 
@@ -97,8 +125,12 @@ register('RE32-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE33-Exact-v0',
+try:
+    register('RE33-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE33Dataset',
          'off_moo_bench.problem.synthetic_func:RE33',
 
@@ -110,8 +142,12 @@ register('RE33-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE34-Exact-v0',
+try:
+    register('RE34-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE34Dataset',
          'off_moo_bench.problem.synthetic_func:RE34',
 
@@ -123,8 +159,12 @@ register('RE34-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE35-Exact-v0',
+try:
+    register('RE35-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE35Dataset',
          'off_moo_bench.problem.synthetic_func:RE35',
 
@@ -136,8 +176,12 @@ register('RE35-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE36-Exact-v0',
+try:
+    register('RE36-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE36Dataset',
          'off_moo_bench.problem.synthetic_func:RE36',
 
@@ -149,8 +193,12 @@ register('RE36-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE37-Exact-v0',
+try:
+    register('RE37-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE37Dataset',
          'off_moo_bench.problem.synthetic_func:RE37',
 
@@ -162,8 +210,12 @@ register('RE37-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE41-Exact-v0',
+try:
+    register('RE41-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE41Dataset',
          'off_moo_bench.problem.synthetic_func:RE41',
 
@@ -175,8 +227,12 @@ register('RE41-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE42-Exact-v0',
+try:
+    register('RE42-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE42Dataset',
          'off_moo_bench.problem.synthetic_func:RE42',
 
@@ -188,8 +244,12 @@ register('RE42-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RE61-Exact-v0',
+try:
+    register('RE61-Exact-v0',
          'off_moo_bench.datasets.continuous.re_suite_dataset:RE61Dataset',
          'off_moo_bench.problem.synthetic_func:RE61',
 
@@ -201,8 +261,12 @@ register('RE61-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('VLMOP1-Exact-v0',
+try:
+    register('VLMOP1-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:VLMOP1Dataset',
          'off_moo_bench.problem.synthetic_func:VLMOP1',
 
@@ -214,8 +278,12 @@ register('VLMOP1-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('VLMOP2-Exact-v0',
+try:
+    register('VLMOP2-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:VLMOP2Dataset',
          'off_moo_bench.problem.synthetic_func:VLMOP2',
 
@@ -227,8 +295,12 @@ register('VLMOP2-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('VLMOP3-Exact-v0',
+try:
+    register('VLMOP3-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:VLMOP3Dataset',
          'off_moo_bench.problem.synthetic_func:VLMOP3',
 
@@ -240,8 +312,12 @@ register('VLMOP3-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('ZDT1-Exact-v0',
+try:
+    register('ZDT1-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:ZDT1Dataset',
          'off_moo_bench.problem.synthetic_func:ZDT1',
 
@@ -253,8 +329,12 @@ register('ZDT1-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('ZDT2-Exact-v0',
+try:
+    register('ZDT2-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:ZDT2Dataset',
          'off_moo_bench.problem.synthetic_func:ZDT2',
 
@@ -266,8 +346,12 @@ register('ZDT2-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('ZDT3-Exact-v0',
+try:
+    register('ZDT3-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:ZDT3Dataset',
          'off_moo_bench.problem.synthetic_func:ZDT3',
 
@@ -279,8 +363,12 @@ register('ZDT3-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('ZDT4-Exact-v0',
+try:
+    register('ZDT4-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:ZDT4Dataset',
          'off_moo_bench.problem.synthetic_func:ZDT4',
 
@@ -292,8 +380,12 @@ register('ZDT4-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('ZDT6-Exact-v0',
+try:
+    register('ZDT6-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:ZDT6Dataset',
          'off_moo_bench.problem.synthetic_func:ZDT6',
 
@@ -305,8 +397,12 @@ register('ZDT6-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('OmniTest-Exact-v0',
+try:
+    register('OmniTest-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:OmniTestDataset',
          'off_moo_bench.problem.synthetic_func:OmniTest',
 
@@ -318,8 +414,12 @@ register('OmniTest-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('DTLZ1-Exact-v0',
+try:
+    register('DTLZ1-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:DTLZ1Dataset',
          'off_moo_bench.problem.dtlz:DTLZ1',
 
@@ -331,8 +431,12 @@ register('DTLZ1-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('DTLZ2-Exact-v0',
+try:
+    register('DTLZ2-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:DTLZ2Dataset',
          'off_moo_bench.problem.dtlz:DTLZ2',
 
@@ -344,8 +448,12 @@ register('DTLZ2-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('DTLZ3-Exact-v0',
+try:
+    register('DTLZ3-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:DTLZ3Dataset',
          'off_moo_bench.problem.dtlz:DTLZ3',
 
@@ -357,8 +465,12 @@ register('DTLZ3-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('DTLZ4-Exact-v0',
+try:
+    register('DTLZ4-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:DTLZ4Dataset',
          'off_moo_bench.problem.dtlz:DTLZ4',
 
@@ -370,8 +482,12 @@ register('DTLZ4-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('DTLZ5-Exact-v0',
+try:
+    register('DTLZ5-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:DTLZ5Dataset',
          'off_moo_bench.problem.dtlz:DTLZ5',
 
@@ -383,8 +499,12 @@ register('DTLZ5-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('DTLZ6-Exact-v0',
+try:
+    register('DTLZ6-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:DTLZ6Dataset',
          'off_moo_bench.problem.dtlz:DTLZ6',
 
@@ -396,8 +516,12 @@ register('DTLZ6-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('DTLZ7-Exact-v0',
+try:
+    register('DTLZ7-Exact-v0',
          'off_moo_bench.datasets.continuous.synthetic_function_dataset:DTLZ7Dataset',
          'off_moo_bench.problem.dtlz:DTLZ7',
 
@@ -409,8 +533,12 @@ register('DTLZ7-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('MOHopperV2-Exact-v0',
+try:
+    register('MOHopperV2-Exact-v0',
          'off_moo_bench.datasets.continuous.mo_hopper_dataset:MOHopperV2Dataset',
          'off_moo_bench.problem.morl.morl_problem:MOHopperV2',
 
@@ -422,8 +550,12 @@ register('MOHopperV2-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('MOSwimmerV2-Exact-v0',
+try:
+    register('MOSwimmerV2-Exact-v0',
          'off_moo_bench.datasets.continuous.mo_swimmer_dataset:MOSwimmerV2Dataset',
          'off_moo_bench.problem.morl.morl_problem:MOSwimmerV2',
 
@@ -435,8 +567,12 @@ register('MOSwimmerV2-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('Portfolio-Exact-v0',
+try:
+    register('Portfolio-Exact-v0',
          'off_moo_bench.datasets.continuous.portfolio_dataset:PortfolioDataset',
          'off_moo_bench.problem.comb_opt.mo_portfolio:MOPortfolio',
 
@@ -448,8 +584,12 @@ register('Portfolio-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('Molecule-Exact-v0',
+try:
+    register('Molecule-Exact-v0',
          'off_moo_bench.datasets.continuous.molecule_dataset:MoleculeDataset',
          'off_moo_bench.problem.moo_molecule_funcs.molecule:Molecule',
 
@@ -461,8 +601,12 @@ register('Molecule-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('NASBench201Test-Exact-v0',
+try:
+    register('NASBench201Test-Exact-v0',
          'off_moo_bench.datasets.discrete.nb201_test_dataset:NB201TestDataset',
          'off_moo_bench.problem.mo_nas.mo_nas:NASBench201Test',
 
@@ -474,8 +618,12 @@ register('NASBench201Test-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP1-Exact-v0',
+try:
+    register('C10MOP1-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP1Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP1',
 
@@ -487,8 +635,12 @@ register('C10MOP1-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP2-Exact-v0',
+try:
+    register('C10MOP2-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP2Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP2',
 
@@ -500,8 +652,12 @@ register('C10MOP2-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP3-Exact-v0',
+try:
+    register('C10MOP3-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP3Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP3',
 
@@ -513,8 +669,12 @@ register('C10MOP3-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP4-Exact-v0',
+try:
+    register('C10MOP4-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP4Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP4',
 
@@ -526,8 +686,12 @@ register('C10MOP4-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP5-Exact-v0',
+try:
+    register('C10MOP5-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP5Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP5',
 
@@ -539,8 +703,12 @@ register('C10MOP5-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP6-Exact-v0',
+try:
+    register('C10MOP6-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP6Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP6',
 
@@ -552,8 +720,12 @@ register('C10MOP6-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP7-Exact-v0',
+try:
+    register('C10MOP7-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP7Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP7',
 
@@ -565,8 +737,12 @@ register('C10MOP7-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP8-Exact-v0',
+try:
+    register('C10MOP8-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP8Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP8',
 
@@ -578,8 +754,12 @@ register('C10MOP8-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('C10MOP9-Exact-v0',
+try:
+    register('C10MOP9-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:C10MOP9Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:C10MOP9',
 
@@ -591,8 +771,12 @@ register('C10MOP9-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP1-Exact-v0',
+try:
+    register('IN1KMOP1-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP1Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP1',
 
@@ -604,8 +788,12 @@ register('IN1KMOP1-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP2-Exact-v0',
+try:
+    register('IN1KMOP2-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP2Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP2',
 
@@ -617,8 +805,12 @@ register('IN1KMOP2-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP3-Exact-v0',
+try:
+    register('IN1KMOP3-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP3Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP3',
 
@@ -630,8 +822,12 @@ register('IN1KMOP3-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP4-Exact-v0',
+try:
+    register('IN1KMOP4-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP4Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP4',
 
@@ -643,8 +839,12 @@ register('IN1KMOP4-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP5-Exact-v0',
+try:
+    register('IN1KMOP5-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP5Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP5',
 
@@ -656,8 +856,12 @@ register('IN1KMOP5-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP6-Exact-v0',
+try:
+    register('IN1KMOP6-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP6Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP6',
 
@@ -669,8 +873,12 @@ register('IN1KMOP6-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP7-Exact-v0',
+try:
+    register('IN1KMOP7-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP7Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP7',
 
@@ -682,8 +890,12 @@ register('IN1KMOP7-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP8-Exact-v0',
+try:
+    register('IN1KMOP8-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP8Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP8',
 
@@ -695,8 +907,12 @@ register('IN1KMOP8-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('IN1KMOP9-Exact-v0',
+try:
+    register('IN1KMOP9-Exact-v0',
          'off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP9Dataset',
          'off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP9',
 
@@ -708,8 +924,12 @@ register('IN1KMOP9-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('Regex-Exact-v0',
+try:
+    register('Regex-Exact-v0',
          'off_moo_bench.datasets.sequence.regex_dataset:RegexDataset',
          'off_moo_bench.problem.lambo.lambo_mole_task:REGEX',
 
@@ -721,8 +941,12 @@ register('Regex-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('ZINC-Exact-v0',
+try:
+    register('ZINC-Exact-v0',
          'off_moo_bench.datasets.sequence.zinc_dataset:ZINCDataset',
          'off_moo_bench.problem.lambo.lambo_mole_task:ZINC',
 
@@ -734,8 +958,12 @@ register('ZINC-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('RFP-Exact-v0',
+try:
+    register('RFP-Exact-v0',
          'off_moo_bench.datasets.sequence.rfp_dataset:RFPDataset',
          'off_moo_bench.problem.lambo.lambo_mole_task:RFP',
 
@@ -747,8 +975,12 @@ register('RFP-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiTSP20-Exact-v0',
+try:
+    register('BiTSP20-Exact-v0',
          'off_moo_bench.datasets.permutation.motsp_dataset:BiTSP20Dataset',
          'off_moo_bench.problem.comb_opt.mo_tsp:BiTSP20',
 
@@ -760,8 +992,12 @@ register('BiTSP20-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiTSP50-Exact-v0',
+try:
+    register('BiTSP50-Exact-v0',
          'off_moo_bench.datasets.permutation.motsp_dataset:BiTSP50Dataset',
          'off_moo_bench.problem.comb_opt.mo_tsp:BiTSP50',
 
@@ -773,8 +1009,12 @@ register('BiTSP50-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiTSP100-Exact-v0',
+try:
+    register('BiTSP100-Exact-v0',
          'off_moo_bench.datasets.permutation.motsp_dataset:BiTSP100Dataset',
          'off_moo_bench.problem.comb_opt.mo_tsp:BiTSP100',
 
@@ -786,8 +1026,12 @@ register('BiTSP100-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiTSP500-Exact-v0',
+try:
+    register('BiTSP500-Exact-v0',
          'off_moo_bench.datasets.permutation.motsp_dataset:BiTSP500Dataset',
          'off_moo_bench.problem.comb_opt.mo_tsp:BiTSP500',
 
@@ -799,8 +1043,12 @@ register('BiTSP500-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('TriTSP20-Exact-v0',
+try:
+    register('TriTSP20-Exact-v0',
          'off_moo_bench.datasets.permutation.motsp_dataset:TriTSP20Dataset',
          'off_moo_bench.problem.comb_opt.mo_tsp_3obj:TriTSP20',
 
@@ -812,8 +1060,12 @@ register('TriTSP20-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('TriTSP50-Exact-v0',
+try:
+    register('TriTSP50-Exact-v0',
          'off_moo_bench.datasets.permutation.motsp_dataset:TriTSP50Dataset',
          'off_moo_bench.problem.comb_opt.mo_tsp_3obj:TriTSP50',
 
@@ -825,8 +1077,12 @@ register('TriTSP50-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('TriTSP100-Exact-v0',
+try:
+    register('TriTSP100-Exact-v0',
          'off_moo_bench.datasets.permutation.motsp_dataset:TriTSP100Dataset',
          'off_moo_bench.problem.comb_opt.mo_tsp_3obj:TriTSP100',
 
@@ -838,8 +1094,12 @@ register('TriTSP100-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiKP50-Exact-v0',
+try:
+    register('BiKP50-Exact-v0',
          'off_moo_bench.datasets.permutation.mokp_dataset:BiKP50Dataset',
          'off_moo_bench.problem.comb_opt.mo_kp:BiKP50',
 
@@ -851,8 +1111,12 @@ register('BiKP50-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiKP100-Exact-v0',
+try:
+    register('BiKP100-Exact-v0',
          'off_moo_bench.datasets.permutation.mokp_dataset:BiKP100Dataset',
          'off_moo_bench.problem.comb_opt.mo_kp:BiKP100',
 
@@ -864,8 +1128,12 @@ register('BiKP100-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiKP200-Exact-v0',
+try:
+    register('BiKP200-Exact-v0',
          'off_moo_bench.datasets.permutation.mokp_dataset:BiKP200Dataset',
          'off_moo_bench.problem.comb_opt.mo_kp:BiKP200',
 
@@ -877,8 +1145,12 @@ register('BiKP200-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiCVRP20-Exact-v0',
+try:
+    register('BiCVRP20-Exact-v0',
          'off_moo_bench.datasets.permutation.mocvrp_dataset:BiCVRP20Dataset',
          'off_moo_bench.problem.comb_opt.mo_cvrp:BiCVRP20',
 
@@ -890,8 +1162,12 @@ register('BiCVRP20-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiCVRP50-Exact-v0',
+try:
+    register('BiCVRP50-Exact-v0',
          'off_moo_bench.datasets.permutation.mocvrp_dataset:BiCVRP50Dataset',
          'off_moo_bench.problem.comb_opt.mo_cvrp:BiCVRP50',
 
@@ -903,8 +1179,12 @@ register('BiCVRP50-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         
 
-register('BiCVRP100-Exact-v0',
+try:
+    register('BiCVRP100-Exact-v0',
          'off_moo_bench.datasets.permutation.mocvrp_dataset:BiCVRP100Dataset',
          'off_moo_bench.problem.comb_opt.mo_cvrp:BiCVRP100',
 
@@ -916,3 +1196,6 @@ register('BiCVRP100-Exact-v0',
 
          # keyword arguments for building the exact oracle
          problem_kwargs=dict())
+except:
+    pass
+         

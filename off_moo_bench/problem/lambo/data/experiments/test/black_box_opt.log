@@ -565,3 +565,47 @@ AttributeError: module 'numpy' has no attribute 'float'.
 `np.float` was a deprecated alias for the builtin `float`. To avoid this error in existing code, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
 The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
     https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+[2024-07-16 14:46:58,604][root][ERROR] - not enough values to unpack (expected 2, got 0)
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/trx/code/offline-moo-final/off_moo_bench/problem/lambo/lambo/optimizers/pymoo.py", line 210, in optimize
+    res = minimize(
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/optimize.py", line 83, in minimize
+    res = algorithm.run()
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 213, in run
+    self.next()
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 233, in next
+    self.evaluator.eval(self.problem, infills, algorithm=self)
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/core/evaluator.py", line 95, in eval
+    self._eval(problem, pop[I], evaluate_values_of=evaluate_values_of, **kwargs)
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/core/evaluator.py", line 112, in _eval
+    out = problem.evaluate(pop.get("X"),
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/core/problem.py", line 124, in evaluate
+    self.do(X, out, *args, **kwargs)
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/core/problem.py", line 162, in do
+    self._evaluate(X, out, *args, **kwargs)
+  File "/home/trx/code/offline-moo-final/off_moo_bench/problem/lambo/lambo/tasks/proxy_rfp/proxy_rfp.py", line 98, in _evaluate
+    candidate = base_candidate.new_candidate(mut_list)
+  File "/home/trx/code/offline-moo-final/off_moo_bench/problem/lambo/lambo/candidate.py", line 196, in new_candidate
+    return FoldedCandidate(**cand_kwargs)
+  File "/home/trx/code/offline-moo-final/off_moo_bench/problem/lambo/lambo/candidate.py", line 118, in __init__
+    metrics = foldx_manager(mutation_list, self.uuid)
+  File "/home/trx/code/offline-moo-final/off_moo_bench/problem/lambo/lambo/tasks/proxy_rfp/foldx.py", line 154, in __call__
+    metrics = self.read_result(self.work_dir / id)
+  File "/home/trx/code/offline-moo-final/off_moo_bench/problem/lambo/lambo/tasks/proxy_rfp/foldx.py", line 213, in read_result
+    mutant_metrics, wild_metrics = f.readlines()[-2:]
+ValueError: not enough values to unpack (expected 2, got 0)
+[2024-07-16 15:02:02,189][root][ERROR] - not enough values to unpack (expected 2, got 0)
+Traceback (most recent call last):
+  File "scripts/black_box_opt.py", line 56, in main
+    metrics = optimizer.optimize(
+  File "/home/trx/code/offline-moo-final/off_moo_bench/problem/lambo/lambo/optimizers/pymoo.py", line 210, in optimize
+    res = minimize(
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/optimize.py", line 83, in minimize
+    res = algorithm.run()
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 213, in run
+    self.next()
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/pymoo/core/algorithm.py", line 233, in next
+    self.evaluator.eval(self.problem, infills, algorithm=self)
+  File "/home/trx/anaconda3/envs/off-moo/lib/python3.8/site-packages/
