@@ -1,40 +1,37 @@
+import warnings
+
 from off_moo_bench.problem.synthetic_func import *
+from off_moo_bench.problem.comb_opt import *
+from off_moo_bench.problem.dtlz import *
 
 load_nas = True
 try:
     from off_moo_bench.problem.mo_nas import *
 except:
     load_nas = False
-
-from off_moo_bench.problem.mo_nas import *
-# from off_moo_bench.problem.qm9 import *
-from off_moo_bench.problem.comb_opt import *
-from off_moo_bench.problem.dtlz import *
+    warnings.warn("Failed to config EvoXBench module. It might fail when you are running with MO-NAS tasks.")
 
 load_morl = True
 try:
     from off_moo_bench.problem.morl import *
 except:
     load_morl = False
-    
-from off_moo_bench.problem.morl import *
+    warnings.warn("Failed to config MuJoCo module. It might fail when you are running with MORL tasks.")
 
 load_lambo = True
-# print('1')
-# try:
-#     from off_moo_bench.problem.lambo import *
-# except:
-#     load_lambo = False
+try:
+    from off_moo_bench.problem.lambo import *
+except:
+    load_lambo = False
+    warnings.warn("Failed to config LAMBO module. It might fail when you are running with Sci-Design tasks.")
 
-from off_moo_bench.problem.lambo import *
-# assert 0, load_lambo
 load_chem = True
 try:
     from off_moo_bench.problem.moo_molecule_funcs import *
 except:
     load_chem = False
+    warnings.warn("Failed to config Molecule module. It might fail when you are running with Sci-Design tasks.")
 
-from off_moo_bench.problem.moo_molecule_funcs import *
 
 def get_problem(env_name, *args, **kwargs):
     env_name = env_name.lower()

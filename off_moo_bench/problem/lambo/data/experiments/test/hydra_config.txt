@@ -1,6 +1,6 @@
 logger:
   _target_: upcycle.logging.DataFrameLogger
-  log_dir: data/experiments/test/sunny_couch_0/2024-07-15_22-01-58
+  log_dir: data/experiments/test/figurative_region_0/2024-07-16_15-09-22
 task:
   _target_: lambo.tasks.proxy_rfp.proxy_rfp.ProxyRFPTask
   obj_dim: 2
@@ -112,8 +112,8 @@ project_name: lambo
 version: v0.2.1
 data_dir: data/experiments
 exp_name: test
-job_name: sunny_couch_0
-timestamp: 2024-07-15_22-01-58
+job_name: figurative_region_0
+timestamp: 2024-07-16_15-09-22
 log_dir: data/experiments/test
 wandb_mode: online
 wandb_host: https://api.wandb.ai
