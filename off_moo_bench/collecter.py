@@ -20,8 +20,10 @@ from off_moo_bench.problem.comb_opt.mo_portfolio import PortfolioRepair
 load_evoxbench = True
 try:
     from off_moo_bench.problem.mo_nas import get_genetic_operator
+    evox_sampling, evox_crossover, evox_mutation, evox_repair = get_genetic_operator()
 except:
     load_evoxbench = False
+    evox_sampling, evox_crossover, evox_mutation, evox_repair = None, None, None, None 
 
 class StartFromZeroRepair(Repair):
 
@@ -49,7 +51,7 @@ class IntegerRandomSampling(FloatRandomSampling):
         X = super()._do(problem, n_samples, **kwargs)
         return np.around(X).astype(int)
 
-evox_sampling, evox_crossover, evox_mutation, evox_repair = get_genetic_operator() if load_evoxbench else None, None, None, None
+# evox_sampling, evox_crossover, evox_mutation, evox_repair = get_genetic_operator() if load_evoxbench else None, None, None, None
 
 CROSSOVERS = {
     "lambo_sbx": get_crossover(name='int_sbx', prob=0., eta=16),
