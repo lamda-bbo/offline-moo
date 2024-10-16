@@ -145,3 +145,16 @@ To reproduce the performance of baseline algorithms reported in our work, you ma
 
 ## Contact 
 If you have any questions, feel free to contact [Rongxi Tan](https://trxcc.github.io/) or raise an issue.
+
+## Citation
+
+```
+@inproceedings{offline-moo,
+    author = {Ke Xue, Rong-Xi Tan, Xiaobin Huang, Chao Qian.},
+    title = {Offline Multi-Objective Optimization},
+    booktitle = {Proceedings of the 41st International Conference on Machine Learning (ICML'24)},
+    year = {2024},
+    address={Vienna, Austria},
+    pages={55595-55624}
+}
+```
