@@ -1,11 +1,15 @@
-from .monitor import Monitor
-import gym
 import json
 
+import gym
+
+from .monitor import Monitor
+
+
 def test_monitor():
-    import pandas
     import os
     import uuid
+
+    import pandas
 
     env = gym.make("CartPole-v1")
     env.seed(0)
@@ -17,15 +21,22 @@ def test_monitor():
         if done:
             menv.reset()
 
-    f = open(mon_file, 'rt')
+    f = open(mon_file, "rt")
 
     firstline = f.readline()
-    assert firstline.startswith('#')
+    assert firstline.startswith("#")
     metadata = json.loads(firstline[1:])
-    assert metadata['env_id'] == "CartPole-v1"
-    assert set(metadata.keys()) == {'env_id', 't_start'},  "Incorrect keys in monitor metadata"
+    assert metadata["env_id"] == "CartPole-v1"
+    assert set(metadata.keys()) == {
+        "env_id",
+        "t_start",
+    }, "Incorrect keys in monitor metadata"
 
     last_logline = pandas.read_csv(f, index_col=None)
-    assert set(last_logline.keys()) == {'l', 't', 'r'}, "Incorrect keys in monitor logline"
+    assert set(last_logline.keys()) == {
+        "l",
+        "t",
+        "r",
+    }, "Incorrect keys in monitor logline"
     f.close()
     os.remove(mon_file)

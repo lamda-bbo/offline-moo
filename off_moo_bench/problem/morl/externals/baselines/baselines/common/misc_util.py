@@ -1,10 +1,11 @@
-import gym
-import numpy as np
 import os
 import pickle
 import random
 import tempfile
 import zipfile
+
+import gym
+import numpy as np
 
 
 def zipsame(*seqs):
@@ -38,7 +39,10 @@ class EzPickle(object):
         self._ezpickle_kwargs = kwargs
 
     def __getstate__(self):
-        return {"_ezpickle_args": self._ezpickle_args, "_ezpickle_kwargs": self._ezpickle_kwargs}
+        return {
+            "_ezpickle_args": self._ezpickle_args,
+            "_ezpickle_kwargs": self._ezpickle_kwargs,
+        }
 
     def __setstate__(self, d):
         out = type(self)(*d["_ezpickle_args"], **d["_ezpickle_kwargs"])
@@ -48,13 +52,15 @@ class EzPickle(object):
 def set_global_seeds(i):
     try:
         import MPI
+
         rank = MPI.COMM_WORLD.Get_rank()
     except ImportError:
         rank = 0
 
-    myseed = i  + 1000 * rank if i is not None else None
+    myseed = i + 1000 * rank if i is not None else None
     try:
         import tensorflow as tf
+
         tf.set_random_seed(myseed)
     except ImportError:
         pass
@@ -87,21 +93,21 @@ def pretty_eta(seconds_left):
     hours_left %= 24
 
     def helper(cnt, name):
-        return "{} {}{}".format(str(cnt), name, ('s' if cnt > 1 else ''))
+        return "{} {}{}".format(str(cnt), name, ("s" if cnt > 1 else ""))
 
     if days_left > 0:
-        msg = helper(days_left, 'day')
+        msg = helper(days_left, "day")
         if hours_left > 0:
-            msg += ' and ' + helper(hours_left, 'hour')
+            msg += " and " + helper(hours_left, "hour")
         return msg
     if hours_left > 0:
-        msg = helper(hours_left, 'hour')
+        msg = helper(hours_left, "hour")
         if minutes_left > 0:
-            msg += ' and ' + helper(minutes_left, 'minute')
+            msg += " and " + helper(minutes_left, "minute")
         return msg
     if minutes_left > 0:
-        return helper(minutes_left, 'minute')
-    return 'less than a minute'
+        return helper(minutes_left, "minute")
+    return "less than a minute"
 
 
 class RunningAvg(object):
@@ -137,6 +143,7 @@ class RunningAvg(object):
         """Get the current estimate"""
         return self._value
 
+
 def boolean_flag(parser, name, default=False, help=None):
     """Add a boolean flag to argparse parser.
 
@@ -151,8 +158,10 @@ def boolean_flag(parser, name, default=False, help=None):
     help: str
         help string for the flag
     """
-    dest = name.replace('-', '_')
-    parser.add_argument("--" + name, action="store_true", default=default, dest=dest, help=help)
+    dest = name.replace("-", "_")
+    parser.add_argument(
+        "--" + name, action="store_true", default=default, dest=dest, help=help
+    )
     parser.add_argument("--no-" + name, action="store_false", dest=dest)
 
 
@@ -210,7 +219,9 @@ def relatively_safe_pickle_dump(obj, path, compression=False):
         with tempfile.NamedTemporaryFile() as uncompressed_file:
             pickle.dump(obj, uncompressed_file)
             uncompressed_file.file.flush()
-            with zipfile.ZipFile(temp_storage, "w", compression=zipfile.ZIP_DEFLATED) as myzip:
+            with zipfile.ZipFile(
+                temp_storage, "w", compression=zipfile.ZIP_DEFLATED
+            ) as myzip:
                 myzip.write(uncompressed_file.name, "data")
     else:
         with open(temp_storage, "wb") as f:

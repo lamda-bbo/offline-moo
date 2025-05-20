@@ -1,18 +1,16 @@
+import itertools
 import math
 import random
 from collections.__init__ import namedtuple
-import itertools
 
 import numpy as np
 import torch
-from Levenshtein._levenshtein import distance as edit_distance, editops as edit_ops
-
-from scipy.stats import rankdata
-from scipy.special import softmax
-
-from cachetools import cached, LRUCache
-
+from cachetools import LRUCache, cached
 from lambo.transforms import padding_collate_fn
+from Levenshtein._levenshtein import distance as edit_distance
+from Levenshtein._levenshtein import editops as edit_ops
+from scipy.special import softmax
+from scipy.stats import rankdata
 
 AMINO_ACIDS = [
     "A",
@@ -40,8 +38,15 @@ RESIDUE_ALPHABET = ["[PAD]", "[CLS]", "[SEP]", "[UNK]", "[MASK]"] + AMINO_ACIDS 
 
 
 class IntTokenizer:
-    def __init__(self, non_special_vocab, full_vocab, padding_token="[PAD]",
-                 masking_token="[MASK]", bos_token="[CLS]", eos_token="[SEP]"):
+    def __init__(
+        self,
+        non_special_vocab,
+        full_vocab,
+        padding_token="[PAD]",
+        masking_token="[MASK]",
+        bos_token="[CLS]",
+        eos_token="[SEP]",
+    ):
         self.non_special_vocab = non_special_vocab
         self.full_vocab = full_vocab
         self.special_vocab = set(full_vocab) - set(non_special_vocab)
@@ -61,11 +66,11 @@ class IntTokenizer:
         tokens = ["[CLS]"]
         buffer = []
         for char in seq:
-            if char == '[':
+            if char == "[":
                 buffer.append(char)
-            elif char == ']':
+            elif char == "]":
                 buffer.append(char)
-                tokens.append(''.join(buffer))
+                tokens.append("".join(buffer))
                 buffer = []
             elif len(buffer) > 0:
                 buffer.append(char)
@@ -84,13 +89,13 @@ class IntTokenizer:
             if token in self.special_vocab and token not in ["[MASK]", "[UNK]"]:
                 continue
             tokens.append(token)
-        return ' '.join(tokens)
+        return " ".join(tokens)
 
     def convert_id_to_token(self, token_id):
         if torch.is_tensor(token_id):
             token_id = token_id.item()
         assert isinstance(token_id, int)
-        return self.inverse_lookup.get(token_id, '[UNK]')
+        return self.inverse_lookup.get(token_id, "[UNK]")
 
     def convert_token_to_id(self, token):
         unk_idx = self.lookup["[UNK]"]
@@ -167,7 +172,7 @@ def draw_bootstrap(*arrays, bootstrap_ratio=0.632, min_samples=1):
     return res
 
 
-def to_tensor(*arrays, device=torch.device('cpu')):
+def to_tensor(*arrays, device=torch.device("cpu")):
     tensors = []
     for arr in arrays:
         if isinstance(arr, torch.Tensor):
@@ -199,8 +204,8 @@ def mutation_list(src_str, tgt_str, tokenizer):
     # def to_unicode(seq):
     #     return ''.join([chr(int(x)) for x in seq]).encode('utf-8').decode('utf-8')
 
-    src_token_id_seq = ''.join([chr(x) for x in tokenizer.encode(src_str)[1:-1]])
-    tgt_token_id_seq = ''.join([chr(x) for x in tokenizer.encode(tgt_str)[1:-1]])
+    src_token_id_seq = "".join([chr(x) for x in tokenizer.encode(src_str)[1:-1]])
+    tgt_token_id_seq = "".join([chr(x) for x in tokenizer.encode(tgt_str)[1:-1]])
 
     if edit_distance(src_token_id_seq, tgt_token_id_seq) == 0:
         return []
@@ -218,7 +223,9 @@ def mutation_list(src_str, tgt_str, tokenizer):
             if pos_1 == len(src_token_id_seq) - 1:
                 tmp_tok_id_seq = tmp_tok_id_seq[:-1]
             else:
-                tmp_tok_id_seq = tmp_tok_id_seq[:tmp_pos] + tmp_tok_id_seq[tmp_pos + 1:]
+                tmp_tok_id_seq = (
+                    tmp_tok_id_seq[:tmp_pos] + tmp_tok_id_seq[tmp_pos + 1 :]
+                )
 
             mutations.append(StringDeletion(char_1, tmp_pos, tokenizer))
             trans_adj -= 1
@@ -229,7 +236,11 @@ def mutation_list(src_str, tgt_str, tokenizer):
             if pos_1 == len(src_token_id_seq) - 1:
                 tmp_tok_id_seq = tmp_tok_id_seq[:-1] + chr(char_2)
             else:
-                tmp_tok_id_seq = tmp_tok_id_seq[:tmp_pos] + chr(char_2) + tmp_tok_id_seq[tmp_pos + 1:]
+                tmp_tok_id_seq = (
+                    tmp_tok_id_seq[:tmp_pos]
+                    + chr(char_2)
+                    + tmp_tok_id_seq[tmp_pos + 1 :]
+                )
 
             mutations.append(StringSubstitution(char_1, tmp_pos, char_2, tokenizer))
 
@@ -243,7 +254,9 @@ def mutation_list(src_str, tgt_str, tokenizer):
             if pos_1 == len(src_token_id_seq) - 1:
                 tmp_tok_id_seq = tmp_tok_id_seq[:-1] + chr(char_2) + tmp_tok_id_seq[-1]
             else:
-                tmp_tok_id_seq = tmp_tok_id_seq[:tmp_pos] + chr(char_2) + tmp_tok_id_seq[tmp_pos:]
+                tmp_tok_id_seq = (
+                    tmp_tok_id_seq[:tmp_pos] + chr(char_2) + tmp_tok_id_seq[tmp_pos:]
+                )
 
             mutations.append(StringInsertion(char_1, tmp_pos, char_2, tokenizer))
             trans_adj += 1
@@ -251,7 +264,7 @@ def mutation_list(src_str, tgt_str, tokenizer):
     # check output
     tmp_str = tokenizer.decode([ord(x) for x in tmp_tok_id_seq]).replace(" ", "")
     assert tmp_tok_id_seq == tgt_token_id_seq
-    assert tmp_str == tgt_str, f'{tgt_str}\n{tmp_str}'
+    assert tmp_str == tgt_str, f"{tgt_str}\n{tmp_str}"
 
     return mutations
 
@@ -287,7 +300,7 @@ class StringInsertion:
     def __init__(self, old_token_idx, token_pos, new_token_idx, tokenizer):
         if old_token_idx is None:
             self.old_token_idx = None
-            self.old_token = ''
+            self.old_token = ""
         else:
             self.old_token_idx = int(old_token_idx)
             self.old_token = tokenizer.decode(self.old_token_idx)
@@ -313,7 +326,7 @@ class FoldxMutation(StringSubstitution):
         self.mutant_residue = tokenizer.decode(new_token_idx)
 
 
-def weighted_resampling(scores, k=1., num_samples=None):
+def weighted_resampling(scores, k=1.0, num_samples=None):
     """
     Multi-objective ranked resampling weights.
     Assumes scores are being minimized.
@@ -326,7 +339,7 @@ def weighted_resampling(scores, k=1., num_samples=None):
     num_rows = scores.shape[0]
     scores = scores.reshape(num_rows, -1)
 
-    ranks = rankdata(scores, method='dense', axis=0)  # starts from 1
+    ranks = rankdata(scores, method="dense", axis=0)  # starts from 1
     ranks = ranks.max(axis=-1)  # if A strictly dominates B it will have higher weight.
 
     weights = softmax(-np.log(ranks) / k)
@@ -367,9 +380,7 @@ def update_splits(
 
     # shuffle new data
     new_inputs, new_targets = new_split
-    new_perm = np.random.permutation(
-        np.arange(new_inputs.shape[0])
-    )
+    new_perm = np.random.permutation(np.arange(new_inputs.shape[0]))
     new_inputs = new_inputs[new_perm]
     new_targets = new_targets[new_perm]
 
@@ -378,10 +389,12 @@ def update_splits(
 
     num_rows = train_inputs.shape[0] + val_inputs.shape[0] + unseen_inputs.shape[0]
     num_test = min(
-        np.random.binomial(num_rows, holdout_ratio / 2.),
+        np.random.binomial(num_rows, holdout_ratio / 2.0),
         unseen_inputs.shape[0],
     )
-    num_test = max(test_inputs.shape[0], num_test) if test_inputs.size else max(1, num_test)
+    num_test = (
+        max(test_inputs.shape[0], num_test) if test_inputs.size else max(1, num_test)
+    )
 
     # first allocate to test split
     test_split = DataSplit(unseen_inputs[:num_test], unseen_targets[:num_test])
@@ -393,7 +406,7 @@ def update_splits(
 
     # then allocate to val split
     num_val = min(
-        np.random.binomial(num_rows, holdout_ratio / 2.),
+        np.random.binomial(num_rows, holdout_ratio / 2.0),
         resid_inputs.shape[0],
     )
     num_val = max(val_inputs.shape[0], num_val) if val_inputs.size else max(1, num_val)
@@ -417,31 +430,29 @@ def safe_np_cat(arrays, **kwargs):
 
 
 def str_to_tokens(str_array, tokenizer):
-    tokens = [
-        torch.tensor(tokenizer.encode(x)) for x in str_array
-    ]
+    tokens = [torch.tensor(tokenizer.encode(x)) for x in str_array]
     batch = padding_collate_fn(tokens, tokenizer.padding_idx)
     return batch
 
 
 def tokens_to_str(tok_idx_array, tokenizer):
-    str_array = np.array([
-        tokenizer.decode(token_ids).replace(' ', '') for token_ids in tok_idx_array
-    ])
+    str_array = np.array(
+        [tokenizer.decode(token_ids).replace(" ", "") for token_ids in tok_idx_array]
+    )
     return str_array
 
 
 def apply_mutation(base_seq, mut_pos, mut_res, op_type, tokenizer):
     tokens = tokenizer.decode(tokenizer.encode(base_seq)).split(" ")[1:-1]
 
-    if op_type == 'sub':
-        mut_seq = "".join(tokens[:mut_pos] + [mut_res] + tokens[(mut_pos + 1):])
-    elif op_type == 'ins':
+    if op_type == "sub":
+        mut_seq = "".join(tokens[:mut_pos] + [mut_res] + tokens[(mut_pos + 1) :])
+    elif op_type == "ins":
         mut_seq = "".join(tokens[:mut_pos] + [mut_res] + tokens[mut_pos:])
-    elif op_type == 'del':
-        mut_seq = "".join(tokens[:mut_pos] + tokens[(mut_pos + 1):])
+    elif op_type == "del":
+        mut_seq = "".join(tokens[:mut_pos] + tokens[(mut_pos + 1) :])
     else:
-        raise ValueError('unsupported operation')
+        raise ValueError("unsupported operation")
 
     return mut_seq
 

@@ -1,6 +1,6 @@
-import torch
 import random
 
+import torch
 from lambo.transforms import SequenceTranslation
 
 

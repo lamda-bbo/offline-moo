@@ -18,7 +18,9 @@ def quantile_calibration(mean, std, targets):
 
     targets = targets.unsqueeze(0)
     targets_in_region = torch.le(lb, targets) * torch.le(targets, ub)
-    occupancy_rates = targets_in_region.float().mean(-1, keepdim=True)  # average over target dim
+    occupancy_rates = targets_in_region.float().mean(
+        -1, keepdim=True
+    )  # average over target dim
     occupancy_rates = occupancy_rates.mean(-2, keepdim=True)  # average over batch dim
     # import pdb; pdb.set_trace()
     ece = (occupancy_rates - quantiles).abs().mean().item()

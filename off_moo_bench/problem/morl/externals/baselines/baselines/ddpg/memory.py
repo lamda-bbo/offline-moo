@@ -2,7 +2,7 @@ import numpy as np
 
 
 class RingBuffer(object):
-    def __init__(self, maxlen, shape, dtype='float32'):
+    def __init__(self, maxlen, shape, dtype="float32"):
         self.maxlen = maxlen
         self.start = 0
         self.length = 0
@@ -60,11 +60,11 @@ class Memory(object):
         terminal1_batch = self.terminals1.get_batch(batch_idxs)
 
         result = {
-            'obs0': array_min2d(obs0_batch),
-            'obs1': array_min2d(obs1_batch),
-            'rewards': array_min2d(reward_batch),
-            'actions': array_min2d(action_batch),
-            'terminals1': array_min2d(terminal1_batch),
+            "obs0": array_min2d(obs0_batch),
+            "obs1": array_min2d(obs1_batch),
+            "rewards": array_min2d(reward_batch),
+            "actions": array_min2d(action_batch),
+            "terminals1": array_min2d(terminal1_batch),
         }
         return result
 

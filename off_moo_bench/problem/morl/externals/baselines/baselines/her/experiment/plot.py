@@ -1,32 +1,37 @@
 # DEPRECATED, use baselines.common.plot_util instead
 
+import argparse
+import json
 import os
+
+import glob2
 import matplotlib.pyplot as plt
 import numpy as np
-import json
-import seaborn as sns; sns.set()
-import glob2
-import argparse
+
+import seaborn as sns
+
+sns.set()
 
 
 def smooth_reward_curve(x, y):
     halfwidth = int(np.ceil(len(x) / 60))  # Halfwidth of our smoothing convolution
     k = halfwidth
     xsmoo = x
-    ysmoo = np.convolve(y, np.ones(2 * k + 1), mode='same') / np.convolve(np.ones_like(y), np.ones(2 * k + 1),
-        mode='same')
+    ysmoo = np.convolve(y, np.ones(2 * k + 1), mode="same") / np.convolve(
+        np.ones_like(y), np.ones(2 * k + 1), mode="same"
+    )
     return xsmoo, ysmoo
 
 
 def load_results(file):
     if not os.path.exists(file):
         return None
-    with open(file, 'r') as f:
+    with open(file, "r") as f:
         lines = [line for line in f]
     if len(lines) < 2:
         return None
-    keys = [name.strip() for name in lines[0].split(',')]
-    data = np.genfromtxt(file, delimiter=',', skip_header=1, filling_values=0.)
+    keys = [name.strip() for name in lines[0].split(",")]
+    data = np.genfromtxt(file, delimiter=",", skip_header=1, filling_values=0.0)
     if data.ndim == 1:
         data = data.reshape(1, -1)
     assert data.ndim == 2
@@ -54,38 +59,41 @@ def pad(xs, value=np.nan):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('dir', type=str)
-parser.add_argument('--smooth', type=int, default=1)
+parser.add_argument("dir", type=str)
+parser.add_argument("--smooth", type=int, default=1)
 args = parser.parse_args()
 
 # Load all data.
 data = {}
-paths = [os.path.abspath(os.path.join(path, '..')) for path in glob2.glob(os.path.join(args.dir, '**', 'progress.csv'))]
+paths = [
+    os.path.abspath(os.path.join(path, ".."))
+    for path in glob2.glob(os.path.join(args.dir, "**", "progress.csv"))
+]
 for curr_path in paths:
     if not os.path.isdir(curr_path):
         continue
-    results = load_results(os.path.join(curr_path, 'progress.csv'))
+    results = load_results(os.path.join(curr_path, "progress.csv"))
     if not results:
-        print('skipping {}'.format(curr_path))
+        print("skipping {}".format(curr_path))
         continue
-    print('loading {} ({})'.format(curr_path, len(results['epoch'])))
-    with open(os.path.join(curr_path, 'params.json'), 'r') as f:
+    print("loading {} ({})".format(curr_path, len(results["epoch"])))
+    with open(os.path.join(curr_path, "params.json"), "r") as f:
         params = json.load(f)
 
-    success_rate = np.array(results['test/success_rate'])
-    epoch = np.array(results['epoch']) + 1
-    env_id = params['env_name']
-    replay_strategy = params['replay_strategy']
+    success_rate = np.array(results["test/success_rate"])
+    epoch = np.array(results["epoch"]) + 1
+    env_id = params["env_name"]
+    replay_strategy = params["replay_strategy"]
 
-    if replay_strategy == 'future':
-        config = 'her'
+    if replay_strategy == "future":
+        config = "her"
     else:
-        config = 'ddpg'
-    if 'Dense' in env_id:
-        config += '-dense'
+        config = "ddpg"
+    if "Dense" in env_id:
+        config += "-dense"
     else:
-        config += '-sparse'
-    env_id = env_id.replace('Dense', '')
+        config += "-sparse"
+    env_id = env_id.replace("Dense", "")
 
     # Process and smooth data.
     assert success_rate.shape == epoch.shape
@@ -103,7 +111,7 @@ for curr_path in paths:
 
 # Plot data.
 for env_id in sorted(data.keys()):
-    print('exporting {}'.format(env_id))
+    print("exporting {}".format(env_id))
     plt.clf()
 
     for config in sorted(data[env_id].keys()):
@@ -112,9 +120,14 @@ for env_id in sorted(data.keys()):
         assert xs.shape == ys.shape
 
         plt.plot(xs[0], np.nanmedian(ys, axis=0), label=config)
-        plt.fill_between(xs[0], np.nanpercentile(ys, 25, axis=0), np.nanpercentile(ys, 75, axis=0), alpha=0.25)
+        plt.fill_between(
+            xs[0],
+            np.nanpercentile(ys, 25, axis=0),
+            np.nanpercentile(ys, 75, axis=0),
+            alpha=0.25,
+        )
     plt.title(env_id)
-    plt.xlabel('Epoch')
-    plt.ylabel('Median Success Rate')
+    plt.xlabel("Epoch")
+    plt.ylabel("Median Success Rate")
     plt.legend()
-    plt.savefig(os.path.join(args.dir, 'fig_{}.png'.format(env_id)))
+    plt.savefig(os.path.join(args.dir, "fig_{}.png".format(env_id)))

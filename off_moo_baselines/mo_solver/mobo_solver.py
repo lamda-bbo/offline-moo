@@ -1,14 +1,16 @@
-import numpy as np
 import os
+from typing import Optional
+
+import numpy as np
 import torch
 from algorithm.mo_solver.base import Solver
-from typing import Optional
-from torch import Tensor
-from botorch.test_functions.base import MultiObjectiveTestProblem
-from pymoo.core.problem import Problem
-from pymoo.algorithms.moo.nsga2 import NonDominatedSorting
-from off_moo_bench.evaluation.metrics import hv
 from algorithm.mo_solver.external import lhs
+from botorch.test_functions.base import MultiObjectiveTestProblem
+from pymoo.algorithms.moo.nsga2 import NonDominatedSorting
+from pymoo.core.problem import Problem
+from torch import Tensor
+
+from off_moo_bench.evaluation.metrics import hv
 from utils import get_N_nondominated_index
 
 tkwargs = {
@@ -16,17 +18,23 @@ tkwargs = {
     "device": torch.device("cuda" if torch.cuda.is_available() else "cpu"),
 }
 
+
 class BotorchProblem(MultiObjectiveTestProblem):
-    def __init__(self, pymoo_problem: Problem, ref_point: np.ndarray, noise_std: Optional[float] = None, negate: bool = False) -> None:
+    def __init__(
+        self,
+        pymoo_problem: Problem,
+        ref_point: np.ndarray,
+        noise_std: Optional[float] = None,
+        negate: bool = False,
+    ) -> None:
         self.dim = pymoo_problem.n_var
         self.num_objectives = pymoo_problem.n_obj
         self._bounds = list(zip(pymoo_problem.xl, pymoo_problem.xu))
         self._ref_point = list(ref_point)
         super().__init__(noise_std=noise_std, negate=negate)
         self.model = pymoo_problem.model
-    
+
     def evaluate_true(self, X: Tensor) -> Tensor:
-        
         if isinstance(self.model, list):
             assert len(self.model) == self.n_obj
             y = torch.zeros((0, 1)).to(self.device)
@@ -43,37 +51,42 @@ class BotorchProblem(MultiObjectiveTestProblem):
 
 class MOBOSolver(Solver):
     def __init__(self, n_gen, pop_init_method, batch_size, **kwargs):
-        super().__init__(n_gen=n_gen, pop_init_method=pop_init_method, batch_size=batch_size)
+        super().__init__(
+            n_gen=n_gen, pop_init_method=pop_init_method, batch_size=batch_size
+        )
         self.algo_kwargs = kwargs
 
     def solve(self, problem, X, Y):
-
-        botorch_problem = BotorchProblem(problem, ref_point=np.max(Y, axis=0),
-                                          negate=True).to(**tkwargs)
+        botorch_problem = BotorchProblem(
+            problem, ref_point=np.max(Y, axis=0), negate=True
+        ).to(**tkwargs)
 
         X_init, Y_init = self._get_sampling(X, Y, num_samples=100)
 
         SMOKE_TEST = os.environ.get("SMOKE_TEST")
 
-        from botorch.models.gp_regression import FixedNoiseGP
-        from botorch.models.model_list_gp_regression import ModelListGP
-        from botorch.models.transforms.outcome import Standardize
-        from gpytorch.mlls.sum_marginal_log_likelihood import SumMarginalLogLikelihood
-        from botorch.utils.transforms import unnormalize, normalize
-        from botorch.utils.sampling import draw_sobol_samples
-        from botorch.optim.optimize import optimize_acqf, optimize_acqf_list
-        from botorch.acquisition.objective import GenericMCObjective
-        from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
-        from botorch.utils.multi_objective.box_decompositions.non_dominated import (
-            FastNondominatedPartitioning,
-        )
         from botorch.acquisition.multi_objective.monte_carlo import (
             qExpectedHypervolumeImprovement,
             qNoisyExpectedHypervolumeImprovement,
         )
-        from botorch.utils.sampling import sample_simplex
+        from botorch.acquisition.objective import GenericMCObjective
+        from botorch.models.gp_regression import FixedNoiseGP
+        from botorch.models.model_list_gp_regression import ModelListGP
+        from botorch.models.transforms.outcome import Standardize
+        from botorch.optim.optimize import optimize_acqf, optimize_acqf_list
+        from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+            FastNondominatedPartitioning,
+        )
+        from botorch.utils.multi_objective.scalarization import (
+            get_chebyshev_scalarization,
+        )
+        from botorch.utils.sampling import draw_sobol_samples, sample_simplex
+        from botorch.utils.transforms import normalize, unnormalize
+        from gpytorch.mlls.sum_marginal_log_likelihood import SumMarginalLogLikelihood
 
-        NOISE_SE = torch.tensor([1e-6 for _ in range(botorch_problem.num_objectives)], **tkwargs)
+        NOISE_SE = torch.tensor(
+            [1e-6 for _ in range(botorch_problem.num_objectives)], **tkwargs
+        )
 
         def initialize_model(train_x, train_obj, state_dict=None):
             # define models for objective and constraint
@@ -92,7 +105,7 @@ class MOBOSolver(Solver):
             if state_dict is not None:
                 model.load_state_dict(state_dict)
             return mll, model
-        
+
         BATCH_SIZE = 8
         NUM_RESTARTS = 10 if not SMOKE_TEST else 2
         RAW_SAMPLES = 512 if not SMOKE_TEST else 4
@@ -130,7 +143,7 @@ class MOBOSolver(Solver):
             new_obj_true = botorch_problem(new_x)
             new_obj = new_obj_true + torch.randn_like(new_obj_true) * NOISE_SE
             return new_x, new_obj, new_obj_true
-        
+
         def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler):
             """Optimizes the qEHVI acquisition function, and returns a new candidate and observation."""
             # partition non-dominated space into disjoint rectangles
@@ -156,7 +169,7 @@ class MOBOSolver(Solver):
             new_obj_true = botorch_problem(new_x)
             new_obj = new_obj_true + torch.randn_like(new_obj_true) * NOISE_SE
             return new_x, new_obj, new_obj_true
-        
+
         import time
         import warnings
 
@@ -167,7 +180,6 @@ class MOBOSolver(Solver):
             DominatedPartitioning,
         )
         from botorch.utils.multi_objective.pareto import is_non_dominated
-
 
         warnings.filterwarnings("ignore", category=BadInitialCandidatesWarning)
         warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -181,8 +193,9 @@ class MOBOSolver(Solver):
         # hvs_qehvi.append(hv(ref_point=botorch_problem.ref_point.cpu().numpy()).do(Y_init))
 
         hvs_qnehvi = []
-        hvs_qnehvi.append(hv(nadir_point=botorch_problem.ref_point.cpu().numpy(), 
-                                    y = Y_init))
+        hvs_qnehvi.append(
+            hv(nadir_point=botorch_problem.ref_point.cpu().numpy(), y=Y_init)
+        )
 
         # train_x_qehvi, train_obj_qehvi = (
         #     torch.Tensor(X_init).to(**tkwargs),
@@ -204,7 +217,9 @@ class MOBOSolver(Solver):
             fit_gpytorch_mll(mll_qnehvi)
 
             # qehvi_sampler = SobolQMCNormalSampler(sample_shape=torch.Size([MC_SAMPLES]))
-            qnehvi_sampler = SobolQMCNormalSampler(sample_shape=torch.Size([MC_SAMPLES]))
+            qnehvi_sampler = SobolQMCNormalSampler(
+                sample_shape=torch.Size([MC_SAMPLES])
+            )
 
             # (
             #     new_x_qehvi,
@@ -217,7 +232,7 @@ class MOBOSolver(Solver):
             (
                 new_x_qnehvi,
                 new_obj_qnehvi,
-                new_obj_true_qnehvi
+                new_obj_true_qnehvi,
             ) = optimize_qnehvi_and_get_observation(
                 model_qnehvi, train_x_qnehvi, train_obj_qnehvi, qnehvi_sampler
             )
@@ -240,11 +255,17 @@ class MOBOSolver(Solver):
             train_obj_qnehvi = torch.cat([train_obj_qnehvi, new_obj_qnehvi])
             # train_obj_true_qnehvi = torch.cat([train_obj_true_qnehvi, new_obj_true_qnehvi])
 
-            hvs_qnehvi.append(hv(nadir_point=botorch_problem.ref_point.cpu().numpy(), 
-                                    y = train_obj_qnehvi.detach().cpu().numpy()))
+            hvs_qnehvi.append(
+                hv(
+                    nadir_point=botorch_problem.ref_point.cpu().numpy(),
+                    y=train_obj_qnehvi.detach().cpu().numpy(),
+                )
+            )
 
-            mll_qnehvi, model_qnehvi = initialize_model(train_x_qnehvi, train_obj_qnehvi)
-            
+            mll_qnehvi, model_qnehvi = initialize_model(
+                train_x_qnehvi, train_obj_qnehvi
+            )
+
             t1 = time.time()
 
             if verbose:
@@ -261,6 +282,7 @@ class MOBOSolver(Solver):
         train_obj_qnehvi = train_obj_qnehvi.detach().cpu().numpy()
 
         from pymoo.algorithms.moo.nsga2 import NonDominatedSorting
+
         # fronts = NonDominatedSorting().do(train_obj_qnehvi, return_rank=True, n_stop_if_ranked=256)[0]
         # indices_cnt = 0
         # indices_select = []
@@ -276,13 +298,10 @@ class MOBOSolver(Solver):
         y_sol = train_obj_qnehvi[indices_select]
         x_sol = train_x_qnehvi[indices_select]
 
-
-        return {'x': x_sol, 'y': y_sol}
-
-
+        return {"x": x_sol, "y": y_sol}
 
     def _get_sampling(self, X, Y, num_samples):
-        if self.pop_init_method == 'nds':
+        if self.pop_init_method == "nds":
             sorted_indices = NonDominatedSorting().do(Y)
             sampling = (
                 X[np.concatenate(sorted_indices)][:num_samples],
@@ -298,7 +317,5 @@ class MOBOSolver(Solver):
                 )
         else:
             raise NotImplementedError
-        
+
         return sampling
-
-

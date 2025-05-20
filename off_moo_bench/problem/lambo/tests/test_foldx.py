@@ -1,12 +1,13 @@
-from Bio import PDB
 from pathlib import Path
-from lambo.tasks.proxy_rfp.foldx import FoldxManager
+
+from Bio import PDB
 from lambo.candidate import pdb_to_residues
-from lambo.utils import FoldxMutation, RESIDUE_ALPHABET, IntTokenizer
+from lambo.tasks.proxy_rfp.foldx import FoldxManager
+from lambo.utils import RESIDUE_ALPHABET, FoldxMutation, IntTokenizer
 
 
 class SelectChains(PDB.Select):
-    """ Only accept the specified chains when saving. """
+    """Only accept the specified chains when saving."""
 
     def __init__(self, chain_letters):
         self.chain_letters = chain_letters
@@ -41,12 +42,12 @@ def extract_chain(path, chain="A"):
 
 def test_foldx():
     test_dir = Path(__file__).parent.resolve()
-    test_pdb_asset = (test_dir / "./files/1ggx.pdb")
+    test_pdb_asset = test_dir / "./files/1ggx.pdb"
     pdb_path = extract_chain(test_pdb_asset, chain="A")
     work_dir = Path(__file__).parent / "tmp"
     work_dir.mkdir(parents=True, exist_ok=True)
 
-    residue_seq, pos_seq = pdb_to_residues(pdb_path, chain_id='A')
+    residue_seq, pos_seq = pdb_to_residues(pdb_path, chain_id="A")
     print(residue_seq)
     print(pos_seq)
 
@@ -67,16 +68,16 @@ def test_foldx():
             chain="A",
             token_pos=pos_seq[0],
             new_token_idx=tokenizer.encode("G")[1],
-            tokenizer=tokenizer
+            tokenizer=tokenizer,
         ),
         FoldxMutation(
             old_token_idx=tokenizer.encode("K")[1],
             chain="A",
             token_pos=pos_seq[2],
             new_token_idx=tokenizer.encode("L")[1],
-            tokenizer=tokenizer
+            tokenizer=tokenizer,
         ),
     ]
-    ddG = foldx_manager(mutation_list, id='1ggx')
+    ddG = foldx_manager(mutation_list, id="1ggx")
     print(f"{ddG} kcal/mol")
     print(f"full cache saved at  {foldx_manager.cache_out}")

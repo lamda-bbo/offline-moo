@@ -1,13 +1,13 @@
-import os 
-import sys 
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-)
+import os
+import sys
 
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+
+
+import numpy as np
 
 from off_moo_bench.problem import get_problem
 from utils import read_data
-import numpy as np
 
 # from evoxbench.database.init import config
 # import os
@@ -16,7 +16,15 @@ import numpy as np
 # config(os.path.join(base_path, 'database'), os.path.join(base_path, 'data'))
 
 env_names = [
-    'zdt1', 're21', 'molecule', 'zinc', 'regex', 'rfp', 'mo_hopper_v2', 'c10mop1', 'nb201_test'
+    "zdt1",
+    "re21",
+    "molecule",
+    "zinc",
+    "regex",
+    "rfp",
+    "mo_hopper_v2",
+    "c10mop1",
+    "nb201_test",
 ]
 
 for env_name in env_names:
@@ -29,12 +37,12 @@ for env_name in env_names:
     print(type(problem))
 
     print(np.max(y, axis=0), np.min(y, axis=0))
-    print('Nadir Point:', problem.get_nadir_point())
+    print("Nadir Point:", problem.get_nadir_point())
     print(x.shape)
     print(y.shape)
 
-    print('x[100] =', x[100])
-    print('f(x[100]) =', problem.evaluate(x[100].reshape(1, -1)), 'y[100] =', y[100])
+    print("x[100] =", x[100])
+    print("f(x[100]) =", problem.evaluate(x[100].reshape(1, -1)), "y[100] =", y[100])
     print(len(np.where(np.isinf(y))[0]))
     print(len(np.where(np.logical_or(np.isinf(y), np.isnan(y)))[0]))
 
@@ -56,4 +64,4 @@ for env_name in env_names:
     #         print(len(np.where(np.logical_or(np.isinf(y), np.isnan(y)))[0]))
     #     pass
 
-    print('\n\n')
+    print("\n\n")

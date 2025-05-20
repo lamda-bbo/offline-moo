@@ -1,13 +1,15 @@
-import torch
-from torch.nn import functional as F
-import numpy as np
 import math
-import torchvision
-# import wandb
 
+import numpy as np
+import torch
+import torchvision
+from lambo import dataset as gfp_dataset
+from lambo import transforms as gfp_transforms
 from lambo.models.mlm import sample_mask
-from lambo import dataset as gfp_dataset, transforms as gfp_transforms
 from lambo.models.shared_elements import check_early_stopping
+from torch.nn import functional as F
+
+# import wandb
 
 
 def corrupt_tok_idxs(tgt_tok_idxs, tokenizer, max_len_delta, select_idxs=None):
@@ -17,9 +19,7 @@ def corrupt_tok_idxs(tgt_tok_idxs, tokenizer, max_len_delta, select_idxs=None):
         # sample position indexes
         rand_idxs = sample_mask(tgt_tok_idxs, tokenizer, mask_size=max_len_delta)
         # sample length changes
-        len_deltas = np.random.randint(
-            0, max_len_delta + 1, (tgt_tok_idxs.size(0),)
-        )
+        len_deltas = np.random.randint(0, max_len_delta + 1, (tgt_tok_idxs.size(0),))
         # sample tokens for insertion/substitution
         rand_tok_idxs = torch.tensor(
             np.random.choice(viable_idxs, rand_idxs.shape, replace=True)
@@ -73,7 +73,7 @@ def corrupt_tok_idxs(tgt_tok_idxs, tokenizer, max_len_delta, select_idxs=None):
     return src_tok_idxs
 
 
-def lanmt_train_step(model, optimizer, tgt_tok_idxs, loss_scale=1.):
+def lanmt_train_step(model, optimizer, tgt_tok_idxs, loss_scale=1.0):
     optimizer.zero_grad(set_to_none=True)
 
     # corrupt random tokens
@@ -92,7 +92,9 @@ def lanmt_train_step(model, optimizer, tgt_tok_idxs, loss_scale=1.):
     tgt_tok_logits = model.tgt_tok_logits(tgt_tok_features)
 
     tok_loss = F.cross_entropy(
-        tgt_tok_logits.flatten(end_dim=-2), tgt_tok_idxs.flatten(), ignore_index=model.tokenizer.padding_idx
+        tgt_tok_logits.flatten(end_dim=-2),
+        tgt_tok_idxs.flatten(),
+        ignore_index=model.tokenizer.padding_idx,
     )
     len_deltas = (tgt_lens - src_lens).long()
     len_targets = len_deltas + model.max_len_delta
@@ -107,8 +109,8 @@ def lanmt_train_step(model, optimizer, tgt_tok_idxs, loss_scale=1.):
 
 def lanmt_train_epoch(model, optimizer, train_loader):
     metrics = dict(
-        train_loss=0.,
-        train_perplexity=0.,
+        train_loss=0.0,
+        train_perplexity=0.0,
     )
     model.train()
     for minibatch in train_loader:
@@ -118,24 +120,28 @@ def lanmt_train_epoch(model, optimizer, train_loader):
             assert torch.is_tensor(minibatch)
             tgt_tok_idxs = minibatch
 
-        loss, tgt_tok_logits, tgt_tok_idxs = lanmt_train_step(model, optimizer, tgt_tok_idxs)
+        loss, tgt_tok_logits, tgt_tok_idxs = lanmt_train_step(
+            model, optimizer, tgt_tok_idxs
+        )
 
         # logging
         tgt_mask = tgt_tok_idxs.ne(model.tokenizer.padding_idx).float()
         log_prob = F.log_softmax(tgt_tok_logits, dim=-1)
-        log_prob = np.take_along_axis(log_prob, tgt_tok_idxs.cpu().numpy()[..., None], axis=-1).squeeze(-1)
+        log_prob = np.take_along_axis(
+            log_prob, tgt_tok_idxs.cpu().numpy()[..., None], axis=-1
+        ).squeeze(-1)
         log_prob *= tgt_mask
 
-        metrics['train_perplexity'] += 2 ** (
+        metrics["train_perplexity"] += 2 ** (
             -(log_prob / math.log(2)).sum() / tgt_mask.sum()
         ).item() / len(train_loader)
-        metrics['train_loss'] += loss.item() / len(train_loader)
+        metrics["train_loss"] += loss.item() / len(train_loader)
     return metrics
 
 
 def lanmt_eval_epoch(model, eval_loader, split):
     metrics = dict(
-        perplexity=0.,
+        perplexity=0.0,
     )
     model.eval()
     for minibatch in eval_loader:
@@ -146,7 +152,9 @@ def lanmt_eval_epoch(model, eval_loader, split):
             tgt_tok_idxs = minibatch
 
         # corrupt random tokens
-        src_tok_idxs = corrupt_tok_idxs(tgt_tok_idxs, model.tokenizer, model.max_len_delta)
+        src_tok_idxs = corrupt_tok_idxs(
+            tgt_tok_idxs, model.tokenizer, model.max_len_delta
+        )
         src_tok_idxs = src_tok_idxs.to(model.device)
         tgt_tok_idxs = tgt_tok_idxs.to(model.device)
 
@@ -163,21 +171,31 @@ def lanmt_eval_epoch(model, eval_loader, split):
         # logging
         # tgt_mask = tgt_tok_idxs.ne(model.tokenizer.padding_idx).float()
         log_prob = F.log_softmax(tgt_tok_logits, dim=-1)
-        log_prob = np.take_along_axis(log_prob, tgt_tok_idxs.cpu().numpy()[..., None], axis=-1).squeeze(-1)
+        log_prob = np.take_along_axis(
+            log_prob, tgt_tok_idxs.cpu().numpy()[..., None], axis=-1
+        ).squeeze(-1)
         log_prob *= tgt_mask
 
-        metrics['perplexity'] += 2 ** (
+        metrics["perplexity"] += 2 ** (
             -(log_prob / math.log(2)).sum() / tgt_mask.sum()
         ).item() / len(eval_loader)
 
-    metrics = {f'{split}_{key}': val for key, val in metrics.items()}
+    metrics = {f"{split}_{key}": val for key, val in metrics.items()}
 
     return metrics
 
 
-def fit_lanmt_model(model, train_seqs, num_epochs, batch_size, lr, patience, max_shift,
-                              weights=None, log_prefix=''):
-
+def fit_lanmt_model(
+    model,
+    train_seqs,
+    num_epochs,
+    batch_size,
+    lr,
+    patience,
+    max_shift,
+    weights=None,
+    log_prefix="",
+):
     # random translation data augmentation, apply tokenizer
     train_transform = []
     if max_shift > 0:
@@ -191,8 +209,12 @@ def fit_lanmt_model(model, train_seqs, num_epochs, batch_size, lr, patience, max
     if weights is None:
         loader_kwargs = dict(batch_size=batch_size, shuffle=True)
     else:
-        sampler = torch.utils.data.WeightedRandomSampler(weights, batch_size, replacement=True)
-        batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size=batch_size, drop_last=False)
+        sampler = torch.utils.data.WeightedRandomSampler(
+            weights, batch_size, replacement=True
+        )
+        batch_sampler = torch.utils.data.BatchSampler(
+            sampler, batch_size=batch_size, drop_last=False
+        )
         loader_kwargs = dict(batch_sampler=batch_sampler)
 
     train_loader = torch.utils.data.DataLoader(
@@ -209,26 +231,24 @@ def fit_lanmt_model(model, train_seqs, num_epochs, batch_size, lr, patience, max
     model.requires_grad_(True)
     for epoch in range(num_epochs):
         metrics = {}
-        metrics.update(
-            lanmt_train_epoch(model, optimizer, train_loader)
-        )
+        metrics.update(lanmt_train_epoch(model, optimizer, train_loader))
         # use avg. train loss as convergence crit.
-        lr_sched.step(metrics['train_loss'])
+        lr_sched.step(metrics["train_loss"])
         best_score, best_epoch, best_weights, stop = check_early_stopping(
             model,
             best_score,
             best_epoch,
             best_weights,
-            metrics['train_loss'],
+            metrics["train_loss"],
             epoch + 1,
             patience,
             save_weights=True,
-            )
+        )
 
         # logging
         metrics.update(dict(best_score=best_score, best_epoch=best_epoch))
         if len(log_prefix) > 0:
-            metrics = {'/'.join((log_prefix, key)): val for key, val in metrics.items()}
+            metrics = {"/".join((log_prefix, key)): val for key, val in metrics.items()}
         # try:
         #     wandb.log(metrics)
         # except Exception:

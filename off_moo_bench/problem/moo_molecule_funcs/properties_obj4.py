@@ -1,72 +1,83 @@
-
-import pathlib
 import os
+import pathlib
 
 import numpy as np
 import torch
-
+from finetune_generator import Chemprop
 from hgraph import *
 
-from .multiobj_rationale.properties import *
 from .drd2_scorer import get_score as drd2_score
+from .multiobj_rationale.properties import *
+
 # from multiobj_rationale.properties import *
 # from drd2_scorer import get_score as drd2_score
-
-from finetune_generator import Chemprop
 
 
 class GSK3Prop:
     def __init__(self):
         self.func = gsk3_model()
+
     def __call__(self, smiles):
         return self.func(smiles)
+
 
 class JNK3Prop:
     def __init__(self):
         self.func = jnk3_model()
+
     def __call__(self, smiles):
         return self.func(smiles)
+
 
 class QEDProp:
     def __init__(self):
         self.func = qed_func()
+
     def __call__(self, smiles):
         return self.func(smiles)
+
 
 class SAProp:
     def __init__(self):
         self.func = sa_func()
+
     def __call__(self, smiles):
         return self.func(smiles)
+
 
 class DRD2Prop:
     def __init__(self):
         self.func = drd2_score
+
     def __call__(self, smiles):
         return self.func(smiles)
+
 
 class HIVProp:
     def __init__(self):
         base_path = pathlib.Path(__file__).parent.resolve()
-        evaluator = Chemprop(os.path.join(base_path, 'hiv'))
+        evaluator = Chemprop(os.path.join(base_path, "hiv"))
         self.func = evaluator.predict_single
+
     def __call__(self, smiles):
         return self.func(smiles)
+
 
 class SARSProp:
     def __init__(self):
         base_path = pathlib.Path(__file__).parent.resolve()
-        evaluator = Chemprop(os.path.join(base_path, 'SARS-single'))
+        evaluator = Chemprop(os.path.join(base_path, "SARS-single"))
         self.func = evaluator.predict_single
+
     def __call__(self, smiles):
         return self.func(smiles)
 
 
 SUPPORTED_PROPERTIES = {
-    'gsk3': GSK3Prop,
-    'jnk3': JNK3Prop,
-    'qed': QEDProp,
-    'sa': SAProp,
+    "gsk3": GSK3Prop,
+    "jnk3": JNK3Prop,
+    "qed": QEDProp,
+    "sa": SAProp,
     # 'drd2': DRD2Prop,
     # 'hiv': HIVProp,
     # 'sars': SARSProp,
@@ -75,10 +86,12 @@ SUPPORTED_PROPERTIES = {
 
 class MOOMoleculeFunction:
     """
-    Give it a list of properties from SUPPORTED_PROPERTIES to initialize a function going from a 32-dim pretrained latent space to the desired properties. 
+    Give it a list of properties from SUPPORTED_PROPERTIES to initialize a function going from a 32-dim pretrained latent space to the desired properties.
     """
+
     _max_hv = 0.38
-    def __init__(self, props, device='cuda' if torch.cuda.is_available() else 'cpu'):
+
+    def __init__(self, props, device="cuda" if torch.cuda.is_available() else "cpu"):
         for prop in props:
             assert prop in SUPPORTED_PROPERTIES.keys()
         self.prop_funcs = [SUPPORTED_PROPERTIES[prop]() for prop in props]
@@ -89,19 +102,22 @@ class MOOMoleculeFunction:
 
         self.bounds = torch.tensor(bounds, dtype=torch.float).transpose(-1, -2)
         if torch.cuda.is_available():
-            self.ref_point = torch.tensor([0.0, 0.0, 0.0, 0.0], device='cuda')
+            self.ref_point = torch.tensor([0.0, 0.0, 0.0, 0.0], device="cuda")
         else:
             self.ref_point = torch.tensor([0.0, 0.0, 0.0, 0.0])
 
-        
         class FakeArgs:
             def __init__(self):
                 base_path = pathlib.Path(__file__).parent.resolve()
-                self.vocab = os.path.join(base_path, 'hgraph2graph/data/chembl/vocab.txt')
-                self.model = os.path.join(base_path, 'hgraph2graph/ckpt/chembl-pretrained/model.ckpt')
+                self.vocab = os.path.join(
+                    base_path, "hgraph2graph/data/chembl/vocab.txt"
+                )
+                self.model = os.path.join(
+                    base_path, "hgraph2graph/ckpt/chembl-pretrained/model.ckpt"
+                )
 
                 self.atom_vocab = common_atom_vocab
-                self.rnn_type = 'LSTM'
+                self.rnn_type = "LSTM"
                 self.hidden_size = 250
                 self.embed_size = 250
                 self.batch_size = 50
@@ -111,24 +127,26 @@ class MOOMoleculeFunction:
                 self.diterT = 1
                 self.diterG = 3
                 self.dropout = 0.0
+
         args = FakeArgs()
-        vocab = [x.strip("\r\n ").split() for x in open(args.vocab)] 
-        args.vocab = PairVocab(vocab, cuda=(self.device=='cuda'))
+        vocab = [x.strip("\r\n ").split() for x in open(args.vocab)]
+        args.vocab = PairVocab(vocab, cuda=(self.device == "cuda"))
 
-        model = HierVAE(args).to(self.device) # latent model
+        model = HierVAE(args).to(self.device)  # latent model
 
-        model.load_state_dict(torch.load(args.model, map_location='cpu')[0])
+        model.load_state_dict(torch.load(args.model, map_location="cpu")[0])
         # model.load_state_dict(torch.load(args.model)[0])
         model.eval()
         self.model = model
 
-
-    def __call__(self, sample): 
-        # NOTE: it's possible for the decoding to fail sometimes, and i'm not sure why. 
+    def __call__(self, sample):
+        # NOTE: it's possible for the decoding to fail sometimes, and i'm not sure why.
         # you can probably wrap it in a try/except and just treat the value as minimum (which is what we did), or however you want to handle it
         try:
             sample = sample.cpu().numpy()
-            root_vecs = torch.from_numpy(sample).to(self.device).view(len(sample), -1).float()
+            root_vecs = (
+                torch.from_numpy(sample).to(self.device).view(len(sample), -1).float()
+            )
         except:
             root_vecs = torch.from_numpy(sample).to(self.device).view(1, -1).float()
 
@@ -137,10 +155,14 @@ class MOOMoleculeFunction:
         # root_vecs = torch.from_numpy(sample).to(self.device).view(1, -1).float()
         # print(root_vecs)
         try:
-            smiles = self.model.decoder.decode((root_vecs, root_vecs, root_vecs), greedy=True, max_decode_step=150)
+            smiles = self.model.decoder.decode(
+                (root_vecs, root_vecs, root_vecs), greedy=True, max_decode_step=150
+            )
         except:
             if torch.cuda.is_available():
-                return torch.tensor([[0.0, 0.0, 0.0, 0.0]], dtype=torch.float, device='cuda')
+                return torch.tensor(
+                    [[0.0, 0.0, 0.0, 0.0]], dtype=torch.float, device="cuda"
+                )
             else:
                 return torch.tensor([[0.0, 0.0, 0.0, 0.0]], dtype=torch.float)
         # print(smiles)
@@ -152,7 +174,7 @@ class MOOMoleculeFunction:
         res = np.array(res)
         res = res.transpose()
         if torch.cuda.is_available():
-            res = torch.tensor(res, dtype=torch.float, device='cuda')
+            res = torch.tensor(res, dtype=torch.float, device="cuda")
         else:
             res = torch.tensor(res, dtype=torch.float)
 
@@ -161,16 +183,17 @@ class MOOMoleculeFunction:
 
         # print(res)
 
-
-
         # return [prop_func(smiles) for prop_func in self.prop_funcs]
 
+
 import torch
+
 # import numpy as np
 tkwargs = {
     "dtype": torch.double,
     "device": torch.device("cpu"),
 }
+
 
 def from_unit_cube(x, lb, ub):
     """Project from [0, 1]^d to hypercube with bounds lb and ub"""
@@ -193,14 +216,11 @@ def latin_hypercube(n_pts, dim):
     return X
 
 
-
 import matplotlib.pyplot as plt
 import pandas as pd
-
-
-from matplotlib import rcParams
-from botorch.utils.multi_objective.pareto import is_non_dominated
 from botorch.utils.multi_objective.hypervolume import Hypervolume
+from botorch.utils.multi_objective.pareto import is_non_dominated
+from matplotlib import rcParams
 
 #
 # if __name__=='__main__':
@@ -278,13 +298,4 @@ from botorch.utils.multi_objective.hypervolume import Hypervolume
 # fig.savefig('molecule.png', bbox_inches='tight')
 
 
-
-
-
-
-
-
-
-
-
-    # print(problem(np.random.rand(32)))
+# print(problem(np.random.rand(32)))

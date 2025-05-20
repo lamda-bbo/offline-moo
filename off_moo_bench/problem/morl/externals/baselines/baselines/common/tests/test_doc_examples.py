@@ -1,6 +1,8 @@
 import pytest
+
 try:
     import mujoco_py
+
     _mujoco_present = True
 except BaseException:
     mujoco_py = None
@@ -9,15 +11,15 @@ except BaseException:
 
 @pytest.mark.skipif(
     not _mujoco_present,
-    reason='error loading mujoco - either mujoco / mujoco key not present, or LD_LIBRARY_PATH is not pointing to mujoco library'
+    reason="error loading mujoco - either mujoco / mujoco key not present, or LD_LIBRARY_PATH is not pointing to mujoco library",
 )
 def test_lstm_example():
     import tensorflow as tf
-    from baselines.common import policies, models, cmd_util
+    from baselines.common import cmd_util, models, policies
     from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 
     # create vectorized environment
-    venv = DummyVecEnv([lambda: cmd_util.make_mujoco_env('Reacher-v2', seed=0)])
+    venv = DummyVecEnv([lambda: cmd_util.make_mujoco_env("Reacher-v2", seed=0)])
 
     with tf.Session() as sess:
         # build policy based on lstm network with 128 units
@@ -40,9 +42,4 @@ def test_lstm_example():
             if done:
                 break
 
-
         assert step_counter > 5
-
-
-
-

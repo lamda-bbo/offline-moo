@@ -1,5 +1,10 @@
-from lambo.candidate import StringCandidate, StringSubstitution, StringInsertion, StringDeletion
-from lambo.utils import mutation_list, IntTokenizer
+from lambo.candidate import (
+    StringCandidate,
+    StringDeletion,
+    StringInsertion,
+    StringSubstitution,
+)
+from lambo.utils import IntTokenizer, mutation_list
 
 
 def check_candidates(b_seq, n_seq, manual_cand, auto_cand):
@@ -10,15 +15,15 @@ def check_candidates(b_seq, n_seq, manual_cand, auto_cand):
     assert manual_cand.mutant_residue_seq == n_seq
 
 
-VOCAB = ['A', 'B', 'C', 'D', 'E', 'F', '[PAD]', '[MASK]', '[UNK]', '[CLS]', '[SEP]']
+VOCAB = ["A", "B", "C", "D", "E", "F", "[PAD]", "[MASK]", "[UNK]", "[CLS]", "[SEP]"]
 
 
 def test_string_substitution():
     tokenizer = IntTokenizer(VOCAB, VOCAB)
-    b_seq = 'ABA'
+    b_seq = "ABA"
     b_cand = StringCandidate(b_seq, mutation_list=[], tokenizer=tokenizer)
 
-    n_seq = 'ACA'
+    n_seq = "ACA"
     manual_mut_ops = [
         StringSubstitution(
             old_token_idx=1, token_pos=1, new_token_idx=2, tokenizer=tokenizer
@@ -34,10 +39,10 @@ def test_string_substitution():
 
 def test_string_insertion():
     tokenizer = IntTokenizer(VOCAB, VOCAB)
-    b_seq = 'ABA'
+    b_seq = "ABA"
     b_cand = StringCandidate(b_seq, mutation_list=[], tokenizer=tokenizer)
 
-    n_seq = 'ACBA'
+    n_seq = "ACBA"
     manual_mut_ops = [
         StringInsertion(
             old_token_idx=1, token_pos=1, new_token_idx=2, tokenizer=tokenizer
@@ -53,10 +58,10 @@ def test_string_insertion():
 
 def test_string_deletion():
     tokenizer = IntTokenizer(VOCAB, VOCAB)
-    b_seq = 'ABA'
+    b_seq = "ABA"
     b_cand = StringCandidate(b_seq, mutation_list=[], tokenizer=tokenizer)
 
-    n_seq = 'AB'
+    n_seq = "AB"
     manual_mut_ops = [
         StringDeletion(old_token_idx=0, token_pos=2, tokenizer=tokenizer),
     ]
@@ -70,10 +75,10 @@ def test_string_deletion():
 
 def test_multiple_mutation():
     tokenizer = IntTokenizer(VOCAB, VOCAB)
-    b_seq = 'AFBFAFC'
+    b_seq = "AFBFAFC"
     b_cand = StringCandidate(b_seq, mutation_list=[], tokenizer=tokenizer)
 
-    n_seq = 'FDBFDAFE'
+    n_seq = "FDBFDAFE"
 
     auto_mut_ops = mutation_list(b_seq, n_seq, tokenizer)
     # [print(op) for op in auto_mut_ops]
@@ -81,9 +86,15 @@ def test_multiple_mutation():
 
     manual_mut_ops = [
         StringDeletion(old_token_idx=0, token_pos=0, tokenizer=tokenizer),
-        StringInsertion(old_token_idx=1, token_pos=1, new_token_idx=3, tokenizer=tokenizer),
-        StringInsertion(old_token_idx=0, token_pos=4, new_token_idx=3, tokenizer=tokenizer),
-        StringSubstitution(old_token_idx=2, token_pos=7, new_token_idx=4, tokenizer=tokenizer),
+        StringInsertion(
+            old_token_idx=1, token_pos=1, new_token_idx=3, tokenizer=tokenizer
+        ),
+        StringInsertion(
+            old_token_idx=0, token_pos=4, new_token_idx=3, tokenizer=tokenizer
+        ),
+        StringSubstitution(
+            old_token_idx=2, token_pos=7, new_token_idx=4, tokenizer=tokenizer
+        ),
     ]
     manual_cand = b_cand.new_candidate(manual_mut_ops, tokenizer)
 

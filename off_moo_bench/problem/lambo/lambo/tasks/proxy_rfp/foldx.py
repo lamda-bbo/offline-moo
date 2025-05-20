@@ -1,11 +1,12 @@
-import platform
+import datetime
+import logging
 import os
-import datetime 
+import platform
 import shutil
+import uuid
 from pathlib import Path
 from subprocess import PIPE, Popen
-import logging
-import uuid
+
 from Bio import PDB
 
 _name = "FoldX"
@@ -16,7 +17,7 @@ else:
 
 
 class SelectChains(PDB.Select):
-    """ Only accept the specified chains when saving. """
+    """Only accept the specified chains when saving."""
 
     def __init__(self, chain_letters):
         self.chain_letters = chain_letters
@@ -86,8 +87,8 @@ class FoldxManager:
         #     ts = datetime.datetime.utcnow() + datetime.timedelta(hours=+8)
         #     self.work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
         #                                  "..", "..", "..",
-        #                                  "data", 
-        #                                  "experiments", 
+        #                                  "data",
+        #                                  "experiments",
         #                                  "test",
         #                                  "offline_moo",
         #                                  f"{ts.year}-{ts.month}-{ts.day}_{ts.hour}-{ts.minute}-{ts.second}")
@@ -153,7 +154,9 @@ class FoldxManager:
         tag = self.build_mutant(mutation_list, id)
         metrics = self.read_result(self.work_dir / id)
         with open(self.cache_out, "a") as f:
-            f.write(f"{tag},{mutation_list},{metrics['wild_total_energy']},{metrics['mutant_total_energy']}\n")
+            f.write(
+                f"{tag},{mutation_list},{metrics['wild_total_energy']},{metrics['mutant_total_energy']}\n"
+            )
         return metrics
 
     def minimize_energy(self):
@@ -162,7 +165,7 @@ class FoldxManager:
         os.chdir(self.work_dir)
         fold_cmd = [str(self.bin_dir / _bin_name)] + self.repair_cmd
         if not self.skip_minimization:
-            print(' '.join(fold_cmd))
+            print(" ".join(fold_cmd))
             self._run_foldx(cmd=fold_cmd, cwd=self.work_dir, outfile="finalRepair.out")
         else:
             shutil.move(
@@ -201,7 +204,11 @@ class FoldxManager:
             ]
         )
 
-        self._run_foldx(cmd=foldx_cmd, cwd=self.work_dir, outfile=f"{subdir / 'buildFoldxMutant.out'}")
+        self._run_foldx(
+            cmd=foldx_cmd,
+            cwd=self.work_dir,
+            outfile=f"{subdir / 'buildFoldxMutant.out'}",
+        )
         os.chdir(cwd)
         return id
 
@@ -212,7 +219,7 @@ class FoldxManager:
             with open(Path(foldx_dir) / "Raw_wt_input_Repair.fxout", "r") as f:
                 mutant_metrics, wild_metrics = f.readlines()[-2:]
         except FileNotFoundError:
-            raise RuntimeError('FoldX BuildModel call failed.')
+            raise RuntimeError("FoldX BuildModel call failed.")
         metrics = dict(
             mutant_total_energy=float(mutant_metrics.split()[1]),
             wild_total_energy=float(wild_metrics.split()[1]),
@@ -256,7 +263,7 @@ class FoldxManager:
     @staticmethod
     def _run_foldx(cmd, cwd, outfile):
         with open(outfile, "wb") as f:
-            out, err = Popen(cmd, stdout=f, stderr=PIPE,  cwd=cwd).communicate()
+            out, err = Popen(cmd, stdout=f, stderr=PIPE, cwd=cwd).communicate()
         if len(err.decode("utf-8")) > 0:
             logging.error(f"FoldX error: {err.decode('utf-8')}")
 

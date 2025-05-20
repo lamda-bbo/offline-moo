@@ -1,10 +1,6 @@
 # tests for tf_util
 import tensorflow as tf
-from baselines.common.tf_util import (
-    function,
-    initialize,
-    single_threaded_session
-)
+from baselines.common.tf_util import function, initialize, single_threaded_session
 
 
 def test_function():
@@ -37,6 +33,6 @@ def test_multikwargs():
             assert lin(2, 2) == 10
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_function()
     test_multikwargs()

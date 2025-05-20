@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Buffer(object):
     # gets obs, actions, rewards, mu's, (states, masks), dones
     def __init__(self, env, nsteps, size=50000):
@@ -13,7 +14,9 @@ class Buffer(object):
         self.nstack = env.nstack
         self.nc //= self.nstack
         self.nbatch = self.nenv * self.nsteps
-        self.size = size // (self.nsteps)  # Each loc contains nenv * nsteps frames, thus total buffer is nenv * size frames
+        self.size = size // (
+            self.nsteps
+        )  # Each loc contains nenv * nsteps frames, thus total buffer is nenv * size frames
 
         # Memory
         self.enc_obs = None
@@ -41,8 +44,7 @@ class Buffer(object):
         # dones has shape [nenvs, nsteps]
         # returns stacked obs of shape [nenv, (nsteps + 1), nh, nw, nstack*nc]
 
-        return _stack_obs(enc_obs, dones,
-                          nsteps=self.nsteps)
+        return _stack_obs(enc_obs, dones, nsteps=self.nsteps)
 
     def put(self, enc_obs, actions, rewards, mus, dones, masks):
         # enc_obs [nenv, (nsteps + nstack), nh, nw, nc]
@@ -50,8 +52,12 @@ class Buffer(object):
         # mus [nenv, nsteps, nact]
 
         if self.enc_obs is None:
-            self.enc_obs = np.empty([self.size] + list(enc_obs.shape), dtype=self.obs_dtype)
-            self.actions = np.empty([self.size] + list(actions.shape), dtype=self.ac_dtype)
+            self.enc_obs = np.empty(
+                [self.size] + list(enc_obs.shape), dtype=self.obs_dtype
+            )
+            self.actions = np.empty(
+                [self.size] + list(actions.shape), dtype=self.ac_dtype
+            )
             self.rewards = np.empty([self.size] + list(rewards.shape), dtype=np.float32)
             self.mus = np.empty([self.size] + list(mus.shape), dtype=np.float32)
             self.dones = np.empty([self.size] + list(dones.shape), dtype=np.bool)
@@ -97,20 +103,23 @@ class Buffer(object):
         return obs, actions, rewards, mus, dones, masks
 
 
-
 def _stack_obs_ref(enc_obs, dones, nsteps):
     nenv = enc_obs.shape[0]
     nstack = enc_obs.shape[1] - nsteps
     nh, nw, nc = enc_obs.shape[2:]
     obs_dtype = enc_obs.dtype
-    obs_shape = (nh, nw, nc*nstack)
+    obs_shape = (nh, nw, nc * nstack)
 
     mask = np.empty([nsteps + nstack - 1, nenv, 1, 1, 1], dtype=np.float32)
     obs = np.zeros([nstack, nsteps + nstack, nenv, nh, nw, nc], dtype=obs_dtype)
-    x = np.reshape(enc_obs, [nenv, nsteps + nstack, nh, nw, nc]).swapaxes(1, 0)  # [nsteps + nstack, nenv, nh, nw, nc]
+    x = np.reshape(enc_obs, [nenv, nsteps + nstack, nh, nw, nc]).swapaxes(
+        1, 0
+    )  # [nsteps + nstack, nenv, nh, nw, nc]
 
-    mask[nstack-1:] = np.reshape(1.0 - dones, [nenv, nsteps, 1, 1, 1]).swapaxes(1, 0)  # keep
-    mask[:nstack-1] = 1.0
+    mask[nstack - 1 :] = np.reshape(1.0 - dones, [nenv, nsteps, 1, 1, 1]).swapaxes(
+        1, 0
+    )  # keep
+    mask[: nstack - 1] = 1.0
 
     # y = np.reshape(1 - dones, [nenvs, nsteps, 1, 1, 1])
     for i in range(nstack):
@@ -119,25 +128,35 @@ def _stack_obs_ref(enc_obs, dones, nsteps):
         x = x[:-1] * mask
         mask = mask[1:]
 
-    return np.reshape(obs[:, (nstack-1):].transpose((2, 1, 3, 4, 0, 5)), (nenv, (nsteps + 1)) + obs_shape)
+    return np.reshape(
+        obs[:, (nstack - 1) :].transpose((2, 1, 3, 4, 0, 5)),
+        (nenv, (nsteps + 1)) + obs_shape,
+    )
+
 
 def _stack_obs(enc_obs, dones, nsteps):
     nenv = enc_obs.shape[0]
     nstack = enc_obs.shape[1] - nsteps
     nc = enc_obs.shape[-1]
 
-    obs_ = np.zeros((nenv, nsteps + 1) + enc_obs.shape[2:-1] + (enc_obs.shape[-1] * nstack, ), dtype=enc_obs.dtype)
-    mask = np.ones((nenv, nsteps+1), dtype=enc_obs.dtype)
+    obs_ = np.zeros(
+        (nenv, nsteps + 1) + enc_obs.shape[2:-1] + (enc_obs.shape[-1] * nstack,),
+        dtype=enc_obs.dtype,
+    )
+    mask = np.ones((nenv, nsteps + 1), dtype=enc_obs.dtype)
     mask[:, 1:] = 1.0 - dones
-    mask = mask.reshape(mask.shape + tuple(np.ones(len(enc_obs.shape)-2, dtype=np.uint8)))
+    mask = mask.reshape(
+        mask.shape + tuple(np.ones(len(enc_obs.shape) - 2, dtype=np.uint8))
+    )
 
-    for i in range(nstack-1, -1, -1):
+    for i in range(nstack - 1, -1, -1):
         obs_[..., i * nc : (i + 1) * nc] = enc_obs[:, i : i + nsteps + 1, :]
-        if i < nstack-1:
+        if i < nstack - 1:
             obs_[..., i * nc : (i + 1) * nc] *= mask
             mask[:, 1:, ...] *= mask[:, :-1, ...]
 
     return obs_
+
 
 def test_stack_obs():
     nstack = 7

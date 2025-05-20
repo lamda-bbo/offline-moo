@@ -1,10 +1,13 @@
 from copy import deepcopy
+
 import numpy as np
 
-'''
+"""
 OptGraph is a data structure to store the optimization history.
 The optimization history is a rooted forest, and is organized in a tree structure.
-'''
+"""
+
+
 class OptGraph:
     def __init__(self):
         self.weights = []

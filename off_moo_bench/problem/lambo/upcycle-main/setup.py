@@ -14,11 +14,11 @@ with open(REQUIREMENTS_FILE) as f:
 
 setup(
     name=NAME,
-    version='0.0.1',
-    description='Reusable code snippets',
+    version="0.0.1",
+    description="Reusable code snippets",
     author=AUTHOR,
-    author_email='ss13641@nyu.edu',
-    url='https://github.com/samuelstanton/upcycle',
+    author_email="ss13641@nyu.edu",
+    url="https://github.com/samuelstanton/upcycle",
     install_requires=requirements,
     packages=PACKAGES,
 )

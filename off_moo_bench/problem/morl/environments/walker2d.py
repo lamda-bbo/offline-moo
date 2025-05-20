@@ -2,16 +2,24 @@
 # two objectives
 # running speed, energy efficiency
 
+from os import path
+
 import numpy as np
 from gym import utils
 from gym.envs.mujoco import mujoco_env
-from os import path
+
 
 class Walker2dEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self):
         self.obj_dim = 2
         utils.EzPickle.__init__(self)
-        mujoco_env.MujocoEnv.__init__(self, model_path = path.join(path.abspath(path.dirname(__file__)), "assets/walker2d.xml"), frame_skip = 4)
+        mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path=path.join(
+                path.abspath(path.dirname(__file__)), "assets/walker2d.xml"
+            ),
+            frame_skip=4,
+        )
 
     def step(self, a):
         qpos0_sum = np.sum(self.sim.data.qpos)
@@ -23,11 +31,10 @@ class Walker2dEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         alive_bonus = 1.0
         reward_speed = (posafter - posbefore) / self.dt + alive_bonus
         reward_energy = 4.0 - 1.0 * np.square(a).sum() + alive_bonus
-        done = not (height > 0.8 and height < 2.0 and
-                    ang > -1.0 and ang < 1.0)
+        done = not (height > 0.8 and height < 2.0 and ang > -1.0 and ang < 1.0)
         ob = self._get_obs()
 
-        return ob, 0., done, {'obj': np.array([reward_speed, reward_energy])}
+        return ob, 0.0, done, {"obj": np.array([reward_speed, reward_energy])}
 
     def _get_obs(self):
         qpos = self.sim.data.qpos
@@ -38,7 +45,7 @@ class Walker2dEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         c = 1e-3
         self.set_state(
             self.init_qpos + self.np_random.uniform(low=-c, high=c, size=self.model.nq),
-            self.init_qvel + self.np_random.uniform(low=-c, high=c, size=self.model.nv)
+            self.init_qvel + self.np_random.uniform(low=-c, high=c, size=self.model.nv),
         )
         return self._get_obs()
 

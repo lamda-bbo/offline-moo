@@ -1,5 +1,4 @@
 import numpy as np
-
 from pymoo.core.crossover import Crossover
 
 
@@ -17,10 +16,16 @@ class BatchCrossover(Crossover):
             parent_batches = problem.x_to_query_batches(parents)
             batch_size = parent_batches.shape[-2]
 
-            keep_mask = (np.random.rand(batch_size) > self.prob_per_query)
+            keep_mask = np.random.rand(batch_size) > self.prob_per_query
 
-            child_1 = np.concatenate((parent_batches[:1, keep_mask], parent_batches[1:2, ~keep_mask]), axis=-2)
-            child_2 = np.concatenate((parent_batches[:1, ~keep_mask], parent_batches[1:2, keep_mask]), axis=-2)
+            child_1 = np.concatenate(
+                (parent_batches[:1, keep_mask], parent_batches[1:2, ~keep_mask]),
+                axis=-2,
+            )
+            child_2 = np.concatenate(
+                (parent_batches[:1, ~keep_mask], parent_batches[1:2, keep_mask]),
+                axis=-2,
+            )
             child_batches = np.concatenate((child_1, child_2))
             child_x = problem.query_batches_to_x(child_batches)
 

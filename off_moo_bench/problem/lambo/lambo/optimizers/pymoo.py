@@ -1,18 +1,16 @@
-import numpy as np
-import torch
-import hydra
 # import wandb
 import time
+
+import hydra
+import numpy as np
 import pandas as pd
-
-from botorch.utils.multi_objective import pareto, infer_reference_point
-
-from pymoo.factory import get_termination, get_performance_indicator
-from pymoo.optimize import minimize
-
-from lambo.tasks.surrogate_task import SurrogateTask
+import torch
+from botorch.utils.multi_objective import infer_reference_point, pareto
 from lambo.models.lm_elements import LanguageModel
-from lambo.utils import weighted_resampling, DataSplit, update_splits, safe_np_cat
+from lambo.tasks.surrogate_task import SurrogateTask
+from lambo.utils import DataSplit, safe_np_cat, update_splits, weighted_resampling
+from pymoo.factory import get_performance_indicator, get_termination
+from pymoo.optimize import minimize
 
 
 def pareto_frontier(candidate_pool, obj_vals):
@@ -30,9 +28,9 @@ def pareto_frontier(candidate_pool, obj_vals):
 
 
 class Normalizer(object):
-    def __init__(self, loc=0., scale=1.):
+    def __init__(self, loc=0.0, scale=1.0):
         self.loc = loc
-        self.scale = np.where(scale != 0, scale, 1.)
+        self.scale = np.where(scale != 0, scale, 1.0)
 
     def __call__(self, arr):
         min_val = self.loc - 4 * self.scale
@@ -47,8 +45,19 @@ class Normalizer(object):
 
 
 class SequentialGeneticOptimizer(object):
-    def __init__(self, bb_task, algorithm, tokenizer, num_rounds, num_gens, seed, concentrate_pool=1,
-                 residue_sampler='uniform', resampling_weight=1., **kwargs):
+    def __init__(
+        self,
+        bb_task,
+        algorithm,
+        tokenizer,
+        num_rounds,
+        num_gens,
+        seed,
+        concentrate_pool=1,
+        residue_sampler="uniform",
+        resampling_weight=1.0,
+        **kwargs,
+    ):
         self.bb_task = bb_task
         self.algorithm = algorithm
         self.num_rounds = num_rounds
@@ -70,17 +79,23 @@ class SequentialGeneticOptimizer(object):
         self.active_targets = None
         self.resampling_weight = resampling_weight
 
-    def optimize(self, candidate_pool, pool_targets, all_seqs, all_targets, log_prefix=''):
+    def optimize(
+        self, candidate_pool, pool_targets, all_seqs, all_targets, log_prefix=""
+    ):
         batch_size = self.bb_task.batch_size
         target_min = all_targets.min(axis=0)
         target_range = all_targets.max(axis=0) - target_min
         hypercube_transform = Normalizer(
             loc=target_min + 0.5 * target_range,
-            scale=target_range / 2.,
+            scale=target_range / 2.0,
         )
 
-        bb_task = hydra.utils.instantiate(self.bb_task, tokenizer=self.tokenizer, candidate_pool=candidate_pool,
-                                          batch_size=1)
+        bb_task = hydra.utils.instantiate(
+            self.bb_task,
+            tokenizer=self.tokenizer,
+            candidate_pool=candidate_pool,
+            batch_size=1,
+        )
         is_feasible = bb_task.is_feasible(candidate_pool)
         pool_candidates = candidate_pool[is_feasible]
         pool_targets = pool_targets[is_feasible]
@@ -93,13 +108,19 @@ class SequentialGeneticOptimizer(object):
         self.active_candidates, self.active_targets = pool_candidates, pool_targets
         self.active_seqs = pool_seqs
 
-        pareto_candidates, pareto_targets = pareto_frontier(self.active_candidates, self.active_targets)
-        self.pareto_seqs = np.array([p_cand.mutant_residue_seq for p_cand in pareto_candidates])
+        pareto_candidates, pareto_targets = pareto_frontier(
+            self.active_candidates, self.active_targets
+        )
+        self.pareto_seqs = np.array(
+            [p_cand.mutant_residue_seq for p_cand in pareto_candidates]
+        )
         pareto_cand_history = pareto_candidates.copy()
         pareto_seq_history = self.pareto_seqs.copy()
         pareto_target_history = pareto_targets.copy()
         norm_pareto_targets = hypercube_transform(pareto_targets)
-        self._ref_point = -infer_reference_point(-torch.tensor(norm_pareto_targets)).numpy()
+        self._ref_point = -infer_reference_point(
+            -torch.tensor(norm_pareto_targets)
+        ).numpy()
         rescaled_ref_point = hypercube_transform.inv_transform(self._ref_point)
 
         # logging setup
@@ -107,20 +128,27 @@ class SequentialGeneticOptimizer(object):
         start_time = time.time()
         round_idx = 0
         self._log_candidates(pareto_candidates, pareto_targets, round_idx, log_prefix)
-        metrics = self._log_optimizer_metrics(norm_pareto_targets, round_idx, total_bb_evals, start_time, log_prefix)
-
-        print('\n best candidates')
-        obj_vals = {f'obj_val_{i}': pareto_targets[:, i].min() for i in range(self.bb_task.obj_dim)}
-        print(pd.DataFrame([obj_vals]).to_markdown(floatfmt='.4f'))
-
-        # set up encoder which may also be a masked language model (MLM)
-        encoder = None if self.encoder is None else hydra.utils.instantiate(
-            self.encoder, tokenizer=self.tokenizer
+        metrics = self._log_optimizer_metrics(
+            norm_pareto_targets, round_idx, total_bb_evals, start_time, log_prefix
         )
 
-        if self.residue_sampler == 'uniform':
+        print("\n best candidates")
+        obj_vals = {
+            f"obj_val_{i}": pareto_targets[:, i].min()
+            for i in range(self.bb_task.obj_dim)
+        }
+        print(pd.DataFrame([obj_vals]).to_markdown(floatfmt=".4f"))
+
+        # set up encoder which may also be a masked language model (MLM)
+        encoder = (
+            None
+            if self.encoder is None
+            else hydra.utils.instantiate(self.encoder, tokenizer=self.tokenizer)
+        )
+
+        if self.residue_sampler == "uniform":
             mlm_obj = None
-        elif self.residue_sampler == 'mlm':
+        elif self.residue_sampler == "mlm":
             assert isinstance(encoder, LanguageModel)
             mlm_obj = encoder
         else:
@@ -129,16 +157,29 @@ class SequentialGeneticOptimizer(object):
         for round_idx in range(1, self.num_rounds + 1):
             # contract active pool to current Pareto frontier
             if self.concentrate_pool > 0 and round_idx % self.concentrate_pool == 0:
-                self.active_candidates, self.active_targets = pareto_frontier(self.active_candidates, self.active_targets)
-                self.active_seqs = np.array([a_cand.mutant_residue_seq for a_cand in self.active_candidates])
-                print(f'\nactive set contracted to {self.active_candidates.shape[0]} pareto points')
+                self.active_candidates, self.active_targets = pareto_frontier(
+                    self.active_candidates, self.active_targets
+                )
+                self.active_seqs = np.array(
+                    [a_cand.mutant_residue_seq for a_cand in self.active_candidates]
+                )
+                print(
+                    f"\nactive set contracted to {self.active_candidates.shape[0]} pareto points"
+                )
             # augment active set with old pareto points
             if self.active_candidates.shape[0] < batch_size:
                 num_samples = min(batch_size, pareto_cand_history.shape[0])
-                num_backtrack = min(num_samples, batch_size - self.active_candidates.shape[0])
-                _, weights, _ = weighted_resampling(pareto_target_history, k=self.resampling_weight)
+                num_backtrack = min(
+                    num_samples, batch_size - self.active_candidates.shape[0]
+                )
+                _, weights, _ = weighted_resampling(
+                    pareto_target_history, k=self.resampling_weight
+                )
                 hist_idxs = np.random.choice(
-                    np.arange(pareto_cand_history.shape[0]), num_samples, p=weights, replace=False
+                    np.arange(pareto_cand_history.shape[0]),
+                    num_samples,
+                    p=weights,
+                    replace=False,
                 )
                 is_active = np.in1d(pareto_seq_history[hist_idxs], self.active_seqs)
                 hist_idxs = hist_idxs[~is_active]
@@ -147,42 +188,69 @@ class SequentialGeneticOptimizer(object):
                     backtrack_candidates = pareto_cand_history[hist_idxs]
                     backtrack_targets = pareto_target_history[hist_idxs]
                     backtrack_seqs = pareto_seq_history[hist_idxs]
-                    self.active_candidates = np.concatenate((self.active_candidates, backtrack_candidates))
-                    self.active_targets = np.concatenate((self.active_targets, backtrack_targets))
-                    self.active_seqs = np.concatenate((self.active_seqs, backtrack_seqs))
-                    print(f'active set augmented with {backtrack_candidates.shape[0]} backtrack points')
+                    self.active_candidates = np.concatenate(
+                        (self.active_candidates, backtrack_candidates)
+                    )
+                    self.active_targets = np.concatenate(
+                        (self.active_targets, backtrack_targets)
+                    )
+                    self.active_seqs = np.concatenate(
+                        (self.active_seqs, backtrack_seqs)
+                    )
+                    print(
+                        f"active set augmented with {backtrack_candidates.shape[0]} backtrack points"
+                    )
             # augment active set with random points
             if self.active_candidates.shape[0] < batch_size:
                 num_samples = min(batch_size, pool_candidates.shape[0])
-                num_rand = min(num_samples, batch_size - self.active_candidates.shape[0])
-                _, weights, _ = weighted_resampling(pool_targets, k=self.resampling_weight)
+                num_rand = min(
+                    num_samples, batch_size - self.active_candidates.shape[0]
+                )
+                _, weights, _ = weighted_resampling(
+                    pool_targets, k=self.resampling_weight
+                )
                 rand_idxs = np.random.choice(
-                    np.arange(pool_candidates.shape[0]), num_samples, p=weights, replace=False
+                    np.arange(pool_candidates.shape[0]),
+                    num_samples,
+                    p=weights,
+                    replace=False,
                 )
                 is_active = np.in1d(pool_seqs[rand_idxs], self.active_seqs)
                 rand_idxs = rand_idxs[~is_active][:num_rand]
                 rand_candidates = pool_candidates[rand_idxs]
                 rand_targets = pool_targets[rand_idxs]
                 rand_seqs = pool_seqs[rand_idxs]
-                self.active_candidates = np.concatenate((self.active_candidates, rand_candidates))
-                self.active_targets = np.concatenate((self.active_targets, rand_targets))
+                self.active_candidates = np.concatenate(
+                    (self.active_candidates, rand_candidates)
+                )
+                self.active_targets = np.concatenate(
+                    (self.active_targets, rand_targets)
+                )
                 self.active_seqs = np.concatenate((self.active_seqs, rand_seqs))
-                print(f'active set augmented with {rand_candidates.shape[0]} random points')
+                print(
+                    f"active set augmented with {rand_candidates.shape[0]} random points"
+                )
 
             if self.resampling_weight is None:
-                active_weights = np.ones(self.active_targets.shape[0]) / self.active_targets.shape[0]
+                active_weights = (
+                    np.ones(self.active_targets.shape[0]) / self.active_targets.shape[0]
+                )
             else:
-                _, active_weights, _ = weighted_resampling(self.active_targets, k=self.resampling_weight)
+                _, active_weights, _ = weighted_resampling(
+                    self.active_targets, k=self.resampling_weight
+                )
 
             # prepare the inner task
-            z_score_transform = Normalizer(self.all_targets.mean(0), self.all_targets.std(0))
+            z_score_transform = Normalizer(
+                self.all_targets.mean(0), self.all_targets.std(0)
+            )
 
             # algorithm setup
             algorithm = hydra.utils.instantiate(self.algorithm)
             algorithm.initialization.sampling.tokenizer = self.tokenizer
             algorithm.mating.mutation.tokenizer = self.tokenizer
 
-            if not self.residue_sampler == 'uniform':
+            if not self.residue_sampler == "uniform":
                 algorithm.initialization.sampling.mlm_obj = mlm_obj
                 algorithm.mating.mutation.mlm_obj = mlm_obj
 
@@ -199,25 +267,27 @@ class SequentialGeneticOptimizer(object):
                 start_time=start_time,
                 log_prefix=log_prefix,
             )
-            
+
             if round_idx == self.num_rounds:
                 import pickle
-                with open('proxy_rfp_problem.pkl', 'wb+') as f:
+
+                with open("proxy_rfp_problem.pkl", "wb+") as f:
                     pickle.dump(problem, f)
 
-
-            print('---- optimizing candidates ----')
+            print("---- optimizing candidates ----")
             res = minimize(
-                problem,
-                algorithm,
-                self.term_fn,
-                save_history=False,
-                verbose=True
+                problem, algorithm, self.term_fn, save_history=False, verbose=True
             )
 
             # query outer task, append data
             new_candidates, new_targets, new_seqs, bb_evals = self._evaluate_result(
-                res, self.active_candidates, z_score_transform, round_idx, total_bb_evals, start_time, log_prefix
+                res,
+                self.active_candidates,
+                z_score_transform,
+                round_idx,
+                total_bb_evals,
+                start_time,
+                log_prefix,
             )
             total_bb_evals += bb_evals
 
@@ -229,7 +299,7 @@ class SequentialGeneticOptimizer(object):
             new_candidates = new_candidates[is_feasible]
             new_targets = new_targets[is_feasible]
             if new_candidates.size == 0:
-                print('no new candidates')
+                print("no new candidates")
                 continue
 
             # filter duplicate candidates
@@ -243,9 +313,13 @@ class SequentialGeneticOptimizer(object):
             new_candidates = new_candidates[is_new]
             new_targets = new_targets[is_new]
             if new_candidates.size == 0:
-                print('no new candidates')
+                print("no new candidates")
                 self._log_optimizer_metrics(
-                    norm_pareto_targets, round_idx, total_bb_evals, start_time, log_prefix
+                    norm_pareto_targets,
+                    round_idx,
+                    total_bb_evals,
+                    start_time,
+                    log_prefix,
                 )
                 continue
 
@@ -257,13 +331,15 @@ class SequentialGeneticOptimizer(object):
             self.all_targets = np.concatenate((self.all_targets, new_targets))
 
             for seq in new_seqs:
-                if hasattr(self.tokenizer, 'to_smiles'):
+                if hasattr(self.tokenizer, "to_smiles"):
                     print(self.tokenizer.to_smiles(seq))
                 else:
                     print(seq)
 
             # augment active pool with candidates that can be mutated again
-            self.active_candidates = np.concatenate((self.active_candidates, new_candidates))
+            self.active_candidates = np.concatenate(
+                (self.active_candidates, new_candidates)
+            )
             self.active_targets = np.concatenate((self.active_targets, new_targets))
             self.active_seqs = np.concatenate((self.active_seqs, new_seqs))
 
@@ -272,26 +348,42 @@ class SequentialGeneticOptimizer(object):
                 np.concatenate((pareto_candidates, new_candidates)),
                 np.concatenate((pareto_targets, new_targets)),
             )
-            self.pareto_seqs = np.array([p_cand.mutant_residue_seq for p_cand in pareto_candidates])
+            self.pareto_seqs = np.array(
+                [p_cand.mutant_residue_seq for p_cand in pareto_candidates]
+            )
 
             print(new_targets)
-            print('\n new candidates')
-            obj_vals = {f'obj_val_{i}': new_targets[:, i].min() for i in range(self.bb_task.obj_dim)}
-            print(pd.DataFrame([obj_vals]).to_markdown(floatfmt='.4f'))
+            print("\n new candidates")
+            obj_vals = {
+                f"obj_val_{i}": new_targets[:, i].min()
+                for i in range(self.bb_task.obj_dim)
+            }
+            print(pd.DataFrame([obj_vals]).to_markdown(floatfmt=".4f"))
 
-            print('\n best candidates')
-            obj_vals = {f'obj_val_{i}': pareto_targets[:, i].min() for i in range(self.bb_task.obj_dim)}
-            print(pd.DataFrame([obj_vals]).to_markdown(floatfmt='.4f'))
+            print("\n best candidates")
+            obj_vals = {
+                f"obj_val_{i}": pareto_targets[:, i].min()
+                for i in range(self.bb_task.obj_dim)
+            }
+            print(pd.DataFrame([obj_vals]).to_markdown(floatfmt=".4f"))
 
             par_is_new = np.in1d(self.pareto_seqs, pareto_seq_history, invert=True)
-            pareto_cand_history = safe_np_cat([pareto_cand_history, pareto_candidates[par_is_new]])
-            pareto_seq_history = safe_np_cat([pareto_seq_history, self.pareto_seqs[par_is_new]])
-            pareto_target_history = safe_np_cat([pareto_target_history, pareto_targets[par_is_new]])
+            pareto_cand_history = safe_np_cat(
+                [pareto_cand_history, pareto_candidates[par_is_new]]
+            )
+            pareto_seq_history = safe_np_cat(
+                [pareto_seq_history, self.pareto_seqs[par_is_new]]
+            )
+            pareto_target_history = safe_np_cat(
+                [pareto_target_history, pareto_targets[par_is_new]]
+            )
 
             # logging
             norm_pareto_targets = hypercube_transform(pareto_targets)
             self._log_candidates(new_candidates, new_targets, round_idx, log_prefix)
-            metrics = self._log_optimizer_metrics(norm_pareto_targets, round_idx, total_bb_evals, start_time, log_prefix)
+            metrics = self._log_optimizer_metrics(
+                norm_pareto_targets, round_idx, total_bb_evals, start_time, log_prefix
+            )
 
         return metrics
 
@@ -302,16 +394,21 @@ class SequentialGeneticOptimizer(object):
         raise NotImplementedError
 
     def _log_candidates(self, candidates, targets, round_idx, log_prefix):
-        table_cols = ['round_idx', 'cand_uuid', 'cand_ancestor', 'cand_seq']
-        table_cols.extend([f'obj_val_{idx}' for idx in range(self.bb_task.obj_dim)])
+        table_cols = ["round_idx", "cand_uuid", "cand_ancestor", "cand_seq"]
+        table_cols.extend([f"obj_val_{idx}" for idx in range(self.bb_task.obj_dim)])
         for cand, obj in zip(candidates, targets):
             new_row = [round_idx, cand.uuid, cand.wild_name, cand.mutant_residue_seq]
             new_row.extend([elem for elem in obj])
-            record = {'/'.join((log_prefix, 'candidates', key)): val for key, val in zip(table_cols, new_row)}
+            record = {
+                "/".join((log_prefix, "candidates", key)): val
+                for key, val in zip(table_cols, new_row)
+            }
             # wandb.log(record)
 
-    def _log_optimizer_metrics(self, normed_targets, round_idx, num_bb_evals, start_time, log_prefix):
-        hv_indicator = get_performance_indicator('hv', ref_point=self._ref_point)
+    def _log_optimizer_metrics(
+        self, normed_targets, round_idx, num_bb_evals, start_time, log_prefix
+    ):
+        hv_indicator = get_performance_indicator("hv", ref_point=self._ref_point)
         new_hypervol = hv_indicator.do(normed_targets)
         self._hv_ref = new_hypervol if self._hv_ref is None else self._hv_ref
         metrics = dict(
@@ -322,14 +419,25 @@ class SequentialGeneticOptimizer(object):
             time_elapsed=time.time() - start_time,
         )
         print(pd.DataFrame([metrics]).to_markdown())
-        metrics = {'/'.join((log_prefix, 'opt_metrics', key)): val for key, val in metrics.items()}
+        metrics = {
+            "/".join((log_prefix, "opt_metrics", key)): val
+            for key, val in metrics.items()
+        }
         # wandb.log(metrics)
         return metrics
 
 
 class ModelFreeGeneticOptimizer(SequentialGeneticOptimizer):
     def _create_inner_task(
-            self, candidate_pool, input_data, target_data, transform, candidate_weights, *args, **kwargs):
+        self,
+        candidate_pool,
+        input_data,
+        target_data,
+        transform,
+        candidate_weights,
+        *args,
+        **kwargs,
+    ):
         inner_task = hydra.utils.instantiate(
             self.bb_task,
             candidate_pool=candidate_pool,
@@ -341,17 +449,27 @@ class ModelFreeGeneticOptimizer(SequentialGeneticOptimizer):
         return inner_task
 
     def _evaluate_result(self, result, candidate_pool, transform, *args, **kwargs):
-        new_candidates = result.pop.get('X_cand').reshape(-1)
-        new_seqs = result.pop.get('X_seq').reshape(-1)
-        new_targets = transform.inv_transform(result.pop.get('F'))
+        new_candidates = result.pop.get("X_cand").reshape(-1)
+        new_seqs = result.pop.get("X_seq").reshape(-1)
+        new_targets = transform.inv_transform(result.pop.get("F"))
         bb_evals = self.num_gens * self.algorithm.pop_size
         return new_candidates, new_targets, new_seqs, bb_evals
 
 
 class ModelBasedGeneticOptimizer(SequentialGeneticOptimizer):
     def __init__(
-            self, bb_task, surrogate, algorithm, acquisition, encoder, tokenizer, num_rounds, num_gens, seed,
-            encoder_obj, **kwargs
+        self,
+        bb_task,
+        surrogate,
+        algorithm,
+        acquisition,
+        encoder,
+        tokenizer,
+        num_rounds,
+        num_gens,
+        seed,
+        encoder_obj,
+        **kwargs,
     ):
         super().__init__(
             bb_task=bb_task,
@@ -360,7 +478,7 @@ class ModelBasedGeneticOptimizer(SequentialGeneticOptimizer):
             num_rounds=num_rounds,
             num_gens=num_gens,
             seed=seed,
-            **kwargs
+            **kwargs,
         )
         self.encoder = encoder
         self.surrogate = surrogate
@@ -371,12 +489,27 @@ class ModelBasedGeneticOptimizer(SequentialGeneticOptimizer):
         self.test_split = DataSplit()
         self.encoder_obj = encoder_obj
 
-    def _create_inner_task(self, candidate_pool, candidate_weights, input_data, target_data, transform, ref_point,
-                           encoder, round_idx, num_bb_evals, start_time, log_prefix):
-
+    def _create_inner_task(
+        self,
+        candidate_pool,
+        candidate_weights,
+        input_data,
+        target_data,
+        transform,
+        ref_point,
+        encoder,
+        round_idx,
+        num_bb_evals,
+        start_time,
+        log_prefix,
+    ):
         if self.surrogate_model is None:
-            self.surrogate_model = hydra.utils.instantiate(self.surrogate, encoder=encoder, tokenizer=encoder.tokenizer,
-                                                           alphabet=self.tokenizer.non_special_vocab)
+            self.surrogate_model = hydra.utils.instantiate(
+                self.surrogate,
+                encoder=encoder,
+                tokenizer=encoder.tokenizer,
+                alphabet=self.tokenizer.non_special_vocab,
+            )
 
         # prepare surrogate dataset
         tgt_transform = lambda x: -transform(x)
@@ -385,63 +518,99 @@ class ModelBasedGeneticOptimizer(SequentialGeneticOptimizer):
         new_split = DataSplit(input_data, target_data)
         holdout_ratio = self.surrogate.holdout_ratio
         all_splits = update_splits(
-            self.train_split, self.val_split, self.test_split, new_split, holdout_ratio,
+            self.train_split,
+            self.val_split,
+            self.test_split,
+            new_split,
+            holdout_ratio,
         )
         self.train_split, self.val_split, self.test_split = all_splits
 
-        X_train, Y_train = self.train_split.inputs, tgt_transform(self.train_split.targets)
+        X_train, Y_train = self.train_split.inputs, tgt_transform(
+            self.train_split.targets
+        )
         X_val, Y_val = self.val_split.inputs, tgt_transform(self.val_split.targets)
         X_test, Y_test = self.test_split.inputs, tgt_transform(self.test_split.targets)
 
         # train surrogate
         records = self.surrogate_model.fit(
-            X_train, Y_train, X_val, Y_val, X_test, Y_test, resampling_temp=None,
-            encoder_obj=self.encoder_obj
+            X_train,
+            Y_train,
+            X_val,
+            Y_val,
+            X_test,
+            Y_test,
+            resampling_temp=None,
+            encoder_obj=self.encoder_obj,
         )
         # log result
-        last_entry = {key.split('/')[-1]: val for key, val in records[-1].items()}
-        best_idx = last_entry['best_epoch']
-        best_entry = {key.split('/')[-1]: val for key, val in records[best_idx].items()}
+        last_entry = {key.split("/")[-1]: val for key, val in records[-1].items()}
+        best_idx = last_entry["best_epoch"]
+        best_entry = {key.split("/")[-1]: val for key, val in records[best_idx].items()}
         print(pd.DataFrame([best_entry]).to_markdown())
         metrics = dict(
-            test_rmse=best_entry['test_rmse'],
-            test_nll=best_entry['test_nll'],
-            test_s_rho=best_entry['test_s_rho'],
-            test_ece=best_entry['test_ece'],
-            test_post_var=best_entry['test_post_var'],
+            test_rmse=best_entry["test_rmse"],
+            test_nll=best_entry["test_nll"],
+            test_s_rho=best_entry["test_s_rho"],
+            test_ece=best_entry["test_ece"],
+            test_post_var=best_entry["test_post_var"],
             round_idx=round_idx,
             num_bb_evals=num_bb_evals,
             num_train=self.train_split.inputs.shape[0],
             time_elapsed=time.time() - start_time,
         )
         metrics = {
-            '/'.join((log_prefix, 'opt_metrics', key)): val for key, val in metrics.items()
+            "/".join((log_prefix, "opt_metrics", key)): val
+            for key, val in metrics.items()
         }
         # wandb.log(metrics)
 
         # complete task setup
-        baseline_seqs = np.array([cand.mutant_residue_seq for cand in self.active_candidates])
+        baseline_seqs = np.array(
+            [cand.mutant_residue_seq for cand in self.active_candidates]
+        )
         baseline_targets = self.active_targets
-        baseline_seqs, baseline_targets = pareto_frontier(baseline_seqs, baseline_targets)
+        baseline_seqs, baseline_targets = pareto_frontier(
+            baseline_seqs, baseline_targets
+        )
         baseline_targets = tgt_transform(baseline_targets)
 
         acq_fn = hydra.utils.instantiate(
             self.acquisition,
             X_baseline=baseline_seqs,
-            known_targets=torch.tensor(baseline_targets).to(self.surrogate_model.device),
+            known_targets=torch.tensor(baseline_targets).to(
+                self.surrogate_model.device
+            ),
             surrogate=self.surrogate_model,
-            ref_point=torch.tensor(transformed_ref_point).to(self.surrogate_model.device),
+            ref_point=torch.tensor(transformed_ref_point).to(
+                self.surrogate_model.device
+            ),
             obj_dim=self.bb_task.obj_dim,
         )
-        inner_task = SurrogateTask(self.tokenizer, candidate_pool, acq_fn, batch_size=acq_fn.batch_size,
-                                   allow_len_change=self.bb_task.allow_len_change)
+        inner_task = SurrogateTask(
+            self.tokenizer,
+            candidate_pool,
+            acq_fn,
+            batch_size=acq_fn.batch_size,
+            allow_len_change=self.bb_task.allow_len_change,
+        )
 
         return inner_task
 
-    def _evaluate_result(self, result, candidate_pool, transform, round_idx, num_bb_evals, start_time, log_prefix,
-                         *args, **kwargs):
-        all_x = result.pop.get('X')
-        all_acq_vals = result.pop.get('F')
+    def _evaluate_result(
+        self,
+        result,
+        candidate_pool,
+        transform,
+        round_idx,
+        num_bb_evals,
+        start_time,
+        log_prefix,
+        *args,
+        **kwargs,
+    ):
+        all_x = result.pop.get("X")
+        all_acq_vals = result.pop.get("F")
 
         cand_batches = result.problem.x_to_query_batches(all_x)
         query_points = cand_batches[0]
@@ -454,11 +623,14 @@ class ModelBasedGeneticOptimizer(SequentialGeneticOptimizer):
             batch_idx += 1
 
         bb_task = hydra.utils.instantiate(
-            self.bb_task, tokenizer=self.tokenizer, candidate_pool=candidate_pool, batch_size=1
+            self.bb_task,
+            tokenizer=self.tokenizer,
+            candidate_pool=candidate_pool,
+            batch_size=1,
         )
         bb_out = bb_task.evaluate(query_points, return_as_dictionary=True)
-        new_candidates = bb_out['X_cand'].reshape(-1)
-        new_seqs = bb_out['X_seq'].reshape(-1)
+        new_candidates = bb_out["X_cand"].reshape(-1)
+        new_seqs = bb_out["X_seq"].reshape(-1)
         new_targets = bb_out["F"]
         bb_evals = query_points.shape[0]
 
@@ -468,7 +640,10 @@ class ModelBasedGeneticOptimizer(SequentialGeneticOptimizer):
             num_bb_evals=num_bb_evals,
             time_elapsed=time.time() - start_time,
         )
-        metrics = {'/'.join((log_prefix, 'opt_metrics', key)): val for key, val in metrics.items()}
+        metrics = {
+            "/".join((log_prefix, "opt_metrics", key)): val
+            for key, val in metrics.items()
+        }
         # wandb.log(metrics)
 
         return new_candidates, new_targets, new_seqs, bb_evals

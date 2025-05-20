@@ -2,17 +2,25 @@
 # two objectives
 # running speed, energy efficiency
 
+from os import path
+
 import numpy as np
 from gym import utils
 from gym.envs.mujoco import mujoco_env
-from os import path
+
 
 class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self):
         self.obj_dim = 2
-        mujoco_env.MujocoEnv.__init__(self, model_path = path.join(path.abspath(path.dirname(__file__)), "assets/half_cheetah.xml"), frame_skip = 5)
+        mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path=path.join(
+                path.abspath(path.dirname(__file__)), "assets/half_cheetah.xml"
+            ),
+            frame_skip=5,
+        )
         utils.EzPickle.__init__(self)
-    
+
     def step(self, action):
         xposbefore = self.sim.data.qpos[0]
         action = np.clip(action, -1.0, 1.0)
@@ -21,27 +29,29 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         ob = self._get_obs()
         alive_bonus = 1.0
 
-        reward_run = (xposafter - xposbefore)/self.dt
+        reward_run = (xposafter - xposbefore) / self.dt
         reward_run = min(4.0, reward_run) + alive_bonus
         reward_energy = 4.0 - 1.0 * np.square(action).sum() + alive_bonus
 
         done = not (abs(ang) < np.deg2rad(50))
 
-        return ob, 0., done, {'obj': np.array([reward_run, reward_energy])}
-    
+        return ob, 0.0, done, {"obj": np.array([reward_run, reward_energy])}
+
     def _get_obs(self):
-        return np.concatenate([
-            self.sim.data.qpos.flat[1:],
-            self.sim.data.qvel.flat,
-        ])
-    
+        return np.concatenate(
+            [
+                self.sim.data.qpos.flat[1:],
+                self.sim.data.qvel.flat,
+            ]
+        )
+
     def reset_model(self):
         c = 1e-3
         self.set_state(
             self.init_qpos + self.np_random.uniform(low=-c, high=c, size=self.model.nq),
-            self.init_qvel + c * self.np_random.standard_normal(self.model.nv)
+            self.init_qvel + c * self.np_random.standard_normal(self.model.nv),
         )
         return self._get_obs()
-    
+
     def viewer_setup(self):
         self.viewer.cam.distance = self.model.stat.extent * 0.5

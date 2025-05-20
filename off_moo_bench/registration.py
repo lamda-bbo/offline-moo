@@ -1,36 +1,38 @@
-from off_moo_bench.task import Task
 import re
 
+from off_moo_bench.task import Task
 
 # the format of allowed task names using regex
-TASK_PATTERN = re.compile(r'(\w+)-(\w+)-v(\d+)$')
+TASK_PATTERN = re.compile(r"(\w+)-(\w+)-v(\d+)$")
 
 
 # error message for when an improper name is used
-MISMATCH_MESSAGE = 'Attempted to register malformed task name: {}. (' \
-                   'Currently all names must conform to regex template {}.)'
+MISMATCH_MESSAGE = (
+    "Attempted to register malformed task name: {}. ("
+    "Currently all names must conform to regex template {}.)"
+)
 
 
 # error message when a task version is not found but other versions are
-DEPRECATED_MESSAGE = 'Task {} not found (versions include {})'
+DEPRECATED_MESSAGE = "Task {} not found (versions include {})"
 
 
 # error message when an problem is not registered with a dataset
-problem_MESSAGE = 'problem {} not found with Dataset {} (problems include {})'
+problem_MESSAGE = "problem {} not found with Dataset {} (problems include {})"
 
 
 # error message when no tasks are found with a particular name
-UNKNOWN_MESSAGE = 'No registered task with name: {}'
+UNKNOWN_MESSAGE = "No registered task with name: {}"
 
 
 # error message when a task with this name is already specified
-REREGISTRATION_MESSAGE = 'Cannot re-register id: {}'
+REREGISTRATION_MESSAGE = "Cannot re-register id: {}"
 
 
 class TaskSpecification(object):
-
-    def __init__(self, task_name, dataset, problem,
-                 dataset_kwargs=None, problem_kwargs=None):
+    def __init__(
+        self, task_name, dataset, problem, dataset_kwargs=None, problem_kwargs=None
+    ):
         """Create a specification for a model-based optimization task that
         dynamically imports that task when self.make is called.
 
@@ -68,8 +70,7 @@ class TaskSpecification(object):
 
         # if there is no match raise a ValueError
         if not match:
-            raise ValueError(
-                MISMATCH_MESSAGE.format(task_name, TASK_PATTERN.pattern))
+            raise ValueError(MISMATCH_MESSAGE.format(task_name, TASK_PATTERN.pattern))
 
         # otherwise select the dataset and problem name with regex
         self.dataset_name, self.problem_name = match.group(1), match.group(2)
@@ -106,19 +107,28 @@ class TaskSpecification(object):
             problem_kwargs_final.update(problem_kwargs)
 
         # return a task composing this problem and dataset
-        return Task(self.dataset, self.problem,
-                    dataset_kwargs=dataset_kwargs_final,
-                    problem_kwargs=problem_kwargs_final, **kwargs)
+        return Task(
+            self.dataset,
+            self.problem,
+            dataset_kwargs=dataset_kwargs_final,
+            problem_kwargs=problem_kwargs_final,
+            **kwargs
+        )
 
     def __repr__(self):
-        return "TaskSpecification({}, {}, {}, " \
-               "dataset_kwargs={}, problem_kwargs={})".format(
-                self.task_name, self.dataset, self.problem,
-                self.dataset_kwargs, self.problem_kwargs)
+        return (
+            "TaskSpecification({}, {}, {}, "
+            "dataset_kwargs={}, problem_kwargs={})".format(
+                self.task_name,
+                self.dataset,
+                self.problem,
+                self.dataset_kwargs,
+                self.problem_kwargs,
+            )
+        )
 
 
 class TaskRegistry(object):
-
     def __init__(self):
         """Provide a global interface for registering model-based
         optimization tasks that remain stable over time
@@ -127,8 +137,7 @@ class TaskRegistry(object):
 
         self.task_specs = {}
 
-    def make(self, task_name,
-             dataset_kwargs=None, problem_kwargs=None, **kwargs):
+    def make(self, task_name, dataset_kwargs=None, problem_kwargs=None, **kwargs):
         """Instantiates the intended task using the additional
         keyword arguments provided in this function.
 
@@ -153,8 +162,8 @@ class TaskRegistry(object):
         """
 
         return self.spec(task_name).make(
-            dataset_kwargs=dataset_kwargs,
-            problem_kwargs=problem_kwargs, **kwargs)
+            dataset_kwargs=dataset_kwargs, problem_kwargs=problem_kwargs, **kwargs
+        )
 
     def all(self):
         """Generate a list of the names of all currently registered
@@ -193,8 +202,7 @@ class TaskRegistry(object):
 
         # if there is no match raise a ValueError
         if not match:
-            raise ValueError(
-                MISMATCH_MESSAGE.format(task_name, TASK_PATTERN.pattern))
+            raise ValueError(MISMATCH_MESSAGE.format(task_name, TASK_PATTERN.pattern))
 
         # try to locate the task specification
         try:
@@ -202,37 +210,39 @@ class TaskRegistry(object):
 
         # if it does not exist try to find out why
         except KeyError:
-
             # make a list of all similar registered tasks
             dataset_name, problem_name = match.group(1), match.group(2)
 
-            matching = [valid_name for valid_name, valid_spec
-                        in self.task_specs.items()
-                        if dataset_name == valid_spec.dataset_name
-                        and problem_name == valid_spec.problem_name]
+            matching = [
+                valid_name
+                for valid_name, valid_spec in self.task_specs.items()
+                if dataset_name == valid_spec.dataset_name
+                and problem_name == valid_spec.problem_name
+            ]
 
             # there is another version available
             if matching:
-                raise ValueError(
-                    DEPRECATED_MESSAGE.format(task_name, matching))
+                raise ValueError(DEPRECATED_MESSAGE.format(task_name, matching))
 
-            matching = [valid_name for valid_name, valid_spec
-                        in self.task_specs.items()
-                        if dataset_name == valid_spec.dataset_name]
+            matching = [
+                valid_name
+                for valid_name, valid_spec in self.task_specs.items()
+                if dataset_name == valid_spec.dataset_name
+            ]
 
             # there is another problem available
             if matching:
                 raise ValueError(
-                    problem_MESSAGE.format(problem_name,
-                                          dataset_name, matching))
+                    problem_MESSAGE.format(problem_name, dataset_name, matching)
+                )
 
             # there are no similar matching tasks
             else:
-                raise ValueError(
-                    UNKNOWN_MESSAGE.format(task_name))
+                raise ValueError(UNKNOWN_MESSAGE.format(task_name))
 
-    def register(self, task_name, dataset, problem,
-                 dataset_kwargs=None, problem_kwargs=None):
+    def register(
+        self, task_name, dataset, problem, dataset_kwargs=None, problem_kwargs=None
+    ):
         """Register a specification for a model-based optimization task that
         dynamically imports that task when self.make is called.
 
@@ -262,16 +272,19 @@ class TaskRegistry(object):
 
         # otherwise add that task to the collection
         self.task_specs[task_name] = TaskSpecification(
-            task_name, dataset, problem,
-            dataset_kwargs=dataset_kwargs, problem_kwargs=problem_kwargs)
+            task_name,
+            dataset,
+            problem,
+            dataset_kwargs=dataset_kwargs,
+            problem_kwargs=problem_kwargs,
+        )
 
 
 # create a global task registry
 registry = TaskRegistry()
 
 
-def register(task_name, dataset, problem,
-             dataset_kwargs=None, problem_kwargs=None):
+def register(task_name, dataset, problem, dataset_kwargs=None, problem_kwargs=None):
     """Register a specification for a model-based optimization task that
     dynamically imports that task when self.make is called.
 
@@ -296,8 +309,12 @@ def register(task_name, dataset, problem,
     """
 
     return registry.register(
-        task_name, dataset, problem,
-        dataset_kwargs=dataset_kwargs, problem_kwargs=problem_kwargs)
+        task_name,
+        dataset,
+        problem,
+        dataset_kwargs=dataset_kwargs,
+        problem_kwargs=problem_kwargs,
+    )
 
 
 def make(task_name, dataset_kwargs=None, problem_kwargs=None, **kwargs):
@@ -324,8 +341,12 @@ def make(task_name, dataset_kwargs=None, problem_kwargs=None, **kwargs):
 
     """
 
-    return registry.make(task_name, dataset_kwargs=dataset_kwargs,
-                         problem_kwargs=problem_kwargs, **kwargs)
+    return registry.make(
+        task_name,
+        dataset_kwargs=dataset_kwargs,
+        problem_kwargs=problem_kwargs,
+        **kwargs
+    )
 
 
 def spec(task_name):

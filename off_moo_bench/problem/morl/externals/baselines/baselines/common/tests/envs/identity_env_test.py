@@ -17,6 +17,7 @@ def test_discrete_nodelay():
             assert not done
         ob = next_ob
 
+
 def test_discrete_delay1():
     eplen = 50
     env = DiscreteIdentityEnv(10, episode_len=eplen, delay=1)

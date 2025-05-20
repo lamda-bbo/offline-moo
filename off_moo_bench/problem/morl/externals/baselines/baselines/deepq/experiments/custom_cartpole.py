@@ -1,16 +1,14 @@
-import gym
 import itertools
+
+import baselines.common.tf_util as U
+import gym
 import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
-
-import baselines.common.tf_util as U
-
-from baselines import logger
-from baselines import deepq
+from baselines import deepq, logger
+from baselines.common.schedules import LinearSchedule
 from baselines.deepq.replay_buffer import ReplayBuffer
 from baselines.deepq.utils import ObservationInput
-from baselines.common.schedules import LinearSchedule
 
 
 def model(inpt, num_actions, scope, reuse=False):
@@ -22,7 +20,7 @@ def model(inpt, num_actions, scope, reuse=False):
         return out
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     with U.make_session(num_cpu=8):
         # Create the environment
         env = gym.make("CartPole-v0")
@@ -37,7 +35,9 @@ if __name__ == '__main__':
         replay_buffer = ReplayBuffer(50000)
         # Create the schedule for exploration starting from 1 (every action is random) down to
         # 0.02 (98% of actions are selected according to values predicted by the model).
-        exploration = LinearSchedule(schedule_timesteps=10000, initial_p=1.0, final_p=0.02)
+        exploration = LinearSchedule(
+            schedule_timesteps=10000, initial_p=1.0, final_p=0.02
+        )
 
         # Initialize the parameters and copy them to the target network.
         U.initialize()
@@ -65,8 +65,17 @@ if __name__ == '__main__':
             else:
                 # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
                 if t > 1000:
-                    obses_t, actions, rewards, obses_tp1, dones = replay_buffer.sample(32)
-                    train(obses_t, actions, rewards, obses_tp1, dones, np.ones_like(rewards))
+                    obses_t, actions, rewards, obses_tp1, dones = replay_buffer.sample(
+                        32
+                    )
+                    train(
+                        obses_t,
+                        actions,
+                        rewards,
+                        obses_tp1,
+                        dones,
+                        np.ones_like(rewards),
+                    )
                 # Update target network periodically.
                 if t % 1000 == 0:
                     update_target()
@@ -74,6 +83,10 @@ if __name__ == '__main__':
             if done and len(episode_rewards) % 10 == 0:
                 logger.record_tabular("steps", t)
                 logger.record_tabular("episodes", len(episode_rewards))
-                logger.record_tabular("mean episode reward", round(np.mean(episode_rewards[-101:-1]), 1))
-                logger.record_tabular("% time spent exploring", int(100 * exploration.value(t)))
+                logger.record_tabular(
+                    "mean episode reward", round(np.mean(episode_rewards[-101:-1]), 1)
+                )
+                logger.record_tabular(
+                    "% time spent exploring", int(100 * exploration.value(t))
+                )
                 logger.dump_tabular()

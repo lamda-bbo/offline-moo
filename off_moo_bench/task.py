@@ -1,26 +1,32 @@
-from off_moo_bench.disk_resource import DiskResource
-from off_moo_bench.datasets.discrete_dataset import DiscreteDataset
+import importlib
+import re
+from typing import Union
+
 from off_moo_bench.datasets.dataset_builder import DatasetBuilder
+from off_moo_bench.datasets.discrete_dataset import DiscreteDataset
+from off_moo_bench.disk_resource import DiskResource
 from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.problem.base import BaseProblem
-from typing import Union
-import re
-import importlib
 
 # used to determine the name of a dataset that is sharded to disk
-SHARD_PATTERN = re.compile(r'(.+)-(\w)-(\d+).npy$')
+SHARD_PATTERN = re.compile(r"(.+)-(\w)-(\d+).npy$")
+
 
 # this is used to import data set classes dynamically
 def import_name(name):
     mod_name, attr_name = name.split(":")
     return getattr(importlib.import_module(mod_name), attr_name)
 
-class Task(object):
-    
-    def __init__(self, dataset: Union[DatasetBuilder, type, str],
-                 problem: Union[BaseProblem, type, str],
-                 dataset_kwargs=None, problem_kwargs=None, relabel=False):
 
+class Task(object):
+    def __init__(
+        self,
+        dataset: Union[DatasetBuilder, type, str],
+        problem: Union[BaseProblem, type, str],
+        dataset_kwargs=None,
+        problem_kwargs=None,
+        relabel=False,
+    ):
         # use additional_kwargs to override self.kwargs
         kwargs = dataset_kwargs if dataset_kwargs else dict()
 
@@ -64,42 +70,50 @@ class Task(object):
         new_shards = []
         for shard in dataset.y_shards:
             if relabel and isinstance(shard, DiskResource):
-
                 m = SHARD_PATTERN.search(shard.disk_target)
                 file = f"{m.group(1)}-{problem.name}-y-{m.group(3)}.npy"
 
                 # create a disk resource for the new shard
-                new_shards.append(DiskResource(
-                    file, is_absolute=False,))
+                new_shards.append(
+                    DiskResource(
+                        file,
+                        is_absolute=False,
+                    )
+                )
 
         # check if every shard was downloaded successfully
         # this naturally handles when the shard is already downloaded
-        if relabel and len(new_shards) > 0 and all([
-                f.is_downloaded for f in new_shards]):
-
+        if (
+            relabel
+            and len(new_shards) > 0
+            and all([f.is_downloaded for f in new_shards])
+        ):
             # assign the y shards to the downloaded files and re sample
             # the dataset if sub sampling is being used
             dataset.y_shards = new_shards
-            dataset.subsample(max_samples=dataset.dataset_size,
-                              max_percentile=dataset.dataset_max_percentile,
-                              min_percentile=dataset.dataset_min_percentile)
+            dataset.subsample(
+                max_samples=dataset.dataset_size,
+                max_percentile=dataset.dataset_max_percentile,
+                min_percentile=dataset.dataset_min_percentile,
+            )
 
         elif relabel:
-
             # test if the shards are stored on the disk
             # this means that downloading cached predictions failed
             name = None
             test_shard = dataset.y_shards[0]
             if isinstance(test_shard, DiskResource):
-
                 # create a name for the new sharded prediction
                 m = SHARD_PATTERN.search(test_shard.disk_target)
                 name = f"{m.group(1)}-{problem.name}"
 
             # relabel the dataset using the new oracle model
-            dataset.relabel(lambda x, y: problem.evaluate(x),
-                            to_disk=name is not None,
-                            is_absolute=False, disk_target=name)
+            dataset.relabel(
+                lambda x, y: problem.evaluate(x),
+                to_disk=name is not None,
+                is_absolute=False,
+                disk_target=name,
+            )
 
     @property
     def is_discrete(self):
@@ -186,7 +200,7 @@ class Task(object):
         """
 
         return self.dataset.dataset_min_percentile
-    
+
     @property
     def input_shape(self):
         """the shape of a single design values 'x', represented as a list of
@@ -258,7 +272,7 @@ class Task(object):
         """
 
         return self.dataset.y
-    
+
     @property
     def x_test(self):
         """the design values 'x' for a model-based optimization problem
@@ -276,7 +290,6 @@ class Task(object):
         """
 
         return self.dataset.y_test
-        
 
     @property
     def is_normalized_x(self):
@@ -295,19 +308,19 @@ class Task(object):
         """
 
         return self.dataset.is_normalized_y
-    
+
     @property
     def forbidden_normalize_x(self):
         return self.dataset.forbidden_normalize_x
-    
+
     @property
     def xl(self):
-        return self.problem.xl 
-    
+        return self.problem.xl
+
     @property
     def xu(self):
-        return self.problem.xu 
-    
+        return self.problem.xu
+
     @property
     def nadir_point(self):
         return self.problem.get_nadir_point()
@@ -336,8 +349,9 @@ class Task(object):
             raise ValueError("only supported on discrete datasets")
         return self.dataset.num_classes
 
-    def iterate_batches(self, batch_size, return_x=True,
-                        return_y=True, drop_remainder=False):
+    def iterate_batches(
+        self, batch_size, return_x=True, return_y=True, drop_remainder=False
+    ):
         """Returns an object that supports iterations, which yields tuples of
         design values 'x' and prediction values 'y' from a model-based
         optimization data set for training a model
@@ -369,9 +383,14 @@ class Task(object):
 
         """
 
-        return iter(self.dataset.iterate_batches(
-            batch_size, return_x=return_x,
-            return_y=return_y, drop_remainder=drop_remainder))
+        return iter(
+            self.dataset.iterate_batches(
+                batch_size,
+                return_x=return_x,
+                return_y=return_y,
+                drop_remainder=drop_remainder,
+            )
+        )
 
     def iterate_samples(self, return_x=True, return_y=True):
         """Returns an object that supports iterations, which yields tuples of
@@ -397,8 +416,7 @@ class Task(object):
 
         """
 
-        return iter(self.dataset.iterate_samples(return_x=return_x,
-                                                 return_y=return_y))
+        return iter(self.dataset.iterate_samples(return_x=return_x, return_y=return_y))
 
     def __iter__(self):
         """Returns an object that supports iterations, which yields tuples of
@@ -468,7 +486,7 @@ class Task(object):
         if not hasattr(self.dataset, "map_to_logits"):
             raise ValueError("only supported on discrete datasets")
         self.dataset.map_to_logits()
-        
+
     def get_N_non_dominated_solutions(self, *args, **kwargs):
         return self.dataset.get_N_non_dominated_solutions(*args, **kwargs)
 
@@ -609,7 +627,6 @@ class Task(object):
         if not hasattr(self.dataset, "map_to_logits"):
             raise ValueError("only supported on discrete datasets")
         return self.dataset.to_logits(x)
-    
 
     def predict(self, x_batch, **kwargs):
         """a function that accepts a batch of design values 'x' as input and
@@ -631,17 +648,19 @@ class Task(object):
             value 'x' in a model-based optimization problem
 
         """
-        
+
         if self.is_discrete and self.is_logits:
             if len(x_batch.shape) == 2:
-                x_batch = x_batch.reshape(x_batch.shape[0], -1, self.dataset.num_classes - 1)
-            
+                x_batch = x_batch.reshape(
+                    x_batch.shape[0], -1, self.dataset.num_classes - 1
+                )
+
         if not self.forbidden_normalize_x:
             if self.problem.requires_normalized_x and not self.is_normalized_x:
                 x_batch = self.normalize_x(x_batch)
             elif not self.problem.requires_normalized_x and self.is_normalized_x:
                 x_batch = self.denormalize_x(x_batch)
-            
+
         if self.is_discrete and self.is_logits:
             self.map_to_integers()
             x_batch = self.to_integers(x_batch)

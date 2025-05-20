@@ -1,39 +1,51 @@
 import os
+
 import numpy as np
 import pandas as pd
 import selfies as sf
-
-from pymoo.core.problem import Problem
-
-from tdc import Oracle
-
-from rdkit import Chem
-
 from lambo.candidate import StringCandidate
 from lambo.tasks.chem.logp import prop_func
 from lambo.tasks.chem.utils import SELFIESTokenizer
 from lambo.utils import apply_mutation, mutation_list
+from pymoo.core.problem import Problem
+from rdkit import Chem
+from tdc import Oracle
 
 
 class DockingTask(Problem):
     # TODO this should be subclassing BaseTask
-    def __init__(self, tokenizer, candidate_pool, obj_dim, pdb_id, obj_properties, num_start_examples=512,
-                 transform=lambda x: x, batch_size=1, candidate_weights=None, max_len=74, max_ngram_size=1,
-                 allow_len_change=True, **kwargs):
-
-        assert obj_dim == len(obj_properties), ''
-        self.op_types = ['sub', 'ins', 'del'] if allow_len_change else ['sub']
+    def __init__(
+        self,
+        tokenizer,
+        candidate_pool,
+        obj_dim,
+        pdb_id,
+        obj_properties,
+        num_start_examples=512,
+        transform=lambda x: x,
+        batch_size=1,
+        candidate_weights=None,
+        max_len=74,
+        max_ngram_size=1,
+        allow_len_change=True,
+        **kwargs
+    ):
+        assert obj_dim == len(obj_properties), ""
+        self.op_types = ["sub", "ins", "del"] if allow_len_change else ["sub"]
         if len(candidate_pool) == 0:
-            xl = 0.
-            xu = 1.
+            xl = 0.0
+            xu = 1.0
         else:
             xl = np.array([0] * 4 * batch_size)
-            xu = np.array([
-                len(candidate_pool) - 1,  # base seq choice
-                2 * max_len,  # seq position choice
-                len(tokenizer.sampling_vocab) - 1,  # token choice
-                len(self.op_types) - 1,  # op choice
-            ] * batch_size)
+            xu = np.array(
+                [
+                    len(candidate_pool) - 1,  # base seq choice
+                    2 * max_len,  # seq position choice
+                    len(tokenizer.sampling_vocab) - 1,  # token choice
+                    len(self.op_types) - 1,  # op choice
+                ]
+                * batch_size
+            )
 
         n_var = 4 * batch_size
         super().__init__(
@@ -62,12 +74,12 @@ class DockingTask(Problem):
         return query_batches.reshape(-1, self.n_var)
 
     def task_setup(self, config, project_root=None, *args, **kwargs):
-        if not os.path.exists('./oracle'):
-            asset_path = os.path.join(project_root, 'lambo/assets/tdc/oracle')
-            os.symlink(asset_path, './oracle')
+        if not os.path.exists("./oracle"):
+            asset_path = os.path.join(project_root, "lambo/assets/tdc/oracle")
+            os.symlink(asset_path, "./oracle")
 
         zinc_data = pd.read_csv(
-            os.path.join(project_root, 'lambo/assets/zinc_subsample.csv')
+            os.path.join(project_root, "lambo/assets/zinc_subsample.csv")
         ).sample(self.num_start_examples)
         all_seqs = zinc_data.smiles.values
         all_targets = zinc_data[self.obj_properties].values.reshape(
@@ -75,13 +87,14 @@ class DockingTask(Problem):
         )
 
         if isinstance(self.tokenizer, SELFIESTokenizer):
-            all_seqs = np.array(
-                list(map(sf.encoder, all_seqs))
-            )
+            all_seqs = np.array(list(map(sf.encoder, all_seqs)))
 
-        base_candidates = np.array([
-            StringCandidate(seq, mutation_list=[], tokenizer=self.tokenizer) for seq in all_seqs
-        ]).reshape(-1)
+        base_candidates = np.array(
+            [
+                StringCandidate(seq, mutation_list=[], tokenizer=self.tokenizer)
+                for seq in all_seqs
+            ]
+        ).reshape(-1)
 
         base_targets = all_targets.copy()
         return base_candidates, base_targets, all_seqs, all_targets
@@ -95,7 +108,9 @@ class DockingTask(Problem):
             base_candidate = self.candidate_pool[cand_idx]
             base_seq = base_candidate.mutant_residue_seq
             mut_res = self.tokenizer.sampling_vocab[mut_res_idx]
-            mut_seq = apply_mutation(base_seq, mut_pos, mut_res, op_type, self.tokenizer)
+            mut_seq = apply_mutation(
+                base_seq, mut_pos, mut_res, op_type, self.tokenizer
+            )
             mutation_ops = mutation_list(base_seq, mut_seq, self.tokenizer)
             candidate = base_candidate.new_candidate(mutation_ops, self.tokenizer)
             x_cands.append(candidate)
@@ -116,7 +131,7 @@ class DockingTask(Problem):
 
         scores = []
         for smls_str in smiles_strings:
-            str_score = [float('inf') for _ in self.oracles]
+            str_score = [float("inf") for _ in self.oracles]
             for idx, orcl in enumerate(self.oracles):
                 try:
                     str_score[idx] = orcl(smls_str)
@@ -133,11 +148,13 @@ class DockingTask(Problem):
         else:
             smiles_strings = str_array
 
-        is_valid_mol = np.array([
-            (Chem.MolFromSmiles(s) is not None) for s in smiles_strings
-        ])
-        in_length = np.array([len(cand) <= self.max_len for cand in candidates]).reshape(-1)
-        is_feasible = (is_valid_mol * in_length)
+        is_valid_mol = np.array(
+            [(Chem.MolFromSmiles(s) is not None) for s in smiles_strings]
+        )
+        in_length = np.array(
+            [len(cand) <= self.max_len for cand in candidates]
+        ).reshape(-1)
+        is_feasible = is_valid_mol * in_length
         return is_feasible
 
     def make_new_candidates(self, base_candidates, new_seqs):

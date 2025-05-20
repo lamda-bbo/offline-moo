@@ -3,8 +3,9 @@ from botorch.sampling import IIDNormalSampler
 
 
 class BatchEI(object):
-    def __init__(self, surrogate, known_targets, ref_point, num_samples,
-                 batch_size, **kwargs):
+    def __init__(
+        self, surrogate, known_targets, ref_point, num_samples, batch_size, **kwargs
+    ):
         self.ref_point = ref_point
         sampler = IIDNormalSampler(num_samples=num_samples)
         self.acq_fn = qExpectedImprovement(

@@ -1,12 +1,10 @@
-from baselines import deepq
-from baselines import bench
-from baselines import logger
+from baselines import bench, deepq, logger
 from baselines.common.atari_wrappers import make_atari
 
 
 def main():
     logger.configure()
-    env = make_atari('PongNoFrameskip-v4')
+    env = make_atari("PongNoFrameskip-v4")
     env = bench.Monitor(env, logger.get_dir())
     env = deepq.wrap_atari_dqn(env)
 
@@ -27,8 +25,9 @@ def main():
         gamma=0.99,
     )
 
-    model.save('pong_model.pkl')
+    model.save("pong_model.pkl")
     env.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

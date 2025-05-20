@@ -1,50 +1,46 @@
-import os
-import numpy as np
-import pandas as pd
-from rdkit import RDLogger
-import selfies as sf
 import math
+import os
 from pathlib import Path
 
-RDLogger.DisableLog('rdApp.*')
+import numpy as np
+import pandas as pd
+import selfies as sf
+from rdkit import RDLogger
 
+RDLogger.DisableLog("rdApp.*")
+
+from cachetools import LRUCache, cached
 from deepchem.feat.smiles_tokenizer import SmilesTokenizer
-
-from cachetools import cached, LRUCache
-
-from lambo.utils import IntTokenizer
-from lambo.utils import weighted_resampling
-
+from lambo.utils import IntTokenizer, weighted_resampling
 
 # https://github.com/aspuru-guzik-group/GA/blob/b948519b30bdb162f30e100b647e63bf46777d55/evolution_functions.py#L294
 CUSTOM_SAMPLING_VOCAB = [
-    '[Branch1]',
-    '[#Branch1]',
-    '[=Branch1]',
-    '[epsilon]',
-    '[Ring1]',
-    '[Ring2]',
-    '[Branch2]',
-    '[#Branch2]',
-    '[=Branch2]',
-    '[F]',
-    '[O]',
-    '[=O]',
-    '[N]',
-    '[=N]',
-    '[#N]',
-    '[C]',
-    '[=C]',
-    '[#C]',
-    '[S]',
-    '[=S]',
-    '[C][=C][C][=C][C][=C][Ring1][Branch1]'
+    "[Branch1]",
+    "[#Branch1]",
+    "[=Branch1]",
+    "[epsilon]",
+    "[Ring1]",
+    "[Ring2]",
+    "[Branch2]",
+    "[#Branch2]",
+    "[=Branch2]",
+    "[F]",
+    "[O]",
+    "[=O]",
+    "[N]",
+    "[=N]",
+    "[#N]",
+    "[C]",
+    "[=C]",
+    "[#C]",
+    "[S]",
+    "[=S]",
+    "[C][=C][C][=C][C][=C][Ring1][Branch1]",
 ]
 
 
 class ChemWrapperModule:
-
-    def __init__(self, num_start_examples=10000, worst_ratio=1., best_ratio=0.):
+    def __init__(self, num_start_examples=10000, worst_ratio=1.0, best_ratio=0.0):
         file_loc = os.path.dirname(os.path.realpath(__file__))
         root_path = Path(file_loc).parents[1]
         zinc_asset_path = root_path / "assets" / "zinc.csv"
@@ -53,7 +49,9 @@ class ChemWrapperModule:
         self.n_start_points = num_start_examples
         self.n_worst_points = math.ceil(num_start_examples * worst_ratio)
         self.n_best_points = math.ceil(num_start_examples * best_ratio)
-        self.n_rand_points = num_start_examples - self.n_best_points - self.n_worst_points
+        self.n_rand_points = (
+            num_start_examples - self.n_best_points - self.n_worst_points
+        )
 
     def get_worst_points(self, property_list):
         if self.n_worst_points == 0:
@@ -61,8 +59,7 @@ class ChemWrapperModule:
 
         # scores to be minimized
         obj_vals = np.stack(
-            [-self.df[prop_name].values for prop_name in property_list],
-            axis=-1
+            [-self.df[prop_name].values for prop_name in property_list], axis=-1
         )
         # lower rank --> strictly dominated by higher rank points
         ranks, _, _ = weighted_resampling(-obj_vals)
@@ -72,7 +69,7 @@ class ChemWrapperModule:
         for row_idx in range(self.n_worst_points):
             chosen_idxs.append(rank_argsort[row_idx])
             if len(chosen_idxs) >= self.n_worst_points:
-                chosen_idxs = chosen_idxs[:self.n_worst_points]
+                chosen_idxs = chosen_idxs[: self.n_worst_points]
                 break
         return chosen_idxs
 
@@ -82,8 +79,7 @@ class ChemWrapperModule:
 
         # scores to be minimized
         obj_vals = np.stack(
-            [-self.df[prop_name].values for prop_name in property_list],
-            axis=-1
+            [-self.df[prop_name].values for prop_name in property_list], axis=-1
         )
         # lower rank --> strictly dominates higher rank points
         ranks, _, _ = weighted_resampling(obj_vals)
@@ -93,7 +89,7 @@ class ChemWrapperModule:
         for row_idx in range(self.n_best_points):
             chosen_idxs.append(rank_argsort[row_idx])
             if len(chosen_idxs) >= self.n_best_points:
-                chosen_idxs = chosen_idxs[:self.n_best_points]
+                chosen_idxs = chosen_idxs[: self.n_best_points]
                 break
         return chosen_idxs
 
@@ -116,7 +112,7 @@ class ChemWrapperModule:
             if select_idx not in chosen_idxs:
                 chosen_idxs.append(select_idx)
             if len(chosen_idxs) >= self.n_start_points:
-                chosen_idxs = chosen_idxs[:self.n_start_points]
+                chosen_idxs = chosen_idxs[: self.n_start_points]
                 break
         assert len(chosen_idxs) == self.n_start_points
         return np.array(chosen_idxs)
@@ -124,30 +120,30 @@ class ChemWrapperModule:
     def sample_dataset(self, property_list):
         chosen_indices = self.sample_points(property_list)
         smiles = self.df.iloc[chosen_indices]["smiles"].to_numpy()
-        targets = np.stack([
-            -self.df.iloc[chosen_indices][p_name].values for p_name in property_list
-        ], axis=-1)
-        if 'penalized_logP' in property_list:
-            prop_idx = property_list.index('penalized_logP')
+        targets = np.stack(
+            [-self.df.iloc[chosen_indices][p_name].values for p_name in property_list],
+            axis=-1,
+        )
+        if "penalized_logP" in property_list:
+            prop_idx = property_list.index("penalized_logP")
             targets[..., prop_idx] = np.clip(
-                targets[..., prop_idx], a_min=None, a_max=4.
+                targets[..., prop_idx], a_min=None, a_max=4.0
             )
         return smiles, targets
 
 
 class SMILESTokenizer:
-
-    #MAYBE DO THIS WITH SUBCLASSING INSTEAD
+    # MAYBE DO THIS WITH SUBCLASSING INSTEAD
     def __init__(self):
-        #seyonec/SmilesTokenizer_ChemBERTa_zinc250k_40k
-        #seyonec/SMILES_tokenized_PubChem_shard00_160k
+        # seyonec/SmilesTokenizer_ChemBERTa_zinc250k_40k
+        # seyonec/SMILES_tokenized_PubChem_shard00_160k
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        tokenizer = SmilesTokenizer(os.path.join(dir_path,"vocab.txt"))
+        tokenizer = SmilesTokenizer(os.path.join(dir_path, "vocab.txt"))
 
-        with open(os.path.join(dir_path,"vocab.txt"), 'r') as fd:
+        with open(os.path.join(dir_path, "vocab.txt"), "r") as fd:
             self.full_vocab = [x.strip() for x in fd.readlines()]
 
-        with open(os.path.join(dir_path,"restricted_vocab.txt"), 'r') as fd:
+        with open(os.path.join(dir_path, "restricted_vocab.txt"), "r") as fd:
             self.non_special_vocab = [x.strip() for x in fd.readlines()]
 
         self.tokenizer = tokenizer
@@ -174,15 +170,19 @@ class SMILESTokenizer:
 
 class SELFIESTokenizer(IntTokenizer):
     def __init__(
-            self,
-            dir_path=None,
-            selfies_vocab="selfies_vocab.txt",
-            smiles_data=None,
-        ):
-        dir_path = os.path.dirname(os.path.realpath(__file__)) if dir_path is None else dir_path
+        self,
+        dir_path=None,
+        selfies_vocab="selfies_vocab.txt",
+        smiles_data=None,
+    ):
+        dir_path = (
+            os.path.dirname(os.path.realpath(__file__))
+            if dir_path is None
+            else dir_path
+        )
         if smiles_data is None:
             try:
-                with open(os.path.join(dir_path, selfies_vocab), 'r') as fd:
+                with open(os.path.join(dir_path, selfies_vocab), "r") as fd:
                     non_special_vocab = [x.strip() for x in fd.readlines()]
             except FileNotFoundError:
                 smiles_df = pd.read_csv(os.path.join(dir_path, "smiles.csv"))
@@ -199,7 +199,7 @@ class SELFIESTokenizer(IntTokenizer):
 
     @cached(cache=LRUCache(maxsize=int(1e4)))
     def encode(self, seq):
-        token_ids = sf.selfies_to_encoding(seq, self.lookup, enc_type='label')
+        token_ids = sf.selfies_to_encoding(seq, self.lookup, enc_type="label")
         return [self.bos_idx] + token_ids + [self.eos_idx]
 
     def to_smiles(self, seq):

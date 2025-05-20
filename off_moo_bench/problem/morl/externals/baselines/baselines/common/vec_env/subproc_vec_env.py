@@ -1,7 +1,8 @@
 import multiprocessing as mp
 
 import numpy as np
-from .vec_env import VecEnv, CloudpickleWrapper, clear_mpi_env_vars
+
+from .vec_env import CloudpickleWrapper, VecEnv, clear_mpi_env_vars
 
 
 def worker(remote, parent_remote, env_fn_wrapper):
@@ -10,25 +11,25 @@ def worker(remote, parent_remote, env_fn_wrapper):
     try:
         while True:
             cmd, data = remote.recv()
-            if cmd == 'step':
+            if cmd == "step":
                 ob, reward, done, info = env.step(data)
                 if done:
                     ob = env.reset()
                 remote.send((ob, reward, done, info))
-            elif cmd == 'reset':
+            elif cmd == "reset":
                 ob = env.reset()
                 remote.send(ob)
-            elif cmd == 'render':
-                remote.send(env.render(mode='rgb_array'))
-            elif cmd == 'close':
+            elif cmd == "render":
+                remote.send(env.render(mode="rgb_array"))
+            elif cmd == "close":
                 remote.close()
                 break
-            elif cmd == 'get_spaces_spec':
+            elif cmd == "get_spaces_spec":
                 remote.send((env.observation_space, env.action_space, env.spec))
             else:
                 raise NotImplementedError
     except KeyboardInterrupt:
-        print('SubprocVecEnv worker: got KeyboardInterrupt')
+        print("SubprocVecEnv worker: got KeyboardInterrupt")
     finally:
         env.close()
 
@@ -38,7 +39,8 @@ class SubprocVecEnv(VecEnv):
     VecEnv that runs multiple environments in parallel in subproceses and communicates with them via pipes.
     Recommended to use when num_envs > 1 and step() can be a bottleneck.
     """
-    def __init__(self, env_fns, spaces=None, context='spawn'):
+
+    def __init__(self, env_fns, spaces=None, context="spawn"):
         """
         Arguments:
 
@@ -49,16 +51,24 @@ class SubprocVecEnv(VecEnv):
         nenvs = len(env_fns)
         ctx = mp.get_context(context)
         self.remotes, self.work_remotes = zip(*[ctx.Pipe() for _ in range(nenvs)])
-        self.ps = [ctx.Process(target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn)))
-                   for (work_remote, remote, env_fn) in zip(self.work_remotes, self.remotes, env_fns)]
+        self.ps = [
+            ctx.Process(
+                target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn))
+            )
+            for (work_remote, remote, env_fn) in zip(
+                self.work_remotes, self.remotes, env_fns
+            )
+        ]
         for p in self.ps:
-            p.daemon = True  # if the main process crashes, we should not cause things to hang
+            p.daemon = (
+                True  # if the main process crashes, we should not cause things to hang
+            )
             with clear_mpi_env_vars():
                 p.start()
         for remote in self.work_remotes:
             remote.close()
 
-        self.remotes[0].send(('get_spaces_spec', None))
+        self.remotes[0].send(("get_spaces_spec", None))
         observation_space, action_space, self.spec = self.remotes[0].recv()
         self.viewer = None
         VecEnv.__init__(self, len(env_fns), observation_space, action_space)
@@ -66,7 +76,7 @@ class SubprocVecEnv(VecEnv):
     def step_async(self, actions):
         self._assert_not_closed()
         for remote, action in zip(self.remotes, actions):
-            remote.send(('step', action))
+            remote.send(("step", action))
         self.waiting = True
 
     def step_wait(self):
@@ -79,7 +89,7 @@ class SubprocVecEnv(VecEnv):
     def reset(self):
         self._assert_not_closed()
         for remote in self.remotes:
-            remote.send(('reset', None))
+            remote.send(("reset", None))
         return _flatten_obs([remote.recv() for remote in self.remotes])
 
     def close_extras(self):
@@ -88,23 +98,26 @@ class SubprocVecEnv(VecEnv):
             for remote in self.remotes:
                 remote.recv()
         for remote in self.remotes:
-            remote.send(('close', None))
+            remote.send(("close", None))
         for p in self.ps:
             p.join()
 
     def get_images(self):
         self._assert_not_closed()
         for pipe in self.remotes:
-            pipe.send(('render', None))
+            pipe.send(("render", None))
         imgs = [pipe.recv() for pipe in self.remotes]
         return imgs
 
     def _assert_not_closed(self):
-        assert not self.closed, "Trying to operate on a SubprocVecEnv after calling close()"
+        assert (
+            not self.closed
+        ), "Trying to operate on a SubprocVecEnv after calling close()"
 
     def __del__(self):
         if not self.closed:
             self.close()
+
 
 def _flatten_obs(obs):
     assert isinstance(obs, (list, tuple))
