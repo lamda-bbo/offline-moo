@@ -1,9 +1,8 @@
+import random
 from typing import Sequence
 
-import torch
 import numpy as np
-import random
-
+import torch
 from torch import LongTensor
 
 
@@ -52,12 +51,10 @@ class StringToLongTensor:
         num_tokens = tok_idxs.size(0)
         if self.max_len is not None and num_tokens < self.max_len:
             len_diff = self.max_len - num_tokens
-            padding = LongTensor(
-                [self.tokenizer.padding_idx] * len_diff
-            )
+            padding = LongTensor([self.tokenizer.padding_idx] * len_diff)
             tok_idxs = torch.cat([tok_idxs, padding])
         elif self.max_len is not None and num_tokens > self.max_len:
-            tok_idxs = tok_idxs[:self.max_len]
+            tok_idxs = tok_idxs[: self.max_len]
 
         return tok_idxs
 
@@ -98,12 +95,12 @@ class SequenceTranslation(object):
         rot_x = x.clone()
         # left shift
         if shift < 0:
-            rot_x[1: num_valid_tokens + shift + 1] = trimmed_x[-shift:]
-            rot_x[num_valid_tokens + shift + 1: -1] = trimmed_x[:-shift]
+            rot_x[1 : num_valid_tokens + shift + 1] = trimmed_x[-shift:]
+            rot_x[num_valid_tokens + shift + 1 : -1] = trimmed_x[:-shift]
         # right shift
         else:
-            rot_x[1: shift + 1] = trimmed_x[-shift:]
-            rot_x[shift + 1: -1] = trimmed_x[:-shift]
+            rot_x[1 : shift + 1] = trimmed_x[-shift:]
+            rot_x[shift + 1 : -1] = trimmed_x[:-shift]
 
         return rot_x
 

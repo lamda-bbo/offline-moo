@@ -1,28 +1,47 @@
 import numpy as np
-from pymoo.core.problem import Problem
-
 from lambo.utils import mutation_list
+from pymoo.core.problem import Problem
 
 
 class BaseTask(Problem):
-    def __init__(self, tokenizer, candidate_pool, obj_dim, transform=lambda x: x, batch_size=1,
-                 candidate_weights=None, max_len=None, max_ngram_size=1, allow_len_change=True, **kwargs):
-        self.op_types = ['sub', 'ins', 'del'] if allow_len_change else ['sub']
+    def __init__(
+        self,
+        tokenizer,
+        candidate_pool,
+        obj_dim,
+        transform=lambda x: x,
+        batch_size=1,
+        candidate_weights=None,
+        max_len=None,
+        max_ngram_size=1,
+        allow_len_change=True,
+        **kwargs
+    ):
+        self.op_types = ["sub", "ins", "del"] if allow_len_change else ["sub"]
         if max_len is None:
-            max_len = max([
-                len(tokenizer.encode(cand.mutant_residue_seq)) - 2 for cand in candidate_pool
-            ]) - 1
+            max_len = (
+                max(
+                    [
+                        len(tokenizer.encode(cand.mutant_residue_seq)) - 2
+                        for cand in candidate_pool
+                    ]
+                )
+                - 1
+            )
         if len(candidate_pool) == 0:
-            xl = 0.
-            xu = 1.
+            xl = 0.0
+            xu = 1.0
         else:
             xl = np.array([0] * 4 * batch_size)
-            xu = np.array([
-                len(candidate_pool) - 1,  # base seq choice
-                2 * max_len,  # seq position choice
-                len(tokenizer.sampling_vocab) - 1,  # token choice
-                len(self.op_types) - 1,  # op choice
-            ] * batch_size)
+            xu = np.array(
+                [
+                    len(candidate_pool) - 1,  # base seq choice
+                    2 * max_len,  # seq position choice
+                    len(tokenizer.sampling_vocab) - 1,  # token choice
+                    len(self.op_types) - 1,  # op choice
+                ]
+                * batch_size
+            )
 
         n_var = 4 * batch_size
         super().__init__(
@@ -43,9 +62,7 @@ class BaseTask(Problem):
         new_candidates = []
         for b_cand, n_seq in zip(base_candidates, new_seqs):
             mutation_ops = mutation_list(
-                b_cand.mutant_residue_seq,
-                n_seq,
-                self.tokenizer
+                b_cand.mutant_residue_seq, n_seq, self.tokenizer
             )
             new_candidates.append(b_cand.new_candidate(mutation_ops, self.tokenizer))
         return np.stack(new_candidates)
@@ -69,5 +86,7 @@ class BaseTask(Problem):
         if self.max_len is None:
             is_feasible = np.ones(candidates.shape).astype(bool)
         else:
-            is_feasible = np.array([len(cand) <= self.max_len for cand in candidates]).reshape(-1)
+            is_feasible = np.array(
+                [len(cand) <= self.max_len for cand in candidates]
+            ).reshape(-1)
         return is_feasible

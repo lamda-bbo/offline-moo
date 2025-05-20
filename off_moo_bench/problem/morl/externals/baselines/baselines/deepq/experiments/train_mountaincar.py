@@ -1,5 +1,4 @@
 import gym
-
 from baselines import deepq
 from baselines.common import models
 
@@ -16,11 +15,11 @@ def main():
         exploration_fraction=0.1,
         exploration_final_eps=0.1,
         print_freq=10,
-        param_noise=True
+        param_noise=True,
     )
     print("Saving model to mountaincar_model.pkl")
     act.save("mountaincar_model.pkl")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,13 +1,10 @@
 import numpy as np
-
 import torch
-
-from pymoo.factory import get_mutation
-from pymoo.core.mutation import Mutation
-
 from lambo import utils
-from lambo.tasks.chem.logp import prop_func
 from lambo.models.mlm import sample_tokens
+from lambo.tasks.chem.logp import prop_func
+from pymoo.core.mutation import Mutation
+from pymoo.factory import get_mutation
 
 
 def get_mlm_mutation(mlm_obj, problem, cand_idx, res_idx):
@@ -25,13 +22,13 @@ def get_mlm_mutation(mlm_obj, problem, cand_idx, res_idx):
     )
     new_tok_idxs = np.take_along_axis(new_tok_idxs, mask_idxs, axis=1).reshape(-1)
     new_toks = [mlm_obj.tokenizer.convert_id_to_token(t_idx) for t_idx in new_tok_idxs]
-    sampling_vocab_idxs = np.array([
-        mlm_obj.tokenizer.sampling_vocab.index(tok) for tok in new_toks
-    ])
+    sampling_vocab_idxs = np.array(
+        [mlm_obj.tokenizer.sampling_vocab.index(tok) for tok in new_toks]
+    )
     return sampling_vocab_idxs
 
 
-#following https://peerj.com/articles/pchem-11.pdf
+# following https://peerj.com/articles/pchem-11.pdf
 def safe_vocab_mutation(tokenizer, problem, cand_idx, res_idx):
     muts = []
     seqs = [problem.candidate_pool[i].mutant_residue_seq for i in cand_idx]
@@ -41,7 +38,7 @@ def safe_vocab_mutation(tokenizer, problem, cand_idx, res_idx):
         for i in range(50):
             mut_idx = np.random.randint(0, len(tokenizer.sampling_vocab))
             mut_res = tokenizer.sampling_vocab[mut_idx]
-            mut_seq = "".join(tokens[:idx] + [mut_res] + tokens[(idx + 1):])
+            mut_seq = "".join(tokens[:idx] + [mut_res] + tokens[(idx + 1) :])
             if prop_func(mut_seq) > -100:
                 safe_mut = mut_idx
                 break
@@ -69,7 +66,7 @@ class UniformMutation(Mutation):
         x0 = flat_queries[..., 0]
         seqs = [problem.candidate_pool[i].mutant_residue_seq for i in x0]
 
-        #NEXT LINE WON'T WORK UNLESS WE CHANGE CANDIDATE POOL TO NON-EMPTY IN TASK INIT
+        # NEXT LINE WON'T WORK UNLESS WE CHANGE CANDIDATE POOL TO NON-EMPTY IN TASK INIT
         x1 = np.random.randint(problem.xl[1], problem.xu[1], num_samples)
         x1 = np.array([idx % len(seq) for idx, seq in zip(x1, seqs)])
 
@@ -91,7 +88,7 @@ class UniformMutation(Mutation):
 class LocalMutation(Mutation):
     def __init__(self, eta, prob, tokenizer=None, mlm_obj=None, safe_mut=False):
         super().__init__()
-        self.poly_mutation = get_mutation('int_pm', eta=eta, prob=prob)
+        self.poly_mutation = get_mutation("int_pm", eta=eta, prob=prob)
         self.tokenizer = tokenizer
         self.mlm_obj = mlm_obj
         self.safe_mut = safe_mut
@@ -113,13 +110,22 @@ class LocalMutation(Mutation):
         try:
             mut_x = problem.x_to_query_batches(mut_x).reshape(-1, num_vars)
         except:
-            mut_x = problem.task_instance.x_to_query_batches(mut_x).reshape(-1, num_vars)
+            mut_x = problem.task_instance.x_to_query_batches(mut_x).reshape(
+                -1, num_vars
+            )
         x1 = mut_x[..., 1]
 
         # x1 = np.array([idx % len(seq) for idx, seq in zip(x1, seqs)])
 
         for i, idx in enumerate(x0):
-            num_tokens = len(self.tokenizer.encode(problem.candidate_pool[idx].mutant_residue_seq)) - 2
+            num_tokens = (
+                len(
+                    self.tokenizer.encode(
+                        problem.candidate_pool[idx].mutant_residue_seq
+                    )
+                )
+                - 2
+            )
             x1[i] = min(num_tokens - 1, x1[i])
             # TODO always work with token indices?
             # num_tokens = len(self.tokenizer.encode(cand_seq))

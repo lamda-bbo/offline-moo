@@ -1,4 +1,5 @@
 import numpy as np
+
 # import scipy.signal
 
 
@@ -22,7 +23,8 @@ import numpy as np
 #     assert x.ndim >= 1
 #     return scipy.signal.lfilter([1],[1,-gamma],x[::-1], axis=0)[::-1]
 
-def explained_variance(ypred,y):
+
+def explained_variance(ypred, y):
     """
     Computes fraction of variance that ypred explains about y.
     Returns 1 - Var[y-ypred] / Var[y]
@@ -35,30 +37,35 @@ def explained_variance(ypred,y):
     """
     assert y.ndim == 1 and ypred.ndim == 1
     vary = np.var(y)
-    return np.nan if vary==0 else 1 - np.var(y-ypred)/vary
+    return np.nan if vary == 0 else 1 - np.var(y - ypred) / vary
+
 
 def explained_variance_2d(ypred, y):
     assert y.ndim == 2 and ypred.ndim == 2
     vary = np.var(y, axis=0)
-    out = 1 - np.var(y-ypred)/vary
+    out = 1 - np.var(y - ypred) / vary
     out[vary < 1e-10] = 0
     return out
 
+
 def ncc(ypred, y):
-    return np.corrcoef(ypred, y)[1,0]
+    return np.corrcoef(ypred, y)[1, 0]
+
 
 def flatten_arrays(arrs):
     return np.concatenate([arr.flat for arr in arrs])
 
+
 def unflatten_vector(vec, shapes):
-    i=0
+    i = 0
     arrs = []
     for shape in shapes:
         size = np.prod(shape)
-        arr = vec[i:i+size].reshape(shape)
+        arr = vec[i : i + size].reshape(shape)
         arrs.append(arr)
         i += size
     return arrs
+
 
 def discount_with_boundaries(X, New, gamma):
     """
@@ -67,19 +74,15 @@ def discount_with_boundaries(X, New, gamma):
     """
     Y = np.zeros_like(X)
     T = X.shape[0]
-    Y[T-1] = X[T-1]
-    for t in range(T-2, -1, -1):
-        Y[t] = X[t] + gamma * Y[t+1] * (1 - New[t+1])
+    Y[T - 1] = X[T - 1]
+    for t in range(T - 2, -1, -1):
+        Y[t] = X[t] + gamma * Y[t + 1] * (1 - New[t + 1])
     return Y
 
+
 def test_discount_with_boundaries():
-    gamma=0.9
-    x = np.array([1.0, 2.0, 3.0, 4.0], 'float32')
+    gamma = 0.9
+    x = np.array([1.0, 2.0, 3.0, 4.0], "float32")
     starts = [1.0, 0.0, 0.0, 1.0]
     y = discount_with_boundaries(x, starts, gamma)
-    assert np.allclose(y, [
-        1 + gamma * 2 + gamma**2 * 3,
-        2 + gamma * 3,
-        3,
-        4
-    ])
+    assert np.allclose(y, [1 + gamma * 2 + gamma**2 * 3, 2 + gamma * 3, 3, 4])

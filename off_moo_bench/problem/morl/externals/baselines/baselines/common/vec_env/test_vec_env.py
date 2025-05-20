@@ -5,10 +5,11 @@ Tests for asynchronous vectorized environments.
 import gym
 import numpy as np
 import pytest
+from baselines.common.tests.test_with_mpi import with_mpi
+
 from .dummy_vec_env import DummyVecEnv
 from .shmem_vec_env import ShmemVecEnv
 from .subproc_vec_env import SubprocVecEnv
-from baselines.common.tests.test_with_mpi import with_mpi
 
 
 def assert_venvs_equal(venv1, venv2, num_steps):
@@ -30,7 +31,9 @@ def assert_venvs_equal(venv1, venv2, num_steps):
         assert np.allclose(obs1, obs2)
         venv1.action_space.seed(1337)
         for _ in range(num_steps):
-            actions = np.array([venv1.action_space.sample() for _ in range(venv1.num_envs)])
+            actions = np.array(
+                [venv1.action_space.sample() for _ in range(venv1.num_envs)]
+            )
             for venv in [venv1, venv2]:
                 venv.step_async(actions)
             outs1 = venv1.step_wait()
@@ -44,8 +47,8 @@ def assert_venvs_equal(venv1, venv2, num_steps):
         venv2.close()
 
 
-@pytest.mark.parametrize('klass', (ShmemVecEnv, SubprocVecEnv))
-@pytest.mark.parametrize('dtype', ('uint8', 'float32'))
+@pytest.mark.parametrize("klass", (ShmemVecEnv, SubprocVecEnv))
+@pytest.mark.parametrize("dtype", ("uint8", "float32"))
 def test_vec_env(klass, dtype):  # pylint: disable=R0914
     """
     Test that a vectorized environment is equivalent to
@@ -61,6 +64,7 @@ def test_vec_env(klass, dtype):  # pylint: disable=R0914
         Get an environment constructor with a seed.
         """
         return lambda: SimpleEnv(seed, shape, dtype)
+
     fns = [make_fn(i) for i in range(num_envs)]
     env1 = DummyVecEnv(fns)
     env2 = klass(fns)
@@ -76,8 +80,7 @@ class SimpleEnv(gym.Env):
     def __init__(self, seed, shape, dtype):
         np.random.seed(seed)
         self._dtype = dtype
-        self._start_obs = np.array(np.random.randint(0, 0x100, size=shape),
-                                   dtype=dtype)
+        self._start_obs = np.array(np.random.randint(0, 0x100, size=shape), dtype=dtype)
         self._max_steps = seed + 1
         self._cur_obs = None
         self._cur_step = 0
@@ -91,7 +94,7 @@ class SimpleEnv(gym.Env):
         self._cur_step += 1
         done = self._cur_step >= self._max_steps
         reward = self._cur_step / self._max_steps
-        return self._cur_obs, reward, done, {'foo': 'bar' + str(reward)}
+        return self._cur_obs, reward, done, {"foo": "bar" + str(reward)}
 
     def reset(self):
         self._cur_obs = self._start_obs
@@ -102,13 +105,11 @@ class SimpleEnv(gym.Env):
         raise NotImplementedError
 
 
-
 @with_mpi()
 def test_mpi_with_subprocvecenv():
-    shape = (2,3,4)
+    shape = (2, 3, 4)
     nenv = 1
-    venv = SubprocVecEnv([lambda: SimpleEnv(0, shape, 'float32')] * nenv)
+    venv = SubprocVecEnv([lambda: SimpleEnv(0, shape, "float32")] * nenv)
     ob = venv.reset()
     venv.close()
     assert ob.shape == (nenv,) + shape
-

@@ -4,19 +4,16 @@ from gym.spaces import Discrete
 
 
 class FixedSequenceEnv(Env):
-    def __init__(
-            self,
-            n_actions=10,
-            episode_len=100
-    ):
+    def __init__(self, n_actions=10, episode_len=100):
         self.action_space = Discrete(n_actions)
         self.observation_space = Discrete(1)
         self.np_random = np.random.RandomState(0)
         self.episode_len = episode_len
-        self.sequence = [self.np_random.randint(0, self.action_space.n)
-            for _ in range(self.episode_len)]
+        self.sequence = [
+            self.np_random.randint(0, self.action_space.n)
+            for _ in range(self.episode_len)
+        ]
         self.time = 0
-
 
     def reset(self):
         self.time = 0
@@ -39,5 +36,3 @@ class FixedSequenceEnv(Env):
 
     def _get_reward(self, actions):
         return 1 if actions == self.sequence[self.time] else 0
-
-

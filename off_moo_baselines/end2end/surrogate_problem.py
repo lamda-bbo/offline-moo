@@ -1,15 +1,12 @@
-import torch 
-from pymoo.core.problem import Problem 
+import torch
+from pymoo.core.problem import Problem
+
 from off_moo_baselines.data import tkwargs
+
 
 class End2EndSurrogateProblem(Problem):
     def __init__(self, n_var, n_obj, model):
-        super().__init__(
-            n_var = n_var, 
-            n_obj = n_obj, 
-            xl = 0,
-            xu = 1
-        )
+        super().__init__(n_var=n_var, n_obj=n_obj, xl=0, xu=1)
         self.model = model
         self.model.set_kwargs(**tkwargs)
 

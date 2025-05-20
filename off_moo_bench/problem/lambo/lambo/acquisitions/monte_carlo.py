@@ -1,16 +1,17 @@
-from numpy import array, copy, concatenate
-from torch import Tensor
+import torch
 from botorch.acquisition.multi_objective.monte_carlo import (
-    qExpectedHypervolumeImprovement, qNoisyExpectedHypervolumeImprovement
+    qExpectedHypervolumeImprovement,
+    qNoisyExpectedHypervolumeImprovement,
 )
-from botorch.posteriors import GPyTorchPosterior, Posterior, DeterministicPosterior
+from botorch.posteriors import DeterministicPosterior, GPyTorchPosterior, Posterior
 from gpytorch.distributions import MultitaskMultivariateNormal
 from gpytorch.lazy import BlockDiagLazyTensor
-import torch
-
+from numpy import array, concatenate, copy
+from torch import Tensor
 
 # TODO: replace these with the non-mocked versions once botorch #991 comes in
 # will need to update to botorch master
+
 
 class qDiscreteEHVI(qExpectedHypervolumeImprovement):
     def forward(self, X: array) -> Tensor:
@@ -20,19 +21,19 @@ class qDiscreteEHVI(qExpectedHypervolumeImprovement):
         samples = self.sampler(posterior)
         return self._compute_qehvi(samples=samples)
 
-    
+
 class qDiscreteNEHVI(qNoisyExpectedHypervolumeImprovement):
     # TODO: figure out how to remove
-    
+
     def __init__(
         self,
         model,
         ref_point,
         X_baseline,
-        sampler = None,
-        objective = None,
-        constraints = None,
-        X_pending = None,
+        sampler=None,
+        objective=None,
+        constraints=None,
+        X_pending=None,
         eta: float = 1e-3,
         prune_baseline: bool = False,
         alpha: float = 0.0,
@@ -46,7 +47,7 @@ class qDiscreteNEHVI(qNoisyExpectedHypervolumeImprovement):
         ref_point = ref_point.to(mocked_features)
         # for string kernels
         if mocked_features.ndim > 2:
-            mocked_features = mocked_features[..., 0] # don't let this fail
+            mocked_features = mocked_features[..., 0]  # don't let this fail
 
         super().__init__(
             model=model,
@@ -62,7 +63,7 @@ class qDiscreteNEHVI(qNoisyExpectedHypervolumeImprovement):
             cache_pending=cache_pending,
             max_iep=max_iep,
             incremental_nehvi=incremental_nehvi,
-            **kwargs
+            **kwargs,
         )
         self.X_baseline_string = X_baseline
 
@@ -72,9 +73,9 @@ class qDiscreteNEHVI(qNoisyExpectedHypervolumeImprovement):
             baseline_X = baseline_X.expand(*X.shape[:-2], -1, -1)
             X_full = torch.cat([baseline_X, X], dim=-2)
         else:
-            baseline_X = copy(self.X_baseline_string) # ensure contiguity
+            baseline_X = copy(self.X_baseline_string)  # ensure contiguity
             baseline_X.resize(
-                baseline_X.shape[:-(X.ndim)] + X.shape[:-1] + baseline_X.shape[-1:]
+                baseline_X.shape[: -(X.ndim)] + X.shape[:-1] + baseline_X.shape[-1:]
             )
             X_full = concatenate([baseline_X, X], axis=-1)
         # Note: it is important to compute the full posterior over `(X_baseline, X)``
@@ -87,28 +88,32 @@ class qDiscreteNEHVI(qNoisyExpectedHypervolumeImprovement):
         samples = self.sampler(posterior)[..., -q:, :]
         # add previous nehvi from pending points
         return self._compute_qehvi(samples=samples) + self._prev_nehvi
-    
+
     def _cache_root_decomposition(self, posterior: GPyTorchPosterior) -> None:
         if posterior.mvn._interleaved:
-            if hasattr(posterior.mvn.lazy_covariance_matrix, 'base_lazy_tensor'):
-                posterior_lc_base = posterior.mvn.lazy_covariance_matrix.base_lazy_tensor
+            if hasattr(posterior.mvn.lazy_covariance_matrix, "base_lazy_tensor"):
+                posterior_lc_base = (
+                    posterior.mvn.lazy_covariance_matrix.base_lazy_tensor
+                )
             else:
                 posterior_lc_base = posterior.mvn.lazy_covariance_matrix
 
             new_lazy_covariance = BlockDiagLazyTensor(posterior_lc_base)
-            posterior.mvn = MultitaskMultivariateNormal(posterior.mvn.mean, new_lazy_covariance, interleaved=False)
+            posterior.mvn = MultitaskMultivariateNormal(
+                posterior.mvn.mean, new_lazy_covariance, interleaved=False
+            )
         return super()._cache_root_decomposition(posterior=posterior)
-    
-    
+
+
 class qMTGPDiscreteNEHVI(qDiscreteNEHVI):
     # TODO: remove when botorch #1037 goes in
     # this is copied over from that diff
-    
+
     _uses_matheron = True
-    
+
     def __init__(self, *args, **kwargs):
-        super().__init__(cache_root = False, *args, **kwargs)
-    
+        super().__init__(cache_root=False, *args, **kwargs)
+
     def _set_sampler(
         self,
         q: int,

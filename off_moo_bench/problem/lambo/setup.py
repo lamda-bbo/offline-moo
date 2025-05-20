@@ -1,6 +1,7 @@
-from setuptools import setup, find_packages
 import os
 import sys
+
+from setuptools import find_packages, setup
 
 _here = os.path.abspath(os.path.dirname(__file__))
 
@@ -11,15 +12,17 @@ else:
     with open(os.path.join(_here, "README.md"), encoding="utf-8") as f:
         long_description = f.read()
 
-desc = "Code to reproduce experiments from Accelerating Bayesian Optimization for Protein Design" \
-       "with Denoising Autoencoders."
+desc = (
+    "Code to reproduce experiments from Accelerating Bayesian Optimization for Protein Design"
+    "with Denoising Autoencoders."
+)
 
 setup(
     name="lambo",
     version="0.2.1",
     description=desc,
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     author="Samuel Stanton, Wesley Maddox, and Nate Gruver",
     author_email="ss13641@nyu.edu",
     url="https://github.com/samuelstanton/lambo.git",

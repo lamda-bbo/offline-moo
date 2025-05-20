@@ -56,7 +56,6 @@ MOCOPermutationDict = {
     "mokp_50": "BiKP50-Exact-v0",
     "mokp_100": "BiKP100-Exact-v0",
     "mokp_200": "BiKP200-Exact-v0",
-    
     "bi_tsp_20": "BiTSP20-Exact-v0",
     "bi_tsp_50": "BiTSP50-Exact-v0",
     "bi_tsp_100": "BiTSP100-Exact-v0",
@@ -72,12 +71,10 @@ MOCOPermutationDict = {
     "bi_kp_200": "BiKP200-Exact-v0",
 }
 
-MOCOContinuousDict = {
-    "portfolio": "Portfolio-Exact-v0"
-}
+MOCOContinuousDict = {"portfolio": "Portfolio-Exact-v0"}
 
 MORLDict = {
-    "mo_swimmer_v2": "MOSwimmerV2-Exact-v0", 
+    "mo_swimmer_v2": "MOSwimmerV2-Exact-v0",
     "mo_hopper_v2": "MOHopperV2-Exact-v0",
 }
 
@@ -137,6 +134,13 @@ ALLTASKSDICT = {
     **RESuiteDict,
 }
 
-CONTINUOUSTASKS = SyntheticFunction + MONASLogits + MOCOContinuous + MORL + ScientificDesignContinuous + RESuite
+CONTINUOUSTASKS = (
+    SyntheticFunction
+    + MONASLogits
+    + MOCOContinuous
+    + MORL
+    + ScientificDesignContinuous
+    + RESuite
+)
 PERMUTATIONTASKS = MOCOPermutation
 SEQUENCETASKS = MONASSequence + ScientificDesignSequence

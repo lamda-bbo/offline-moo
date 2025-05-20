@@ -1,24 +1,21 @@
+import functools
+import importlib
+import inspect
 import os
 import subprocess
 import sys
-import importlib
-import inspect
-import functools
 
-import tensorflow as tf
 import numpy as np
-
+import tensorflow as tf
 from baselines.common import tf_util as U
 
 
 def store_args(method):
-    """Stores provided method args as instance attributes.
-    """
+    """Stores provided method args as instance attributes."""
     argspec = inspect.getfullargspec(method)
     defaults = {}
     if argspec.defaults is not None:
-        defaults = dict(
-            zip(argspec.args[-len(argspec.defaults):], argspec.defaults))
+        defaults = dict(zip(argspec.args[-len(argspec.defaults) :], argspec.defaults))
     if argspec.kwonlydefaults is not None:
         defaults.update(argspec.kwonlydefaults)
     arg_names = argspec.args[1:]
@@ -39,31 +36,31 @@ def store_args(method):
 
 
 def import_function(spec):
-    """Import a function identified by a string like "pkg.module:fn_name".
-    """
-    mod_name, fn_name = spec.split(':')
+    """Import a function identified by a string like "pkg.module:fn_name"."""
+    mod_name, fn_name = spec.split(":")
     module = importlib.import_module(mod_name)
     fn = getattr(module, fn_name)
     return fn
 
 
 def flatten_grads(var_list, grads):
-    """Flattens a variables and their gradients.
-    """
-    return tf.concat([tf.reshape(grad, [U.numel(v)])
-                      for (v, grad) in zip(var_list, grads)], 0)
+    """Flattens a variables and their gradients."""
+    return tf.concat(
+        [tf.reshape(grad, [U.numel(v)]) for (v, grad) in zip(var_list, grads)], 0
+    )
 
 
 def nn(input, layers_sizes, reuse=None, flatten=False, name=""):
-    """Creates a simple neural network
-    """
+    """Creates a simple neural network"""
     for i, size in enumerate(layers_sizes):
         activation = tf.nn.relu if i < len(layers_sizes) - 1 else None
-        input = tf.layers.dense(inputs=input,
-                                units=size,
-                                kernel_initializer=tf.contrib.layers.xavier_initializer(),
-                                reuse=reuse,
-                                name=name + '_' + str(i))
+        input = tf.layers.dense(
+            inputs=input,
+            units=size,
+            kernel_initializer=tf.contrib.layers.xavier_initializer(),
+            reuse=reuse,
+            name=name + "_" + str(i),
+        )
         if activation:
             input = activation(input)
     if flatten:
@@ -74,7 +71,9 @@ def nn(input, layers_sizes, reuse=None, flatten=False, name=""):
 
 def install_mpi_excepthook():
     import sys
+
     from mpi4py import MPI
+
     old_hook = sys.excepthook
 
     def new_hook(a, b, c):
@@ -82,6 +81,7 @@ def install_mpi_excepthook():
         sys.stdout.flush()
         sys.stderr.flush()
         MPI.COMM_WORLD.Abort()
+
     sys.excepthook = new_hook
 
 
@@ -93,15 +93,9 @@ def mpi_fork(n, extra_mpi_args=[]):
         return "child"
     if os.getenv("IN_MPI") is None:
         env = os.environ.copy()
-        env.update(
-            MKL_NUM_THREADS="1",
-            OMP_NUM_THREADS="1",
-            IN_MPI="1"
-        )
+        env.update(MKL_NUM_THREADS="1", OMP_NUM_THREADS="1", IN_MPI="1")
         # "-bind-to core" is crucial for good performance
-        args = ["mpirun", "-np", str(n)] + \
-            extra_mpi_args + \
-            [sys.executable]
+        args = ["mpirun", "-np", str(n)] + extra_mpi_args + [sys.executable]
 
         args += sys.argv
         subprocess.check_call(args, env=env)
@@ -125,9 +119,8 @@ def convert_episode_to_batch_major(episode):
 
 
 def transitions_in_episode_batch(episode_batch):
-    """Number of transitions in a given episode batch.
-    """
-    shape = episode_batch['u'].shape
+    """Number of transitions in a given episode batch."""
+    shape = episode_batch["u"].shape
     return shape[0] * shape[1]
 
 

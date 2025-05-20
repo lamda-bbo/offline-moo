@@ -1,7 +1,7 @@
-import numpy as np
 import random
 
-from baselines.common.segment_tree import SumSegmentTree, MinSegmentTree
+import numpy as np
+from baselines.common.segment_tree import MinSegmentTree, SumSegmentTree
 
 
 class ReplayBuffer(object):
@@ -40,7 +40,13 @@ class ReplayBuffer(object):
             rewards.append(reward)
             obses_tp1.append(np.array(obs_tp1, copy=False))
             dones.append(done)
-        return np.array(obses_t), np.array(actions), np.array(rewards), np.array(obses_tp1), np.array(dones)
+        return (
+            np.array(obses_t),
+            np.array(actions),
+            np.array(rewards),
+            np.array(obses_tp1),
+            np.array(dones),
+        )
 
     def sample(self, batch_size):
         """Sample a batch of experiences.
@@ -101,8 +107,8 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         """See ReplayBuffer.store_effect"""
         idx = self._next_idx
         super().add(*args, **kwargs)
-        self._it_sum[idx] = self._max_priority ** self._alpha
-        self._it_min[idx] = self._max_priority ** self._alpha
+        self._it_sum[idx] = self._max_priority**self._alpha
+        self._it_min[idx] = self._max_priority**self._alpha
 
     def _sample_proportional(self, batch_size):
         res = []
@@ -185,7 +191,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         for idx, priority in zip(idxes, priorities):
             assert priority > 0
             assert 0 <= idx < len(self._storage)
-            self._it_sum[idx] = priority ** self._alpha
-            self._it_min[idx] = priority ** self._alpha
+            self._it_sum[idx] = priority**self._alpha
+            self._it_min[idx] = priority**self._alpha
 
             self._max_priority = max(self._max_priority, priority)

@@ -1,5 +1,4 @@
 import gym
-
 from baselines import deepq
 from baselines.common import models
 
@@ -10,7 +9,7 @@ def main():
         env,
         network=models.mlp(num_layers=1, num_hidden=64),
         total_timesteps=0,
-        load_path='mountaincar_model.pkl'
+        load_path="mountaincar_model.pkl",
     )
 
     while True:
@@ -23,5 +22,5 @@ def main():
         print("Episode reward", episode_rew)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,66 +1,84 @@
+from copy import deepcopy
+from typing import Tuple
+
+import gpytorch
 import numpy as np
 import torch
-import gpytorch
-from torch import Tensor
 from botorch import fit_gpytorch_mll
-from botorch.models import FixedNoiseGP
-from botorch.models.model_list_gp_regression import ModelListGP
-from botorch.utils.transforms import unnormalize, normalize
-from botorch.utils.sampling import sample_simplex
-from botorch.optim.optimize import optimize_acqf_list
-from botorch.acquisition.objective import GenericMCObjective
-from gpytorch.mlls.sum_marginal_log_likelihood import SumMarginalLogLikelihood
-from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
 from botorch.acquisition.monte_carlo import qExpectedImprovement
-from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.acquisition.objective import GenericMCObjective
+from botorch.models import FixedNoiseGP
 from botorch.models.gp_regression import SingleTaskGP
-from gpytorch.mlls.sum_marginal_log_likelihood import ExactMarginalLogLikelihood
-from pymoo.algorithms.soo.nonconvex.ga import GA 
-from pymoo.optimize import minimize
+from botorch.models.model_list_gp_regression import ModelListGP
+from botorch.optim.optimize import optimize_acqf_list
+from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
+from botorch.utils.sampling import sample_simplex
+from botorch.utils.transforms import normalize, unnormalize
+from gpytorch.mlls.sum_marginal_log_likelihood import (
+    ExactMarginalLogLikelihood,
+    SumMarginalLogLikelihood,
+)
 from numpy import ndarray
-from typing import Tuple
-from copy import deepcopy
+from pymoo.algorithms.soo.nonconvex.ga import GA
+from pymoo.optimize import minimize
+from torch import Tensor
 
-from utils import get_N_nondominated_index
-from off_moo_baselines.mobo.mobo_utils import tkwargs
 from off_moo_baselines.mobo.kernel import OrderKernel, TransformedCategorical
+from off_moo_baselines.mobo.mobo_utils import tkwargs
 from off_moo_baselines.mobo.surrogate_problem import AcqfProblem
 from off_moo_bench.collecter import get_operator_dict
-from off_moo_bench.task_set import * 
+from off_moo_bench.task_set import *
+from utils import get_N_nondominated_index
+
 
 class MOBOParEGOContinuous:
-    def __init__(self, X_init: Tensor, Y_init: Tensor, 
-                 config: dict, solver_kwargs: dict,
-                 train_gp_data_size: int = 256, 
-                 output_size: int = 256, negate=True) -> None:
+    def __init__(
+        self,
+        X_init: Tensor,
+        Y_init: Tensor,
+        config: dict,
+        solver_kwargs: dict,
+        train_gp_data_size: int = 256,
+        output_size: int = 256,
+        negate=True,
+    ) -> None:
         """
-            args: 
-                X_init: '(N,D)' data of decision variable.
-                Y_init: '(N,m)' data of objective values.
-                ref_point : '(m,)' reference point.
-                train_gp_data_size: Size of data for fitting GP.
-                bounds: '(2, D)' bounds of decision variable.
-                output_size: Size of data for evluating once.
+        args:
+            X_init: '(N,D)' data of decision variable.
+            Y_init: '(N,m)' data of objective values.
+            ref_point : '(m,)' reference point.
+            train_gp_data_size: Size of data for fitting GP.
+            bounds: '(2, D)' bounds of decision variable.
+            output_size: Size of data for evluating once.
         """
-        self.config = config 
+        self.config = config
         self.dim = X_init.shape[1]
         self.num_obj = Y_init.shape[1]
-        
-        assert self.num_obj < 4, "Due to high computational cost, MOBO-qParEGO is suggested to run on a continuous problem with less than 4 objectives."
-        
-        self.X_init, self.Y_init = self._sample_data(X_init.detach().cpu().numpy(), Y_init.detach().cpu().numpy(), train_gp_data_size)
+
+        assert (
+            self.num_obj < 4
+        ), "Due to high computational cost, MOBO-qParEGO is suggested to run on a continuous problem with less than 4 objectives."
+
+        self.X_init, self.Y_init = self._sample_data(
+            X_init.detach().cpu().numpy(),
+            Y_init.detach().cpu().numpy(),
+            train_gp_data_size,
+        )
         bounds_ = np.ones((2, self.dim))
         bounds_[0] = solver_kwargs["xl"]
         bounds_[1] = solver_kwargs["xu"]
         self.bounds = torch.from_numpy(bounds_).to(**tkwargs)
         self.ref_point = solver_kwargs["ref_point"].to(**tkwargs)
-        self.X_init, self.Y_init = (self.X_init.to(**tkwargs), self.Y_init.to(**tkwargs))
+        self.X_init, self.Y_init = (
+            self.X_init.to(**tkwargs),
+            self.Y_init.to(**tkwargs),
+        )
         if negate:
             self.Y_init *= -1
             self.ref_point *= -1
         self.output_size = output_size
 
-    
     def _sample_data(self, X_init, Y_init, train_gp_data_size) -> Tuple[Tensor, Tensor]:
         indices_select = get_N_nondominated_index(Y_init, train_gp_data_size)
         Y_init = Y_init[indices_select]
@@ -73,11 +91,11 @@ class MOBOParEGOContinuous:
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
         return model
-    
+
     def run(self) -> ndarray:
         """
-            return: 
-                 ret: (output_size, D) data decision variable with one BO iteration with output_size batches.
+        return:
+             ret: (output_size, D) data decision variable with one BO iteration with output_size batches.
         """
         MC_SAMPLES = 128
         RAW_SAMPLES = 256
@@ -95,12 +113,12 @@ class MOBOParEGOContinuous:
                 get_chebyshev_scalarization(weights=weights, Y=pred)
             )
             acq_func = qExpectedImprovement(
-                model=model, 
+                model=model,
                 objective=objective,
                 X_baseline=normalize(self.X_init, self.bounds),
                 best_f=objective(self.Y_init).max(),
                 sampler=sampler,
-                prune_baseline=True
+                prune_baseline=True,
             )
             acq_func_list.append(acq_func)
 
@@ -113,32 +131,42 @@ class MOBOParEGOContinuous:
         )
         candidates = unnormalize(candidates.detach(), bounds=self.bounds)
         return candidates.cpu().numpy()
-    
+
+
 class MOBOParEGOPermutation:
-    def __init__(self, X_init: Tensor, Y_init: Tensor, 
-                 config: dict, solver_kwargs: dict,
-                 train_gp_data_size: int = 256, output_size: int = 256,
-                 negate = True) -> None:
+    def __init__(
+        self,
+        X_init: Tensor,
+        Y_init: Tensor,
+        config: dict,
+        solver_kwargs: dict,
+        train_gp_data_size: int = 256,
+        output_size: int = 256,
+        negate=True,
+    ) -> None:
         """
-            args: 
-                X_init: '(N,D)' data of decision variable.
-                Y_init: '(N,m)' data of objective values.
-                ref_point : '(m,)' reference point.
-                train_gp_data_size: Size of data for fitting GP.
-                bounds: '(2, D)' bounds of decision variable.
-                output_size: Size of data for evluating once.
+        args:
+            X_init: '(N,D)' data of decision variable.
+            Y_init: '(N,m)' data of objective values.
+            ref_point : '(m,)' reference point.
+            train_gp_data_size: Size of data for fitting GP.
+            bounds: '(2, D)' bounds of decision variable.
+            output_size: Size of data for evluating once.
         """
-        self.config = config 
+        self.config = config
         X_init = X_init.to(**tkwargs)
         Y_init = Y_init.to(**tkwargs)
         self.dim = X_init.shape[1]
         self.num_obj = Y_init.shape[1]
-        self.X_init, self.Y_init = self._sample_data(X_init.detach().cpu().numpy(), Y_init.detach().cpu().numpy(), train_gp_data_size)
+        self.X_init, self.Y_init = self._sample_data(
+            X_init.detach().cpu().numpy(),
+            Y_init.detach().cpu().numpy(),
+            train_gp_data_size,
+        )
         self.output_size = output_size
         if negate:
             self.Y_init *= -1
 
-    
     def _sample_data(self, X_init, Y_init, train_gp_data_size) -> Tuple[Tensor, Tensor]:
         indices_select = get_N_nondominated_index(Y_init, train_gp_data_size)
         Y_init = Y_init[indices_select]
@@ -150,7 +178,7 @@ class MOBOParEGOPermutation:
         for i in range(train_Y.shape[-1]):
             kernel = OrderKernel().to(**tkwargs)
             train_y = train_Y[..., i : i + 1]
-            train_yvar = torch.full_like(train_y, 0.01 ** 2)
+            train_yvar = torch.full_like(train_y, 0.01**2)
             models.append(
                 FixedNoiseGP(train_X, train_y, train_yvar, covar_module=kernel)
             )
@@ -159,11 +187,11 @@ class MOBOParEGOPermutation:
         mll = SumMarginalLogLikelihood(likelihood, model).to(**tkwargs)
         fit_gpytorch_mll(mll)
         return model
-    
+
     def run(self) -> ndarray:
         """
-            return: 
-                 ret: (output_size, D) data decision variable with one BO iteration with output_size batches.
+        return:
+             ret: (output_size, D) data decision variable with one BO iteration with output_size batches.
         """
         MC_SAMPLES = 128
         model = self._get_model(self.X_init, self.Y_init)
@@ -177,13 +205,13 @@ class MOBOParEGOPermutation:
                 get_chebyshev_scalarization(weights=weights, Y=pred)
             )
             acq_func = qExpectedImprovement(
-                model=model, 
+                model=model,
                 q=self.output_size,
                 objective=objective,
                 X_baseline=self.X_init,
                 best_f=objective(self.Y_init).max(),
                 sampler=sampler,
-                prune_baseline=True
+                prune_baseline=True,
             )
             acq_func_list.append(acq_func)
 
@@ -191,56 +219,70 @@ class MOBOParEGOPermutation:
 
         for acq_func in acq_func_list:
             problem = AcqfProblem(self.dim, acq_func)
-            print('----GA, solving...----')
+            print("----GA, solving...----")
             tmp_config = deepcopy(self.config)
-            tmp_config.update({
-                "sampling": "perm_rnd",
-                "crossover": "order",
-                "mutation": "inversion",
-            })
+            tmp_config.update(
+                {
+                    "sampling": "perm_rnd",
+                    "crossover": "order",
+                    "mutation": "inversion",
+                }
+            )
             operators_dict = get_operator_dict(tmp_config)
             _algo = GA(
                 pop_size=self.config["permutation_pop_size"],
                 **operators_dict,
-                eliminate_duplicates=True
+                eliminate_duplicates=True,
             )
 
-            res = minimize(problem=problem, algorithm=_algo, 
-                           termination=('n_gen', self.config["permutation_n_gen"]), 
-                           verbose=True)
+            res = minimize(
+                problem=problem,
+                algorithm=_algo,
+                termination=("n_gen", self.config["permutation_n_gen"]),
+                verbose=True,
+            )
             x_all.append(res.X.reshape(1, -1))
-        
+
         x_all = np.concatenate(x_all, axis=0)
         return x_all
-    
+
+
 class MOBOParEGOSequence:
-    def __init__(self, X_init: Tensor, Y_init: Tensor, 
-                 config: dict, solver_kwargs: dict,
-                 train_gp_data_size: int = 256, 
-                 output_size: int = 256,
-                 negate = True) -> None:
+    def __init__(
+        self,
+        X_init: Tensor,
+        Y_init: Tensor,
+        config: dict,
+        solver_kwargs: dict,
+        train_gp_data_size: int = 256,
+        output_size: int = 256,
+        negate=True,
+    ) -> None:
         """
-            args: 
-                X_init: '(N,D)' data of decision variable.
-                Y_init: '(N,m)' data of objective values.
-                ref_point : '(m,)' reference point.
-                train_gp_data_size: Size of data for fitting GP.
-                bounds: '(2, D)' bounds of decision variable.
-                output_size: Size of data for evluating once.
+        args:
+            X_init: '(N,D)' data of decision variable.
+            Y_init: '(N,m)' data of objective values.
+            ref_point : '(m,)' reference point.
+            train_gp_data_size: Size of data for fitting GP.
+            bounds: '(2, D)' bounds of decision variable.
+            output_size: Size of data for evluating once.
         """
-        self.config = config 
+        self.config = config
         X_init = X_init.to(**tkwargs)
         Y_init = Y_init.to(**tkwargs)
         self.xl = solver_kwargs["xl"]
         self.xu = solver_kwargs["xu"]
         self.dim = X_init.shape[1]
         self.num_obj = Y_init.shape[1]
-        self.X_init, self.Y_init = self._sample_data(X_init.detach().cpu().numpy(), Y_init.detach().cpu().numpy(), train_gp_data_size)
+        self.X_init, self.Y_init = self._sample_data(
+            X_init.detach().cpu().numpy(),
+            Y_init.detach().cpu().numpy(),
+            train_gp_data_size,
+        )
         self.output_size = output_size
         if negate:
             self.Y_init *= -1
 
-    
     def _sample_data(self, X_init, Y_init, train_gp_data_size) -> Tuple[Tensor, Tensor]:
         indices_select = get_N_nondominated_index(Y_init, train_gp_data_size)
         Y_init = Y_init[indices_select]
@@ -255,11 +297,11 @@ class MOBOParEGOSequence:
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model).to(**tkwargs)
         fit_gpytorch_mll(mll)
         return model
-    
+
     def run(self) -> ndarray:
         """
-            return: 
-                 ret: (output_size, D) data decision variable with one BO iteration with output_size batches.
+        return:
+             ret: (output_size, D) data decision variable with one BO iteration with output_size batches.
         """
         MC_SAMPLES = 128
         model = self._get_model(self.X_init, self.Y_init)
@@ -273,13 +315,13 @@ class MOBOParEGOSequence:
                 get_chebyshev_scalarization(weights=weights, Y=pred)
             )
             acq_func = qExpectedImprovement(
-                model=model, 
+                model=model,
                 q=self.output_size,
                 objective=objective,
                 X_baseline=self.X_init,
                 best_f=objective(self.Y_init).max(),
                 sampler=sampler,
-                prune_baseline=True
+                prune_baseline=True,
             )
             acq_func_list.append(acq_func)
 
@@ -287,41 +329,49 @@ class MOBOParEGOSequence:
 
         for acq_func in acq_func_list:
             problem = AcqfProblem(self.dim, acq_func, xl=self.xl, xu=self.xu)
-            print('----GA, solving...----')
+            print("----GA, solving...----")
             tmp_config = deepcopy(self.config)
-            tmp_config.update({
-                "sampling": "evox_sampling",
-                "crossover": "evox_crossover",
-                "mutation": "evox_mutation",
-                "repair": "evox_repair",
-            })
+            tmp_config.update(
+                {
+                    "sampling": "evox_sampling",
+                    "crossover": "evox_crossover",
+                    "mutation": "evox_mutation",
+                    "repair": "evox_repair",
+                }
+            )
             operator_dict = get_operator_dict(tmp_config)
             _algo = GA(
                 pop_size=self.config["sequence_pop_size"],
                 **operator_dict,
-                eliminate_duplicates=True
+                eliminate_duplicates=True,
             )
 
-            res = minimize(problem=problem, algorithm=_algo, 
-                           termination=('n_gen', self.config["sequence_n_gen"]), 
-                           verbose=True)
+            res = minimize(
+                problem=problem,
+                algorithm=_algo,
+                termination=("n_gen", self.config["sequence_n_gen"]),
+                verbose=True,
+            )
             x_all.append(res.X.reshape(1, -1))
-        
+
         x_all = np.concatenate(x_all, axis=0)
         return x_all
-    
+
+
 class MOBOParEGO:
     def __init__(self, config: dict, **kwargs):
         self.config = config
         task_name = config["task"]
-        
+
         TYPE2SOLVER = {
             "continuous": MOBOParEGOContinuous,
             "permutation": MOBOParEGOPermutation,
-            "sequence": MOBOParEGOSequence
+            "sequence": MOBOParEGOSequence,
         }
-        
-        assert task_name in ALLTASKS, f"task {task_name} not supported in offline-moo-bench"
+
+        assert (
+            task_name in ALLTASKS
+        ), f"task {task_name} not supported in offline-moo-bench"
         if task_name in CONTINUOUSTASKS:
             if task_name in MORL:
                 raise ValueError("MOBO-qParEGO is not suggested to run on MORL tasks")
@@ -332,8 +382,8 @@ class MOBOParEGO:
             self.solver_type = TYPE2SOLVER["sequence"]
         else:
             raise ValueError
-        
+
         self.solver = self.solver_type(config=config, **kwargs)
-        
+
     def run(self) -> ndarray:
         return self.solver.run()

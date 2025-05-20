@@ -15,6 +15,8 @@ class ExpectedObjVal(object):
         if candidates.shape[-1] == 1:
             candidates = candidates.squeeze(-1)
 
-        pred_samples = self.surrogate.posterior(candidates).rsample(torch.Size([self.num_samples]))
+        pred_samples = self.surrogate.posterior(candidates).rsample(
+            torch.Size([self.num_samples])
+        )
 
         return pred_samples.mean(0)

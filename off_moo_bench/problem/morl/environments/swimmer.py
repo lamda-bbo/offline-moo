@@ -2,16 +2,24 @@
 # two objectives
 # forward speed, energy efficiency
 
+from os import path
+
 import numpy as np
 from gym import utils
 from gym.envs.mujoco import mujoco_env
-from os import path
+
 
 class SwimmerEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self):
         self.obj_dim = 2
         utils.EzPickle.__init__(self)
-        mujoco_env.MujocoEnv.__init__(self, model_path = path.join(path.abspath(path.dirname(__file__)), "assets/swimmer.xml"), frame_skip = 4)
+        mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path=path.join(
+                path.abspath(path.dirname(__file__)), "assets/swimmer.xml"
+            ),
+            frame_skip=4,
+        )
 
     def step(self, a):
         ctrl_cost_coeff = 0.15
@@ -22,7 +30,7 @@ class SwimmerEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         reward_fwd = (xposafter - xposbefore) / self.dt
         reward_ctrl = 0.3 - ctrl_cost_coeff * np.square(a).sum()
         ob = self._get_obs()
-        return ob, 0., False, {'obj': np.array([reward_fwd, reward_ctrl])}
+        return ob, 0.0, False, {"obj": np.array([reward_fwd, reward_ctrl])}
 
     def _get_obs(self):
         qpos = self.sim.data.qpos
@@ -33,6 +41,6 @@ class SwimmerEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         c = 1e-3
         self.set_state(
             self.init_qpos + self.np_random.uniform(low=-c, high=c, size=self.model.nq),
-            self.init_qvel + self.np_random.uniform(low=-c, high=c, size=self.model.nv)
+            self.init_qvel + self.np_random.uniform(low=-c, high=c, size=self.model.nv),
         )
         return self._get_obs()

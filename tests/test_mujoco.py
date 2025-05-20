@@ -1,7 +1,9 @@
-import mujoco_py
 import os
+
+import mujoco_py
+
 mj_path = mujoco_py.utils.discover_mujoco()
-xml_path = os.path.join(mj_path, 'model', 'humanoid.xml')
+xml_path = os.path.join(mj_path, "model", "humanoid.xml")
 model = mujoco_py.load_model_from_path(xml_path)
 sim = mujoco_py.MjSim(model)
 
@@ -18,4 +20,3 @@ print(sim.data.qpos)
 #  -2.24492958e-06  4.79357124e-05 -6.38208396e-04 -1.61130312e-03
 #  -1.37554006e-03 -5.54173825e-05 -5.73572648e-05  7.63833991e-05
 #  -2.12765194e-05  5.73572648e-05 -7.63833991e-05 -2.12765194e-05]
-

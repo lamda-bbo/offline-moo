@@ -1,5 +1,5 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 
 N_TRIALS = 10000
@@ -8,8 +8,9 @@ N_EPISODES = 100
 _sess_config = tf.ConfigProto(
     allow_soft_placement=True,
     intra_op_parallelism_threads=1,
-    inter_op_parallelism_threads=1
+    inter_op_parallelism_threads=1,
 )
+
 
 def simple_test(env_fn, learn_fn, min_reward_fraction, n_trials=N_TRIALS):
     def seeded_env_fn():
@@ -35,8 +36,12 @@ def simple_test(env_fn, learn_fn, min_reward_fraction, n_trials=N_TRIALS):
             obs, rew, done, _ = env.step(a)
             sum_rew += float(rew)
         print("Reward in {} trials is {}".format(n_trials, sum_rew))
-        assert sum_rew > min_reward_fraction * n_trials, \
-            'sum of rewards {} is less than {} of the total number of trials {}'.format(sum_rew, min_reward_fraction, n_trials)
+        assert (
+            sum_rew > min_reward_fraction * n_trials
+        ), "sum of rewards {} is less than {} of the total number of trials {}".format(
+            sum_rew, min_reward_fraction, n_trials
+        )
+
 
 def reward_per_episode_test(env_fn, learn_fn, min_avg_reward, n_trials=N_EPISODES):
     env = DummyVecEnv([env_fn])
@@ -47,8 +52,12 @@ def reward_per_episode_test(env_fn, learn_fn, min_avg_reward, n_trials=N_EPISODE
         rewards = [sum(r) for r in rewards]
         avg_rew = sum(rewards) / N_TRIALS
         print("Average reward in {} episodes is {}".format(n_trials, avg_rew))
-        assert avg_rew > min_avg_reward, \
-            'average reward in {} episodes ({}) is less than {}'.format(n_trials, avg_rew, min_avg_reward)
+        assert (
+            avg_rew > min_avg_reward
+        ), "average reward in {} episodes ({}) is less than {}".format(
+            n_trials, avg_rew, min_avg_reward
+        )
+
 
 def rollout(env, model, n_trials):
     rewards = []
@@ -56,7 +65,7 @@ def rollout(env, model, n_trials):
     observations = []
     for i in range(n_trials):
         obs = env.reset()
-        state = model.initial_state if hasattr(model, 'initial_state') else None
+        state = model.initial_state if hasattr(model, "initial_state") else None
         episode_rew = []
         episode_actions = []
         episode_obs = []
@@ -64,7 +73,7 @@ def rollout(env, model, n_trials):
             if state is not None:
                 a, v, state, _ = model.step(obs, S=state, M=[False])
             else:
-                a,v, _, _ = model.step(obs)
+                a, v, _, _ = model.step(obs)
 
             obs, rew, done, _ = env.step(a)
             episode_rew.append(rew)
@@ -79,14 +88,15 @@ def rollout(env, model, n_trials):
 
 
 def smoketest(argstr, **kwargs):
-    import tempfile
-    import subprocess
     import os
-    argstr = 'python -m baselines.run ' + argstr
+    import subprocess
+    import tempfile
+
+    argstr = "python -m baselines.run " + argstr
     for key, value in kwargs:
-        argstr += ' --{}={}'.format(key, value)
+        argstr += " --{}={}".format(key, value)
     tempdir = tempfile.mkdtemp()
     env = os.environ.copy()
-    env['OPENAI_LOGDIR'] = tempdir
-    subprocess.run(argstr.split(' '), env=env)
+    env["OPENAI_LOGDIR"] = tempdir
+    subprocess.run(argstr.split(" "), env=env)
     return tempdir

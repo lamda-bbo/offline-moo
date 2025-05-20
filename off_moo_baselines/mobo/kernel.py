@@ -1,10 +1,11 @@
-import torch 
+import torch
 from gpytorch.kernels import Kernel
 
-from off_moo_baselines.util.data_structure import FeatureCache
 from off_moo_baselines.mobo.mobo_utils import tkwargs
+from off_moo_baselines.util.data_structure import FeatureCache
 
-feature_cache = FeatureCache() 
+feature_cache = FeatureCache()
+
 
 class OrderKernel(Kernel):
     has_lengthscale = True
@@ -31,16 +32,17 @@ class OrderKernel(Kernel):
             x2 = []
             for j in range(len(X2)):
                 x2.append(feature_cache.push(X2[j]))
-                
+
             x1 = torch.vstack(x1).to(**tkwargs)
             x2 = torch.vstack(x2).to(**tkwargs)
             x1 = torch.reshape(x1, (x1.shape[0], 1, -1)).to(**tkwargs)
             x2 = torch.reshape(x2, (1, x2.shape[0], -1)).to(**tkwargs)
             x1 = torch.tile(x1, (1, x2.shape[0], 1)).to(**tkwargs)
             x2 = torch.tile(x2, (x1.shape[0], 1, 1)).to(**tkwargs)
-            mat = torch.sum((x1 - x2)**2, dim=-1).to(**tkwargs)
-            mat = torch.exp(- self.lengthscale * mat)
+            mat = torch.sum((x1 - x2) ** 2, dim=-1).to(**tkwargs)
+            mat = torch.exp(-self.lengthscale * mat)
             return mat
+
 
 class CategoricalOverlap(Kernel):
     """Implementation of the categorical overlap kernel.
@@ -62,13 +64,16 @@ class CategoricalOverlap(Kernel):
         # invert, to now count same cats
         diff1 = torch.logical_not(diff).float()
         if self.ard_num_dims is not None and self.ard_num_dims > 1:
-            k_cat = torch.sum(self.lengthscale * diff1, dim=-1) / torch.sum(self.lengthscale)
+            k_cat = torch.sum(self.lengthscale * diff1, dim=-1) / torch.sum(
+                self.lengthscale
+            )
         else:
             # dividing by number of cat variables to keep this term in range [0,1]
             k_cat = torch.sum(diff1, dim=-1) / x1.shape[1]
         if diag:
             return torch.diag(k_cat).to(**tkwargs)
         return k_cat.to(**tkwargs)
+
 
 class TransformedCategorical(CategoricalOverlap):
     """
@@ -80,42 +85,52 @@ class TransformedCategorical(CategoricalOverlap):
 
     has_lengthscale = True
 
-    def forward(self, x1, x2, diag=False, last_dim_is_batch=False, exp='rbf', **params):
+    def forward(self, x1, x2, diag=False, last_dim_is_batch=False, exp="rbf", **params):
         if x1.dim() <= 3:
             # expand x1 and x2 to calc hamming distance
             M1_expanded = x1.unsqueeze(2)
             M2_expanded = x2.unsqueeze(1)
 
             # calc hamming distance
-            diff = (M1_expanded != M2_expanded)
+            diff = M1_expanded != M2_expanded
 
             # (# batch, # batch)
             diff1 = diff
+
             # diff1 = torch.sum(diff, dim=2)
             # assert 0, (diff.shape, diff1.shape, x1.shape, x2.shape)
             def rbf(d, ard):
                 if ard:
-                    return torch.exp(-torch.sum(d * self.lengthscale, dim=-1) / torch.sum(self.lengthscale))
+                    return torch.exp(
+                        -torch.sum(d * self.lengthscale, dim=-1)
+                        / torch.sum(self.lengthscale)
+                    )
                 else:
-                    return torch.exp(-self.lengthscale * torch.sum(d, dim=-1) / x1.shape[1])
+                    return torch.exp(
+                        -self.lengthscale * torch.sum(d, dim=-1) / x1.shape[1]
+                    )
 
             def mat52(d, ard):
                 raise NotImplementedError
 
-            if exp == 'rbf':
-                k_cat = rbf(diff1, self.ard_num_dims is not None and self.ard_num_dims > 1)
-            elif exp == 'mat52':
-                k_cat = mat52(diff1, self.ard_num_dims is not None and self.ard_num_dims > 1)
+            if exp == "rbf":
+                k_cat = rbf(
+                    diff1, self.ard_num_dims is not None and self.ard_num_dims > 1
+                )
+            elif exp == "mat52":
+                k_cat = mat52(
+                    diff1, self.ard_num_dims is not None and self.ard_num_dims > 1
+                )
             else:
-                raise ValueError('Exponentiation scheme %s is not recognised!' % exp)
+                raise ValueError("Exponentiation scheme %s is not recognised!" % exp)
             if diag:
                 return torch.diag(k_cat).to(**tkwargs)
             return k_cat.to(**tkwargs)
-        
+
         else:
             batch_size1, l, n1, m = x1.shape
             batch_size2, _, n2, _ = x2.shape
-            
+
             assert batch_size2 == batch_size1
 
             # Expand x1 and x2 to calculate the Hamming distance
@@ -123,7 +138,9 @@ class TransformedCategorical(CategoricalOverlap):
             M2_expanded = x2.unsqueeze(2)  # Shape: (batch_size, l, 1, n2, m)
 
             # Calculate Hamming distance
-            hamming_dist = (M1_expanded != M2_expanded).float().sum(dim=-1)  # Shape: (batch_size, l, n1, n2)
+            hamming_dist = (
+                (M1_expanded != M2_expanded).float().sum(dim=-1)
+            )  # Shape: (batch_size, l, n1, n2)
 
             def rbf(d, ard=False):
                 if ard:
@@ -134,12 +151,12 @@ class TransformedCategorical(CategoricalOverlap):
             def mat52(d):
                 raise NotImplementedError
 
-            if exp == 'rbf':
+            if exp == "rbf":
                 k_cat = rbf(hamming_dist)
-            elif exp == 'mat52':
+            elif exp == "mat52":
                 k_cat = mat52(hamming_dist)
             else:
-                raise ValueError('Exponentiation scheme %s is not recognized!' % exp)
+                raise ValueError("Exponentiation scheme %s is not recognized!" % exp)
 
             if diag:
                 return torch.diagonal(k_cat, offset=0, dim1=-2, dim2=-1).contiguous()

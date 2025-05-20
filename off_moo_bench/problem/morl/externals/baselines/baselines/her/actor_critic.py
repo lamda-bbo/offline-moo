@@ -1,11 +1,22 @@
 import tensorflow as tf
-from baselines.her.util import store_args, nn
+from baselines.her.util import nn, store_args
 
 
 class ActorCritic:
     @store_args
-    def __init__(self, inputs_tf, dimo, dimg, dimu, max_u, o_stats, g_stats, hidden, layers,
-                 **kwargs):
+    def __init__(
+        self,
+        inputs_tf,
+        dimo,
+        dimg,
+        dimu,
+        max_u,
+        o_stats,
+        g_stats,
+        hidden,
+        layers,
+        **kwargs
+    ):
         """The actor-critic network and related training code.
 
         Args:
@@ -21,9 +32,9 @@ class ActorCritic:
             hidden (int): number of hidden units that should be used in hidden layers
             layers (int): number of hidden layers
         """
-        self.o_tf = inputs_tf['o']
-        self.g_tf = inputs_tf['g']
-        self.u_tf = inputs_tf['u']
+        self.o_tf = inputs_tf["o"]
+        self.g_tf = inputs_tf["g"]
+        self.u_tf = inputs_tf["u"]
 
         # Prepare inputs for actor and critic.
         o = self.o_stats.normalize(self.o_tf)
@@ -31,10 +42,11 @@ class ActorCritic:
         input_pi = tf.concat(axis=1, values=[o, g])  # for actor
 
         # Networks.
-        with tf.variable_scope('pi'):
-            self.pi_tf = self.max_u * tf.tanh(nn(
-                input_pi, [self.hidden] * self.layers + [self.dimu]))
-        with tf.variable_scope('Q'):
+        with tf.variable_scope("pi"):
+            self.pi_tf = self.max_u * tf.tanh(
+                nn(input_pi, [self.hidden] * self.layers + [self.dimu])
+            )
+        with tf.variable_scope("Q"):
             # for policy training
             input_Q = tf.concat(axis=1, values=[o, g, self.pi_tf / self.max_u])
             self.Q_pi_tf = nn(input_Q, [self.hidden] * self.layers + [1])

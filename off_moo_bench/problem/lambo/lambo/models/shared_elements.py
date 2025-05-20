@@ -3,10 +3,14 @@ import math
 import typing
 
 import torch
-from torch import nn as nn
-
-from lambo.models.lm_elements import PositionalEncoding, FunctionHead, LengthHead, LengthTransform
+from lambo.models.lm_elements import (
+    FunctionHead,
+    LengthHead,
+    LengthTransform,
+    PositionalEncoding,
+)
 from lambo.models.masked_layers import Apply, mResidualBlock
+from torch import nn as nn
 
 
 def gelu(x):
@@ -50,13 +54,13 @@ class LayerNorm(nn.Module):  # type: ignore
 
 
 def pool_features(tokens, token_features, ignore_idxs):
-	mask = torch.ones_like(tokens, dtype=torch.float)
-	for idx in ignore_idxs:
-		mask *= tokens.ne(idx)
-	mask = mask.unsqueeze(-1).to(token_features)
-	pooled_features = (mask * token_features).sum(-2) / (mask.sum(-2) + 1e-6)
+    mask = torch.ones_like(tokens, dtype=torch.float)
+    for idx in ignore_idxs:
+        mask *= tokens.ne(idx)
+    mask = mask.unsqueeze(-1).to(token_features)
+    pooled_features = (mask * token_features).sum(-2) / (mask.sum(-2) + 1e-6)
 
-	return pooled_features
+    return pooled_features
 
 
 class mCNN(nn.Module):
@@ -64,13 +68,29 @@ class mCNN(nn.Module):
     argument (bs,n) that specifies which elements in the sequence are
     merely padded values."""
 
-    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+    device = (
+        torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+    )
 
-    def __init__(self, tokenizer, max_len, embed_dim=128, kernel_size=5, p=0.1, out_dim=1,
-                 layernorm=False, latent_dim=8, max_len_delta=2, num_heads=2, **kwargs):
+    def __init__(
+        self,
+        tokenizer,
+        max_len,
+        embed_dim=128,
+        kernel_size=5,
+        p=0.1,
+        out_dim=1,
+        layernorm=False,
+        latent_dim=8,
+        max_len_delta=2,
+        num_heads=2,
+        **kwargs,
+    ):
         super().__init__()
         vocab_size = len(tokenizer.full_vocab)
-        self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=tokenizer.padding_idx)
+        self.embedding = nn.Embedding(
+            vocab_size, embed_dim, padding_idx=tokenizer.padding_idx
+        )
         self.pos_encoder = PositionalEncoding(embed_dim, p, max_len, batch_first=True)
         self.encoder = nn.Sequential(
             Apply(Expression(lambda x: x.permute(0, 2, 1))),  # (B,N,C) -> (B,C,N)
@@ -92,7 +112,9 @@ class mCNN(nn.Module):
         )
 
         self.length_transform = LengthTransform()
-        self.function_head = FunctionHead(latent_dim, out_dim, kernel_size, layernorm, p, None, type='conv')
+        self.function_head = FunctionHead(
+            latent_dim, out_dim, kernel_size, layernorm, p, None, type="conv"
+        )
         self.length_head = LengthHead(latent_dim, max_len_delta)
         self.lm_head = nn.Linear(embed_dim, vocab_size)
 
@@ -105,7 +127,7 @@ class mCNN(nn.Module):
 
     def enc_tok_features(self, src_tok_idxs):
         if src_tok_idxs.size(1) > self.max_len:
-            src_tok_idxs = src_tok_idxs[:, :self.max_len + 1]
+            src_tok_idxs = src_tok_idxs[:, : self.max_len + 1]
 
         src_tok_features = self.embedding(src_tok_idxs) * math.sqrt(self.embed_dim)
         src_tok_features = self.pos_encoder(src_tok_features)
@@ -113,7 +135,9 @@ class mCNN(nn.Module):
         src_tok_features, _ = self.encoder((src_tok_features, src_mask))
         return src_tok_features, src_mask
 
-    def dec_tok_features(self, src_tok_features, src_mask, lat_tok_features=None, tgt_lens=None):
+    def dec_tok_features(
+        self, src_tok_features, src_mask, lat_tok_features=None, tgt_lens=None
+    ):
         # internal features from function head
         if lat_tok_features is None:
             lat_tok_features, _ = self.function_head(
@@ -129,7 +153,7 @@ class mCNN(nn.Module):
         tgt_tok_features, tgt_mask = self.length_transform(
             src_tok_features=torch.cat([src_tok_features, lat_tok_features], dim=-1),
             src_mask=src_mask,
-            tgt_lens=tgt_lens
+            tgt_lens=tgt_lens,
         )
         tgt_tok_features, _ = self.decoder((tgt_tok_features, tgt_mask))
 
@@ -143,23 +167,27 @@ class mCNN(nn.Module):
 
     def forward(self, src_tok_idxs):
         if src_tok_idxs.size(1) > self.max_len:
-            src_tok_idxs = src_tok_idxs[:, :self.max_len + 1]
+            src_tok_idxs = src_tok_idxs[:, : self.max_len + 1]
         src_tok_features, src_mask = self.enc_tok_features(src_tok_idxs)
         pooling_mask = src_mask * src_tok_idxs.ne(self.tokenizer.eos_idx)
-        _, pooled_features = self.function_head(src_tok_features, src_mask, pooling_mask)
+        _, pooled_features = self.function_head(
+            src_tok_features, src_mask, pooling_mask
+        )
         return pooled_features
 
-    def param_groups(self, lr, weight_decay=0.):
-        shared_group = dict(params=[], lr=lr, weight_decay=weight_decay, betas=(0., 1e-2))
+    def param_groups(self, lr, weight_decay=0.0):
+        shared_group = dict(
+            params=[], lr=lr, weight_decay=weight_decay, betas=(0.0, 1e-2)
+        )
         other_group = dict(params=[], lr=lr, weight_decay=weight_decay)
 
-        shared_names = ['embedding', 'pos_encoder', 'encoder', 'function_head']
+        shared_names = ["embedding", "pos_encoder", "encoder", "function_head"]
         for p_name, param in self.named_parameters():
-            prefix = p_name.split('.')[0]
+            prefix = p_name.split(".")[0]
             if prefix in shared_names:
-                shared_group['params'].append(param)
+                shared_group["params"].append(param)
             else:
-                other_group['params'].append(param)
+                other_group["params"].append(param)
 
         return shared_group, other_group
 
@@ -169,29 +197,55 @@ class Transformer(nn.Module):
     argument (bs,n) that specifies which elements in the sequence are
     merely padded values."""
 
-    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+    device = (
+        torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+    )
 
-    def __init__(self, tokenizer, max_len, embed_dim=64, ff_dim=256, num_heads=2, num_layers=4, p=0.1, out_dim=1,
-                 latent_dim=16, max_len_delta=2, **kwargs):
+    def __init__(
+        self,
+        tokenizer,
+        max_len,
+        embed_dim=64,
+        ff_dim=256,
+        num_heads=2,
+        num_layers=4,
+        p=0.1,
+        out_dim=1,
+        latent_dim=16,
+        max_len_delta=2,
+        **kwargs,
+    ):
         super().__init__()
         vocab_size = len(tokenizer.full_vocab)
-        self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=tokenizer.padding_idx)
+        self.embedding = nn.Embedding(
+            vocab_size, embed_dim, padding_idx=tokenizer.padding_idx
+        )
         self.pos_encoder = PositionalEncoding(embed_dim, p, max_len, batch_first=True)
         self.encoder = nn.TransformerEncoder(
             encoder_layer=nn.TransformerEncoderLayer(
-                d_model=embed_dim, nhead=num_heads, dim_feedforward=ff_dim, dropout=p, batch_first=True
+                d_model=embed_dim,
+                nhead=num_heads,
+                dim_feedforward=ff_dim,
+                dropout=p,
+                batch_first=True,
             ),
             num_layers=num_layers,
         )
         self.decoder = nn.TransformerEncoder(
             encoder_layer=nn.TransformerEncoderLayer(
-                d_model=embed_dim, nhead=num_heads, dim_feedforward=ff_dim, dropout=p, batch_first=True
+                d_model=embed_dim,
+                nhead=num_heads,
+                dim_feedforward=ff_dim,
+                dropout=p,
+                batch_first=True,
             ),
             num_layers=num_layers,
         )
 
         self.length_transform = LengthTransform()
-        self.function_head = FunctionHead(latent_dim, out_dim, None, None, p, num_heads, type='mha')
+        self.function_head = FunctionHead(
+            latent_dim, out_dim, None, None, p, num_heads, type="mha"
+        )
         self.length_head = LengthHead(latent_dim, max_len_delta)
         self.lm_head = nn.Linear(embed_dim, vocab_size)
         self.embed2latent = nn.Linear(embed_dim, latent_dim)
@@ -206,19 +260,23 @@ class Transformer(nn.Module):
 
     def enc_tok_features(self, src_tok_idxs):
         if src_tok_idxs.size(1) > self.max_len:
-            src_tok_idxs = src_tok_idxs[:, :self.max_len + 1]
+            src_tok_idxs = src_tok_idxs[:, : self.max_len + 1]
 
         src_tok_features = self.embedding(src_tok_idxs) * math.sqrt(self.embed_dim)
         src_tok_features = self.pos_encoder(src_tok_features)
         key_padding_mask = src_tok_idxs.eq(self.tokenizer.padding_idx)
 
-        src_tok_features = self.encoder(src_tok_features, src_key_padding_mask=key_padding_mask)
+        src_tok_features = self.encoder(
+            src_tok_features, src_key_padding_mask=key_padding_mask
+        )
         src_tok_features = self.embed2latent(src_tok_features)
         src_mask = (~key_padding_mask).float()
 
         return src_tok_features, src_mask
 
-    def dec_tok_features(self, src_tok_features, src_mask, lat_tok_features=None, tgt_lens=None):
+    def dec_tok_features(
+        self, src_tok_features, src_mask, lat_tok_features=None, tgt_lens=None
+    ):
         # internal features from function head
         if lat_tok_features is None:
             lat_tok_features, _ = self.function_head(
@@ -234,7 +292,7 @@ class Transformer(nn.Module):
         tgt_tok_features, tgt_mask = self.length_transform(
             src_tok_features=torch.cat([src_tok_features, lat_tok_features], dim=-1),
             src_mask=src_mask,
-            tgt_lens=tgt_lens
+            tgt_lens=tgt_lens,
         )
         tgt_tok_features = self.latent2embed(tgt_tok_features)
 
@@ -254,23 +312,27 @@ class Transformer(nn.Module):
 
     def forward(self, src_tok_idxs):
         if src_tok_idxs.size(1) > self.max_len:
-            src_tok_idxs = src_tok_idxs[:, :self.max_len + 1]
+            src_tok_idxs = src_tok_idxs[:, : self.max_len + 1]
         src_tok_features, src_mask = self.enc_tok_features(src_tok_idxs)
         pooling_mask = src_mask * src_tok_idxs.ne(self.tokenizer.eos_idx)
-        _, pooled_features = self.function_head(src_tok_features, src_mask, pooling_mask)
+        _, pooled_features = self.function_head(
+            src_tok_features, src_mask, pooling_mask
+        )
         return pooled_features
 
-    def param_groups(self, lr, weight_decay=0.):
-        shared_group = dict(params=[], lr=lr, weight_decay=weight_decay, betas=(0., 1e-2))
+    def param_groups(self, lr, weight_decay=0.0):
+        shared_group = dict(
+            params=[], lr=lr, weight_decay=weight_decay, betas=(0.0, 1e-2)
+        )
         other_group = dict(params=[], lr=lr, weight_decay=weight_decay)
 
-        shared_names = ['embedding', 'pos_encoder', 'encoder', 'function_head']
+        shared_names = ["embedding", "pos_encoder", "encoder", "function_head"]
         for p_name, param in self.named_parameters():
-            prefix = p_name.split('.')[0]
+            prefix = p_name.split(".")[0]
             if prefix in shared_names:
-                shared_group['params'].append(param)
+                shared_group["params"].append(param)
             else:
-                other_group['params'].append(param)
+                other_group["params"].append(param)
 
         return shared_group, other_group
 
@@ -285,22 +347,19 @@ class Expression(nn.Module):
 
 
 def check_early_stopping(
-        model,
-        best_score,
-        best_epoch,
-        best_weights,
-        curr_score,
-        curr_epoch,
-        patience,
-        tol=1e-3,
-        save_weights=True,
+    model,
+    best_score,
+    best_epoch,
+    best_weights,
+    curr_score,
+    curr_epoch,
+    patience,
+    tol=1e-3,
+    save_weights=True,
 ):
     eps = 1e-6
     stop = False
-    if (
-            best_score is None
-            or (best_score - curr_score) / (abs(best_score) + eps) > tol
-    ):
+    if best_score is None or (best_score - curr_score) / (abs(best_score) + eps) > tol:
         best_score, best_epoch = curr_score, curr_epoch
     elif curr_epoch - best_epoch >= patience:
         stop = True

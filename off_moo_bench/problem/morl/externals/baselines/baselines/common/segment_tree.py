@@ -28,7 +28,9 @@ class SegmentTree(object):
             neutral element for the operation above. eg. float('-inf')
             for max and 0 for sum.
         """
-        assert capacity > 0 and capacity & (capacity - 1) == 0, "capacity must be positive and a power of 2."
+        assert (
+            capacity > 0 and capacity & (capacity - 1) == 0
+        ), "capacity must be positive and a power of 2."
         self._capacity = capacity
         self._value = [neutral_element for _ in range(2 * capacity)]
         self._operation = operation
@@ -45,7 +47,7 @@ class SegmentTree(object):
             else:
                 return self._operation(
                     self._reduce_helper(start, mid, 2 * node, node_start, mid),
-                    self._reduce_helper(mid + 1, end, 2 * node + 1, mid + 1, node_end)
+                    self._reduce_helper(mid + 1, end, 2 * node + 1, mid + 1, node_end),
                 )
 
     def reduce(self, start=0, end=None):
@@ -80,8 +82,7 @@ class SegmentTree(object):
         idx //= 2
         while idx >= 1:
             self._value[idx] = self._operation(
-                self._value[2 * idx],
-                self._value[2 * idx + 1]
+                self._value[2 * idx], self._value[2 * idx + 1]
             )
             idx //= 2
 
@@ -93,9 +94,7 @@ class SegmentTree(object):
 class SumSegmentTree(SegmentTree):
     def __init__(self, capacity):
         super(SumSegmentTree, self).__init__(
-            capacity=capacity,
-            operation=operator.add,
-            neutral_element=0.0
+            capacity=capacity, operation=operator.add, neutral_element=0.0
         )
 
     def sum(self, start=0, end=None):
@@ -134,9 +133,7 @@ class SumSegmentTree(SegmentTree):
 class MinSegmentTree(SegmentTree):
     def __init__(self, capacity):
         super(MinSegmentTree, self).__init__(
-            capacity=capacity,
-            operation=min,
-            neutral_element=float('inf')
+            capacity=capacity, operation=min, neutral_element=float("inf")
         )
 
     def min(self, start=0, end=None):

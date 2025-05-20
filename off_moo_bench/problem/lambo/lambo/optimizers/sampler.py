@@ -1,16 +1,14 @@
 import numpy as np
+from lambo.optimizers.mutation import get_mlm_mutation, safe_vocab_mutation
 from pymoo.core.sampling import Sampling
 
 
-from lambo.optimizers.mutation import get_mlm_mutation, safe_vocab_mutation
-
-
-def _draw_samples(tokenizer, cand_pool, problem, num_samples, mlm_obj=None, safe_mut=False):
+def _draw_samples(
+    tokenizer, cand_pool, problem, num_samples, mlm_obj=None, safe_mut=False
+):
     cand_weights = problem.candidate_weights
     if cand_weights is None:
-        x0 = np.random.choice(
-            np.arange(len(cand_pool)), num_samples, replace=True
-        )
+        x0 = np.random.choice(np.arange(len(cand_pool)), num_samples, replace=True)
     else:
         x0 = np.random.choice(
             np.arange(len(cand_pool)), num_samples, p=cand_weights, replace=True
@@ -51,7 +49,9 @@ class CandidateSampler(Sampling):
 
 
 class BatchSampler(CandidateSampler):
-    def __init__(self, batch_size, tokenizer=None, var_type=np.float64, mlm_obj=None) -> None:
+    def __init__(
+        self, batch_size, tokenizer=None, var_type=np.float64, mlm_obj=None
+    ) -> None:
         super().__init__(var_type)
         self.batch_size = batch_size
         self.tokenizer = tokenizer
@@ -60,8 +60,13 @@ class BatchSampler(CandidateSampler):
 
     def _do(self, problem, n_samples, *args, **kwargs):
         cand_pool = problem.candidate_pool
-        batches = np.stack([
-            _draw_samples(self.tokenizer, cand_pool, problem, self.batch_size, self.mlm_obj) for _ in range(n_samples)
-        ])
+        batches = np.stack(
+            [
+                _draw_samples(
+                    self.tokenizer, cand_pool, problem, self.batch_size, self.mlm_obj
+                )
+                for _ in range(n_samples)
+            ]
+        )
         x = problem.query_batches_to_x(batches)
         return x

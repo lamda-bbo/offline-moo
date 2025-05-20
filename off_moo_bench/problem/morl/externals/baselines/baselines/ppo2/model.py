@@ -1,15 +1,20 @@
-import tensorflow as tf
 import functools
 
-from baselines.common.tf_util import get_session, save_variables, load_variables
-from baselines.common.tf_util import initialize
+import tensorflow as tf
+from baselines.common.tf_util import (
+    get_session,
+    initialize,
+    load_variables,
+    save_variables,
+)
 
 try:
     from baselines.common.mpi_adam_optimizer import MpiAdamOptimizer
-    from mpi4py import MPI
     from baselines.common.mpi_util import sync_from_root
+    from mpi4py import MPI
 except ImportError:
     MPI = None
+
 
 class Model(object):
     """
@@ -24,14 +29,29 @@ class Model(object):
     save/load():
     - Save load the model
     """
-    def __init__(self, *, policy, ob_space, ac_space, nbatch_act, nbatch_train,
-                nsteps, ent_coef, vf_coef, max_grad_norm, mpi_rank_weight=1, comm=None, microbatch_size=None):
+
+    def __init__(
+        self,
+        *,
+        policy,
+        ob_space,
+        ac_space,
+        nbatch_act,
+        nbatch_train,
+        nsteps,
+        ent_coef,
+        vf_coef,
+        max_grad_norm,
+        mpi_rank_weight=1,
+        comm=None,
+        microbatch_size=None
+    ):
         self.sess = sess = get_session()
 
         if MPI is not None and comm is None:
             comm = MPI.COMM_WORLD
 
-        with tf.variable_scope('ppo2_model', reuse=tf.AUTO_REUSE):
+        with tf.variable_scope("ppo2_model", reuse=tf.AUTO_REUSE):
             # CREATE OUR TWO MODELS
             # act_model that is used for sampling
             act_model = policy(nbatch_act, 1, sess)
@@ -66,13 +86,15 @@ class Model(object):
         # Clip the value to reduce variability during Critic training
         # Get the predicted value
         vpred = train_model.vf
-        vpredclipped = OLDVPRED + tf.clip_by_value(train_model.vf - OLDVPRED, - CLIPRANGE, CLIPRANGE)
+        vpredclipped = OLDVPRED + tf.clip_by_value(
+            train_model.vf - OLDVPRED, -CLIPRANGE, CLIPRANGE
+        )
         # Unclipped value
         vf_losses1 = tf.square(vpred - R)
         # Clipped value
         vf_losses2 = tf.square(vpredclipped - R)
 
-        vf_loss = .5 * tf.reduce_mean(tf.maximum(vf_losses1, vf_losses2))
+        vf_loss = 0.5 * tf.reduce_mean(tf.maximum(vf_losses1, vf_losses2))
 
         # Calculate ratio (pi current policy / pi old policy)
         ratio = tf.exp(OLDNEGLOGPAC - neglogpac)
@@ -84,18 +106,22 @@ class Model(object):
 
         # Final PG loss
         pg_loss = tf.reduce_mean(tf.maximum(pg_losses, pg_losses2))
-        approxkl = .5 * tf.reduce_mean(tf.square(neglogpac - OLDNEGLOGPAC))
-        clipfrac = tf.reduce_mean(tf.to_float(tf.greater(tf.abs(ratio - 1.0), CLIPRANGE)))
+        approxkl = 0.5 * tf.reduce_mean(tf.square(neglogpac - OLDNEGLOGPAC))
+        clipfrac = tf.reduce_mean(
+            tf.to_float(tf.greater(tf.abs(ratio - 1.0), CLIPRANGE))
+        )
 
         # Total loss
         loss = pg_loss - entropy * ent_coef + vf_loss * vf_coef
 
         # UPDATE THE PARAMETERS USING LOSS
         # 1. Get the model parameters
-        params = tf.trainable_variables('ppo2_model')
+        params = tf.trainable_variables("ppo2_model")
         # 2. Build our trainer
         if comm is not None and comm.Get_size() > 1:
-            self.trainer = MpiAdamOptimizer(comm, learning_rate=LR, mpi_rank_weight=mpi_rank_weight, epsilon=1e-5)
+            self.trainer = MpiAdamOptimizer(
+                comm, learning_rate=LR, mpi_rank_weight=mpi_rank_weight, epsilon=1e-5
+            )
         else:
             self.trainer = tf.train.AdamOptimizer(learning_rate=LR, epsilon=1e-5)
         # 3. Calculate the gradients
@@ -112,9 +138,14 @@ class Model(object):
         self.grads = grads
         self.var = var
         self._train_op = self.trainer.apply_gradients(grads_and_var)
-        self.loss_names = ['policy_loss', 'value_loss', 'policy_entropy', 'approxkl', 'clipfrac']
+        self.loss_names = [
+            "policy_loss",
+            "value_loss",
+            "policy_entropy",
+            "approxkl",
+            "clipfrac",
+        ]
         self.stats_list = [pg_loss, vf_loss, entropy, approxkl, clipfrac]
-
 
         self.train_model = train_model
         self.act_model = act_model
@@ -128,9 +159,20 @@ class Model(object):
         initialize()
         global_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="")
         if MPI is not None:
-            sync_from_root(sess, global_variables, comm=comm) #pylint: disable=E1101
+            sync_from_root(sess, global_variables, comm=comm)  # pylint: disable=E1101
 
-    def train(self, lr, cliprange, obs, returns, masks, actions, values, neglogpacs, states=None):
+    def train(
+        self,
+        lr,
+        cliprange,
+        obs,
+        returns,
+        masks,
+        actions,
+        values,
+        neglogpacs,
+        states=None,
+    ):
         # Here we calculate advantage A(s,a) = R + yV(s') - V(s)
         # Returns = R + yV(s')
         advs = returns - values
@@ -139,21 +181,17 @@ class Model(object):
         advs = (advs - advs.mean()) / (advs.std() + 1e-8)
 
         td_map = {
-            self.train_model.X : obs,
-            self.A : actions,
-            self.ADV : advs,
-            self.R : returns,
-            self.LR : lr,
-            self.CLIPRANGE : cliprange,
-            self.OLDNEGLOGPAC : neglogpacs,
-            self.OLDVPRED : values
+            self.train_model.X: obs,
+            self.A: actions,
+            self.ADV: advs,
+            self.R: returns,
+            self.LR: lr,
+            self.CLIPRANGE: cliprange,
+            self.OLDNEGLOGPAC: neglogpacs,
+            self.OLDVPRED: values,
         }
         if states is not None:
             td_map[self.train_model.S] = states
             td_map[self.train_model.M] = masks
 
-        return self.sess.run(
-            self.stats_list + [self._train_op],
-            td_map
-        )[:-1]
-
+        return self.sess.run(self.stats_list + [self._train_op], td_map)[:-1]

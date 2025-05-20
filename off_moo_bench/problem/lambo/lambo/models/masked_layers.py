@@ -34,6 +34,7 @@ class MaskLayerNorm1d(nn.LayerNorm):
     """
     Custom masked layer-norm layer
     """
+
     def forward(self, inp: tuple):
         x, mask = inp
 
@@ -118,14 +119,27 @@ def fused_swish(x):
 
 
 class mResidualBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, layernorm, dropout_p=0.1, act_fn='swish', stride=1
-                 ):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        layernorm,
+        dropout_p=0.1,
+        act_fn="swish",
+        stride=1,
+    ):
         super().__init__()
         self.conv_1 = nn.Conv1d(
-            in_channels, out_channels, kernel_size, padding='same', stride=stride, bias=False
+            in_channels,
+            out_channels,
+            kernel_size,
+            padding="same",
+            stride=stride,
+            bias=False,
         )
         self.conv_2 = nn.Conv1d(
-            out_channels, out_channels, kernel_size, padding='same', stride=stride
+            out_channels, out_channels, kernel_size, padding="same", stride=stride
         )
         if layernorm:
             self.norm_1 = MaskLayerNorm1d(normalized_shape=[in_channels, 1])
@@ -134,14 +148,15 @@ class mResidualBlock(nn.Module):
             self.norm_1 = MaskBatchNormNd(in_channels)
             self.norm_2 = MaskBatchNormNd(out_channels)
 
-        if act_fn == 'swish':
+        if act_fn == "swish":
             self.act_fn = fused_swish
         else:
             self.act_fn = nn.ReLU(inplace=True)
 
         if not in_channels == out_channels:
             self.proj = nn.Conv1d(
-                in_channels, out_channels, kernel_size=1, padding='same', stride=1)
+                in_channels, out_channels, kernel_size=1, padding="same", stride=1
+            )
         else:
             self.proj = None
 
@@ -173,7 +188,7 @@ class mConvNormAct(nn.Module):
     def __init__(self, in_channels, out_channels, layernorm=False, ksize=5, stride=1):
         super().__init__()
         self.conv = nn.Conv1d(
-            in_channels, out_channels, ksize, padding='same', stride=stride
+            in_channels, out_channels, ksize, padding="same", stride=stride
         )
         if layernorm:
             self.norm = MaskLayerNorm1d(normalized_shape=[out_channels, 1])

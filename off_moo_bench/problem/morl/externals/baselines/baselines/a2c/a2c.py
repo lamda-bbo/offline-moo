@@ -1,20 +1,16 @@
-import time
 import functools
-import tensorflow as tf
-
-from baselines import logger
-
-from baselines.common import set_global_seeds, explained_variance
-from baselines.common import tf_util
-from baselines.common.policies import build_policy
-
-
-from baselines.a2c.utils import Scheduler, find_trainable_variables
-from baselines.a2c.runner import Runner
-from baselines.ppo2.ppo2 import safemean
+import time
 from collections import deque
 
+import tensorflow as tf
+from baselines import logger
+from baselines.a2c.runner import Runner
+from baselines.a2c.utils import Scheduler, find_trainable_variables
+from baselines.common import explained_variance, set_global_seeds, tf_util
+from baselines.common.policies import build_policy
+from baselines.ppo2.ppo2 import safemean
 from tensorflow import losses
+
 
 class Model(object):
 
@@ -30,16 +26,26 @@ class Model(object):
         save/load():
         - Save load the model
     """
-    def __init__(self, policy, env, nsteps,
-            ent_coef=0.01, vf_coef=0.5, max_grad_norm=0.5, lr=7e-4,
-            alpha=0.99, epsilon=1e-5, total_timesteps=int(80e6), lrschedule='linear'):
 
+    def __init__(
+        self,
+        policy,
+        env,
+        nsteps,
+        ent_coef=0.01,
+        vf_coef=0.5,
+        max_grad_norm=0.5,
+        lr=7e-4,
+        alpha=0.99,
+        epsilon=1e-5,
+        total_timesteps=int(80e6),
+        lrschedule="linear",
+    ):
         sess = tf_util.get_session()
         nenvs = env.num_envs
-        nbatch = nenvs*nsteps
+        nbatch = nenvs * nsteps
 
-
-        with tf.variable_scope('a2c_model', reuse=tf.AUTO_REUSE):
+        with tf.variable_scope("a2c_model", reuse=tf.AUTO_REUSE):
             # step_model is used for sampling
             step_model = policy(nenvs, 1, sess)
 
@@ -65,7 +71,7 @@ class Model(object):
         # Value loss
         vf_loss = losses.mean_squared_error(tf.squeeze(train_model.vf), R)
 
-        loss = pg_loss - entropy*ent_coef + vf_loss * vf_coef
+        loss = pg_loss - entropy * ent_coef + vf_loss * vf_coef
 
         # Update parameters using loss
         # 1. Get the model parameters
@@ -81,7 +87,9 @@ class Model(object):
         # For instance zip(ABCD, xyza) => Ax, By, Cz, Da
 
         # 3. Make op for one policy and value update step of A2C
-        trainer = tf.train.RMSPropOptimizer(learning_rate=LR, decay=alpha, epsilon=epsilon)
+        trainer = tf.train.RMSPropOptimizer(
+            learning_rate=LR, decay=alpha, epsilon=epsilon
+        )
 
         _train = trainer.apply_gradients(grads)
 
@@ -94,16 +102,14 @@ class Model(object):
             for step in range(len(obs)):
                 cur_lr = lr.value()
 
-            td_map = {train_model.X:obs, A:actions, ADV:advs, R:rewards, LR:cur_lr}
+            td_map = {train_model.X: obs, A: actions, ADV: advs, R: rewards, LR: cur_lr}
             if states is not None:
                 td_map[train_model.S] = states
                 td_map[train_model.M] = masks
             policy_loss, value_loss, policy_entropy, _ = sess.run(
-                [pg_loss, vf_loss, entropy, _train],
-                td_map
+                [pg_loss, vf_loss, entropy, _train], td_map
             )
             return policy_loss, value_loss, policy_entropy
-
 
         self.train = train
         self.train_model = train_model
@@ -126,15 +132,15 @@ def learn(
     ent_coef=0.01,
     max_grad_norm=0.5,
     lr=7e-4,
-    lrschedule='linear',
+    lrschedule="linear",
     epsilon=1e-5,
     alpha=0.99,
     gamma=0.99,
     log_interval=100,
     load_path=None,
-    **network_kwargs):
-
-    '''
+    **network_kwargs
+):
+    """
     Main entrypoint for A2C algorithm. Train a policy with given network architecture on a given environment using a2c algorithm.
 
     Parameters:
@@ -179,9 +185,7 @@ def learn(
     **network_kwargs:   keyword arguments to the policy / network builder. See baselines.common/policies.py/build_policy and arguments to a particular type of network
                         For instance, 'mlp' network architecture has arguments num_hidden and num_layers.
 
-    '''
-
-
+    """
 
     set_global_seeds(seed)
 
@@ -190,8 +194,19 @@ def learn(
     policy = build_policy(env, network, **network_kwargs)
 
     # Instantiate the model object (that creates step_model and train_model)
-    model = Model(policy=policy, env=env, nsteps=nsteps, ent_coef=ent_coef, vf_coef=vf_coef,
-        max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule)
+    model = Model(
+        policy=policy,
+        env=env,
+        nsteps=nsteps,
+        ent_coef=ent_coef,
+        vf_coef=vf_coef,
+        max_grad_norm=max_grad_norm,
+        lr=lr,
+        alpha=alpha,
+        epsilon=epsilon,
+        total_timesteps=total_timesteps,
+        lrschedule=lrschedule,
+    )
     if load_path is not None:
         model.load(load_path)
 
@@ -200,33 +215,38 @@ def learn(
     epinfobuf = deque(maxlen=100)
 
     # Calculate the batch_size
-    nbatch = nenvs*nsteps
+    nbatch = nenvs * nsteps
 
     # Start total timer
     tstart = time.time()
 
-    for update in range(1, total_timesteps//nbatch+1):
+    for update in range(1, total_timesteps // nbatch + 1):
         # Get mini batch of experiences
         obs, states, rewards, masks, actions, values, epinfos = runner.run()
         epinfobuf.extend(epinfos)
 
-        policy_loss, value_loss, policy_entropy = model.train(obs, states, rewards, masks, actions, values)
-        nseconds = time.time()-tstart
+        policy_loss, value_loss, policy_entropy = model.train(
+            obs, states, rewards, masks, actions, values
+        )
+        nseconds = time.time() - tstart
 
         # Calculate the fps (frame per second)
-        fps = int((update*nbatch)/nseconds)
+        fps = int((update * nbatch) / nseconds)
         if update % log_interval == 0 or update == 1:
             # Calculates if value function is a good predicator of the returns (ev > 1)
             # or if it's just worse than predicting nothing (ev =< 0)
             ev = explained_variance(values, rewards)
             logger.record_tabular("nupdates", update)
-            logger.record_tabular("total_timesteps", update*nbatch)
+            logger.record_tabular("total_timesteps", update * nbatch)
             logger.record_tabular("fps", fps)
             logger.record_tabular("policy_entropy", float(policy_entropy))
             logger.record_tabular("value_loss", float(value_loss))
             logger.record_tabular("explained_variance", float(ev))
-            logger.record_tabular("eprewmean", safemean([epinfo['r'] for epinfo in epinfobuf]))
-            logger.record_tabular("eplenmean", safemean([epinfo['l'] for epinfo in epinfobuf]))
+            logger.record_tabular(
+                "eprewmean", safemean([epinfo["r"] for epinfo in epinfobuf])
+            )
+            logger.record_tabular(
+                "eplenmean", safemean([epinfo["l"] for epinfo in epinfobuf])
+            )
             logger.dump_tabular()
     return model
-

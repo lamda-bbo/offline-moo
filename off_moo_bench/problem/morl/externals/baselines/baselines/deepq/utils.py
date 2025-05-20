@@ -9,8 +9,8 @@ from baselines.common.tf_util import adjust_shape
 class TfInput(object):
     def __init__(self, name="(unnamed)"):
         """Generalized Tensorflow placeholder. The main differences are:
-            - possibly uses multiple placeholders internally and returns multiple values
-            - can apply light postprocessing to the value feed to placeholder.
+        - possibly uses multiple placeholders internally and returns multiple values
+        - can apply light postprocessing to the value feed to placeholder.
         """
         self.name = name
 
@@ -55,5 +55,3 @@ class ObservationInput(PlaceholderTfInput):
 
     def get(self):
         return self.processed_inpt
-
-

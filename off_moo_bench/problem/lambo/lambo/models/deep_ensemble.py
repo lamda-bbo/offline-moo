@@ -1,31 +1,48 @@
 import math
 
+import lambo.utils
 import numpy as np
 import torch
+
 # import wandb
 from botorch.posteriors import Posterior
-from scipy.stats import spearmanr
-from torch import optim as optim, nn as nn
-from torch.utils.data import DataLoader
-
-import lambo.utils
 from lambo import dataset as dataset_util
 from lambo.models.base_surrogate import BaseSurrogate
 from lambo.models.shared_elements import check_early_stopping, mCNN
 from lambo.transforms import padding_collate_fn
 from lambo.utils import to_cuda
-
+from scipy.stats import spearmanr
+from torch import nn as nn
+from torch import optim as optim
+from torch.utils.data import DataLoader
 
 MODEL_DICT = {
-    'mCNN': mCNN,
+    "mCNN": mCNN,
 }
 
 
 class DeepEnsemble(BaseSurrogate):
-    def __init__(self, tokenizer, model, model_kwargs, lr, bs, weight_decay,
-                 ensemble_size, max_shift, mask_size, num_epochs, eval_period,
-                 bootstrap_ratio, holdout_ratio, early_stopping, patience, min_num_train, 
-                 custom_train_transforms=None, **kwargs):
+    def __init__(
+        self,
+        tokenizer,
+        model,
+        model_kwargs,
+        lr,
+        bs,
+        weight_decay,
+        ensemble_size,
+        max_shift,
+        mask_size,
+        num_epochs,
+        eval_period,
+        bootstrap_ratio,
+        holdout_ratio,
+        early_stopping,
+        patience,
+        min_num_train,
+        custom_train_transforms=None,
+        **kwargs,
+    ):
         super().__init__()
 
         self._set_transforms(tokenizer, max_shift, mask_size, custom_train_transforms)
@@ -44,9 +61,9 @@ class DeepEnsemble(BaseSurrogate):
 
         self.trainer = trainer
         self.ensemble_size = ensemble_size
-        self.models = torch.nn.ModuleList([
-            network_constr(**model_kwargs) for _ in range(self.ensemble_size)
-        ])
+        self.models = torch.nn.ModuleList(
+            [network_constr(**model_kwargs) for _ in range(self.ensemble_size)]
+        )
 
         self.num_epochs = num_epochs
         self.bootstrap_ratio = bootstrap_ratio
@@ -54,10 +71,21 @@ class DeepEnsemble(BaseSurrogate):
         self.early_stopping = early_stopping
         self.patience = patience
         self.min_num_train = min_num_train
-        self.num_outputs = model_kwargs['out_dim']  # BoTorch acquisition compatibility
+        self.num_outputs = model_kwargs["out_dim"]  # BoTorch acquisition compatibility
         self.eval_period = eval_period
 
-    def fit(self, X_train, Y_train, X_val, Y_val, X_test, Y_test, reset=False, log_prefix="deep_ens", **kwargs):
+    def fit(
+        self,
+        X_train,
+        Y_train,
+        X_val,
+        Y_val,
+        X_test,
+        Y_test,
+        reset=False,
+        log_prefix="deep_ens",
+        **kwargs,
+    ):
         super().fit(X_train, Y_train)
         if isinstance(Y_train, np.ndarray):
             Y_train = torch.from_numpy(Y_train).to(self.dtype)
@@ -65,9 +93,11 @@ class DeepEnsemble(BaseSurrogate):
             Y_test = torch.from_numpy(Y_test).to(self.dtype)
 
         num_val = 0 if X_val is None else X_val.shape[0]
-        print(f'{X_train.shape[0]} train, {num_val} val, {X_test.shape[0]} test')
+        print(f"{X_train.shape[0]} train, {num_val} val, {X_test.shape[0]} test")
 
-        _train_dataset, _test_dataset = self._get_datasets(X_train, X_test, Y_train, Y_test)
+        _train_dataset, _test_dataset = self._get_datasets(
+            X_train, X_test, Y_train, Y_test
+        )
         _, _val_dataset = self._get_datasets(X_train, X_val, Y_train, Y_val)
         prev_models = self.models
         new_models = torch.nn.ModuleList()
@@ -76,7 +106,10 @@ class DeepEnsemble(BaseSurrogate):
             if self.bootstrap_ratio is not None:
                 X_train, Y_train = _train_dataset.tensors
                 new_X, new_Y = lambo.utils.draw_bootstrap(
-                    X_train, Y_train, bootstrap_ratio=self.bootstrap_ratio, min_samples=self.min_num_train
+                    X_train,
+                    Y_train,
+                    bootstrap_ratio=self.bootstrap_ratio,
+                    min_samples=self.min_num_train,
                 )
                 train_dataset = dataset_util.TransformTensorDataset(
                     [new_X, new_Y], self.train_transform
@@ -101,7 +134,7 @@ class DeepEnsemble(BaseSurrogate):
                 reset=reset,
                 log_prefix=_log_prefix,
                 early_stopping=self.early_stopping,
-                stopping_patience=self.patience
+                stopping_patience=self.patience,
             )
             if reset:
                 new_models.append(self.trainer.model)
@@ -111,7 +144,9 @@ class DeepEnsemble(BaseSurrogate):
 
         # evaluate full ensemble
         metrics = dict(best_epoch=0)
-        metrics.update(self.evaluate(X_test, Y_test, bs=32, log_prefix=log_prefix, split="test"))
+        metrics.update(
+            self.evaluate(X_test, Y_test, bs=32, log_prefix=log_prefix, split="test")
+        )
         records = [metrics]
 
         return records
@@ -130,7 +165,7 @@ class DeepEnsemble(BaseSurrogate):
         num_samples = ens_size if num_samples is None else num_samples
         if num_samples > ens_size:
             raise ValueError(
-                f'[DeepEnsemble] a {ens_size}-component deep ensemble can do at most {ens_size} function draws'
+                f"[DeepEnsemble] a {ens_size}-component deep ensemble can do at most {ens_size} function draws"
             )
         sample_idxs = np.random.permutation(ens_size)[:num_samples]
 
@@ -220,7 +255,9 @@ class EnsemblePosterior(Posterior):
 
 
 class EnsembleComponentTrainer(object):
-    def __init__(self, network, dict_size, network_kwargs={}, lr=1e-3, bs=100, weight_decay=0.0):
+    def __init__(
+        self, network, dict_size, network_kwargs={}, lr=1e-3, bs=100, weight_decay=0.0
+    ):
         self.network = network
         self.dict_size = dict_size
 
@@ -254,7 +291,7 @@ class EnsembleComponentTrainer(object):
             self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay
         )
         lr_sched = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, patience=math.ceil(stopping_patience / 2.), threshold=1e-3
+            self.optimizer, patience=math.ceil(stopping_patience / 2.0), threshold=1e-3
         )
 
         collate_fn = lambda x: padding_collate_fn(x, self.model.tokenizer.padding_idx)
@@ -272,7 +309,7 @@ class EnsembleComponentTrainer(object):
         # print(f"train_dataset: {len(train_dataset)}")
         best_loss, best_loss_epoch = None, 0
         best_score, best_score_epoch = None, 0
-        stop_crit_key = select_crit_key = 'val_rmse'
+        stop_crit_key = select_crit_key = "val_rmse"
         stop = False
         for epoch_idx in range(num_epochs):
             metrics = {}
@@ -286,10 +323,12 @@ class EnsembleComponentTrainer(object):
                 self.optimizer.step()
                 avg_train_loss += loss.item() / len(loader)
 
-            metrics.update({
-                "epoch": epoch_idx + 1,
-                "train_loss": avg_train_loss,
-            })
+            metrics.update(
+                {
+                    "epoch": epoch_idx + 1,
+                    "train_loss": avg_train_loss,
+                }
+            )
             lr_sched.step(avg_train_loss)
 
             if (epoch_idx + 1) % eval_period == 0:
@@ -323,10 +362,14 @@ class EnsembleComponentTrainer(object):
                     patience=stopping_patience,
                     save_weights=False,
                 )
-                metrics.update(dict(best_loss=best_loss, best_loss_epoch=best_loss_epoch))
+                metrics.update(
+                    dict(best_loss=best_loss, best_loss_epoch=best_loss_epoch)
+                )
 
             if len(log_prefix) > 0:
-                metrics = {'/'.join((log_prefix, key)): val for key, val in metrics.items()}
+                metrics = {
+                    "/".join((log_prefix, key)): val for key, val in metrics.items()
+                }
             # try:
             #     # wandb.log(metrics)
             #     print()

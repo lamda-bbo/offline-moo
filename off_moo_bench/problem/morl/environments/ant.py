@@ -2,16 +2,24 @@
 # two objectives
 # x-axis speed, y-axis speed
 
+from os import path
+
 import numpy as np
 from gym import utils
 from gym.envs.mujoco import mujoco_env
-from os import path
+
 
 class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self):
         self.obj_dim = 2
         self.cost_weights = np.ones(self.obj_dim) / self.obj_dim
-        mujoco_env.MujocoEnv.__init__(self, model_path = path.join(path.abspath(path.dirname(__file__)), "assets/ant.xml"), frame_skip = 5)
+        mujoco_env.MujocoEnv.__init__(
+            self,
+            model_path=path.join(
+                path.abspath(path.dirname(__file__)), "assets/ant.xml"
+            ),
+            frame_skip=5,
+        )
         utils.EzPickle.__init__(self)
 
     def step(self, a):
@@ -23,9 +31,9 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         xposafter = self.get_body_com("torso")[0]
         yposafter = self.get_body_com("torso")[1]
 
-        ctrl_cost = .5 * np.square(a).sum()
+        ctrl_cost = 0.5 * np.square(a).sum()
         survive_reward = 1.0
-        other_reward = - ctrl_cost + survive_reward
+        other_reward = -ctrl_cost + survive_reward
 
         vx_reward = (xposafter - xposbefore) / self.dt + other_reward
         vy_reward = (yposafter - yposbefore) / self.dt + other_reward
@@ -35,19 +43,21 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         notdone = np.isfinite(state).all()
         done = not notdone
         ob = self._get_obs()
-        return ob, reward, done, {'obj': np.array([vx_reward, vy_reward])}
+        return ob, reward, done, {"obj": np.array([vx_reward, vy_reward])}
 
     def _get_obs(self):
-        return np.concatenate([
-            self.sim.data.qpos.flat[2:],
-            self.sim.data.qvel.flat,
-        ])
+        return np.concatenate(
+            [
+                self.sim.data.qpos.flat[2:],
+                self.sim.data.qvel.flat,
+            ]
+        )
 
     def reset_model(self):
         c = 1e-3
         self.set_state(
             self.init_qpos + self.np_random.uniform(low=-c, high=c, size=self.model.nq),
-            self.init_qvel + c * self.np_random.standard_normal(self.model.nv)
+            self.init_qvel + c * self.np_random.standard_normal(self.model.nv),
         )
         return self._get_obs()
 
@@ -55,5 +65,5 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         self.viewer.cam.distance = self.model.stat.extent * 0.5
 
     def set_params(self, params):
-        if params['cost_weights'] is not None:
+        if params["cost_weights"] is not None:
             self.cost_weights = np.copy(params["cost_weights"])

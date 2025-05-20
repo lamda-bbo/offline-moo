@@ -1,29 +1,33 @@
 import sys
-import rdkit
 from argparse import ArgumentParser
-from rdkit import Chem, DataStructs
-from rdkit.Chem import AllChem
-from rdkit.Chem import Descriptors
-import sascorer as sascorer
+
+import rdkit
 import rdkit.Chem.QED as QED
+import sascorer as sascorer
+from rdkit import Chem, DataStructs
+from rdkit.Chem import AllChem, Descriptors
 
 parser = ArgumentParser()
-parser.add_argument('--ref_path', required=True)
+parser.add_argument("--ref_path", required=True)
 args = parser.parse_args()
 
-lg = rdkit.RDLogger.logger() 
+lg = rdkit.RDLogger.logger()
 lg.setLevel(rdkit.RDLogger.CRITICAL)
 
 pred_data = [line.split()[1:] for line in sys.stdin]
-pred_mols = [mol for mol,x,y,qed,sa in pred_data if float(x) >= 0.5 and float(y) >= 0.5 and float(qed) > 0.6 and float(sa) < 4]
+pred_mols = [
+    mol
+    for mol, x, y, qed, sa in pred_data
+    if float(x) >= 0.5 and float(y) >= 0.5 and float(qed) > 0.6 and float(sa) < 4
+]
 
 fraction_actives = len(pred_mols) / len(pred_data)
-print('fraction actives:', fraction_actives)
+print("fraction actives:", fraction_actives)
 
 with open(args.ref_path) as f:
     next(f)
-    true_mols = [line.split(',')[0] for line in f]
-print('number of active reference', len(true_mols))
+    true_mols = [line.split(",")[0] for line in f]
+print("number of active reference", len(true_mols))
 
 true_mols = [Chem.MolFromSmiles(s) for s in true_mols]
 true_mols = [x for x in true_mols if x is not None]
@@ -39,15 +43,14 @@ for i in range(len(pred_fps)):
     if max(sims) >= 0.4:
         fraction_similar += 1
 
-print('novelty:', 1 - fraction_similar / len(pred_mols))
+print("novelty:", 1 - fraction_similar / len(pred_mols))
 
 similarity = 0
 for i in range(len(pred_fps)):
     sims = DataStructs.BulkTanimotoSimilarity(pred_fps[i], pred_fps[:i])
     similarity += sum(sims)
 
-n = len(pred_fps) 
+n = len(pred_fps)
 n_pairs = n * (n - 1) / 2
 diversity = 1 - similarity / n_pairs
-print('diversity:', diversity)
-
+print("diversity:", diversity)
