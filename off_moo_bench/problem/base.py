@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-import torch
 from pymoo.core.problem import Problem
 
 pareto_fronts_path = os.path.join(
@@ -42,18 +41,6 @@ class BaseProblem(Problem):
         if isinstance(ideal_point, list):
             ideal_point = np.array(ideal_point)
         self.ideal_point = ideal_point
-
-        # if not hasattr(self, 'lbound'):
-        #     if isinstance(self.xl, np.ndarray):
-        #         self.lbound = torch.from_numpy(self.xl)
-        #     else:
-        #         self.lbound = torch.ones(self.n_obj).float() * self.xl
-
-        # if not hasattr(self, 'ubound'):
-        #     if isinstance(self.xu, np.ndarray):
-        #         self.ubound = torch.from_numpy(self.xu)
-        #     else:
-        #         self.ubound = torch.ones(self.n_obj).float() * self.xu
 
     def generate_x(self, size, n_dim):
         raise NotImplementedError

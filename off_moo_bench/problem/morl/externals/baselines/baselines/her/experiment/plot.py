@@ -7,7 +7,6 @@ import os
 import glob2
 import matplotlib.pyplot as plt
 import numpy as np
-
 import seaborn as sns
 
 sns.set()

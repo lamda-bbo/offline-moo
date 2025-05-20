@@ -17,16 +17,17 @@ class SyntheticProblem(BaseProblem):
         lbound,
         ubound,
         problem_type="synthetic",
-        requires_normalized_x=True,
+        requires_normalized_x=False,
         nadir_point=None,
         ideal_point=None,
     ):
         super().__init__(
-            name,
-            problem_type,
-            n_obj,
-            n_dim,
-            #  xl=lbound, xu=ubound,
+            name=name,
+            problem_type=problem_type,
+            n_obj=n_obj,
+            n_dim=n_dim,
+            xl=lbound.detach().cpu().numpy(),
+            xu=ubound.detach().cpu().numpy(),
             requires_normalized_x=requires_normalized_x,
             nadir_point=nadir_point,
             ideal_point=ideal_point,
@@ -49,13 +50,13 @@ class SyntheticProblem(BaseProblem):
         )
 
     def f(self, x, *args, **kwargs):
-        assert x.shape[-1] == self.n_dim
+        assert x.shape[-1] == self.n_var
         if self.func == []:
             self.func = self.get_func()
         x = torch.from_numpy(x).to(self.device)
-        self.lbound = self.lbound.to(x.device)
-        self.ubound = self.ubound.to(x.device)
-        x = x * (self.ubound - self.lbound) + self.lbound
+        # self.lbound = self.lbound.to(x.device)
+        # self.ubound = self.ubound.to(x.device)
+        # x = x * (self.ubound - self.lbound) + self.lbound
         # print(x, self.func)
         objs = None
         for f in self.func:
