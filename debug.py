@@ -89,3 +89,4 @@ x = task_ob.x[:50]
 print("standard y:", task_stand.evaluate(torch.from_numpy(x).cuda()))
 print("y:", task.evaluate(x))
 print("ob y:", task_ob.predict(x))
+print("data y:", task_ob.y[:50])
