@@ -114,7 +114,7 @@ class DTLZ2(DTLZ):
         x = torch.from_numpy(x).to(self.device)
         X_, X_M = x[:, : self.n_obj - 1], x[:, self.n_obj - 1 :]
         g = self.g2(X_M)
-        out["F"] = self.obj_func(X_, g, alpha=1).cpu().numpy()
+        out["F"] = self.obj_func(X_, g, alpha=1).cpu().numpy().T
 
 
 class DTLZ3(DTLZ):
@@ -131,7 +131,7 @@ class DTLZ3(DTLZ):
         x = torch.from_numpy(x).to(self.device)
         X_, X_M = x[:, : self.n_obj - 1], x[:, self.n_obj - 1 :]
         g = self.g1(X_M)
-        out["F"] = self.obj_func(X_, g, alpha=1).cpu().numpy()
+        out["F"] = self.obj_func(X_, g, alpha=1).cpu().numpy().T
 
 
 class DTLZ4(DTLZ):
@@ -150,7 +150,7 @@ class DTLZ4(DTLZ):
         x = torch.from_numpy(x).to(self.device)
         X_, X_M = x[:, : self.n_obj - 1], x[:, self.n_obj - 1 :]
         g = self.g2(X_M)
-        out["F"] = self.obj_func(X_, g, alpha=self.alpha).cpu().numpy()
+        out["F"] = self.obj_func(X_, g, alpha=self.alpha).cpu().numpy().T
 
 
 class DTLZ5(DTLZ):
@@ -171,7 +171,7 @@ class DTLZ5(DTLZ):
         theta = 1 / (2 * (1 + g[:, None])) * (1 + 2 * g[:, None] * X_)
         theta = torch.stack([x[:, 0], theta[:, 1:].flatten()], dim=1)
 
-        out["F"] = self.obj_func(theta, g).cpu().numpy()
+        out["F"] = self.obj_func(theta, g).cpu().numpy().T
 
 
 class DTLZ6(DTLZ):
@@ -192,7 +192,7 @@ class DTLZ6(DTLZ):
         theta = 1 / (2 * (1 + g[:, None])) * (1 + 2 * g[:, None] * X_)
         theta = torch.stack([x[:, 0], theta[:, 1:].flatten()], dim=1)
 
-        out["F"] = self.obj_func(theta, g).cpu().numpy()
+        out["F"] = self.obj_func(theta, g).cpu().numpy().T
 
 
 class DTLZ7(DTLZ):
