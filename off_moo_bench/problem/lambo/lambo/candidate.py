@@ -138,12 +138,13 @@ class FoldedCandidate:
             metrics = foldx_manager(mutation_list, self.uuid)
             self.wild_pdb_path = Path(work_dir) / self.uuid / "WT_wt_input_Repair_1.pdb"
             self.mutant_pdb_path = Path(work_dir) / self.uuid / "wt_input_Repair_1.pdb"
-        except RuntimeError:
+        except RuntimeError as e:
             print(f"{wild_name}, {mutation_list}")
+            print(e)
             foldx_success = False
             self.wild_pdb_path = wild_pdb_path
             self.mutant_pdb_path = None
-
+        # print(foldx_success)
         # predicted stability
         self.wild_total_energy = (
             metrics["wild_total_energy"] if foldx_success else float("inf")

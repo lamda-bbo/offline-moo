@@ -1,6 +1,7 @@
 import abc
 import os
-from typing import Optional, Union
+from typing import List, Optional, Union
+import json
 
 import numpy as np
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
@@ -41,6 +42,7 @@ class DatasetBuilder(abc.ABC):
         y_shards: Union[DiskResource, np.ndarray],
         x_test_shards: Union[DiskResource, np.ndarray],
         y_test_shards: Union[DiskResource, np.ndarray],
+        fronts_disk_resource: Union[DiskResource, List[List[int]]],
         x_normalize_method: Optional[str] = "min-max",
         y_normalize_method: Optional[str] = "min-max",
         internal_batch_size: Optional[int] = 32,
@@ -78,6 +80,7 @@ class DatasetBuilder(abc.ABC):
             or isinstance(y_test_shards, DiskResource)
             else y_test_shards
         )
+        self.fronts_disk_resource = fronts_disk_resource
 
         self.num_shards = 0
         for x_shard, y_shard in zip(self.x_shards, self.y_shards):
@@ -679,13 +682,25 @@ class DatasetBuilder(abc.ABC):
             self.update_y_statistics()
 
     def regain_fronts(self, y):
-        return NonDominatedSorting().do(y)
+        if isinstance(self.fronts_disk_resource, DiskResource):
+            if self.fronts_disk_resource.is_downloaded:
+                with open(self.fronts_disk_resource.disk_target, "r") as f:
+                    fronts = json.load(f)
+                    return fronts 
+        elif isinstance(self.fronts_disk_resource, List):
+            fronts = self.fronts_disk_resource
+            return fronts 
+        
+        fronts = NonDominatedSorting().do(y)
+        with open(self.fronts_disk_resource.disk_target, "w") as f:
+            json.dump(fronts, f)
+
+        return fronts
 
     def get_N_non_dominated_solutions(
         self, N: int, return_x=True, return_y=True, regain_fronts=False
     ):
         assert return_x or return_y, "invalid parameter setting."
-
         if regain_fronts or self.fronts is None:
             self.fronts = self.regain_fronts(self.y)
 

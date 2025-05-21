@@ -24,7 +24,7 @@ cd off_moo_bench/problem/lambo/
 python scripts/black_box_opt.py optimizer=mf_genetic optimizer/algorithm=nsga2 task=proxy_rfp tokenizer=protein
 ```
 
-Make sure that the lines of saving instance of ``proxy_rfp_problem.pkl`` exist in line 203 of  ``off_moo_bench/problem/lambo/lambo/optimizers/pymoo.py`` such that 
+Make sure that the lines of saving instance of ``proxy_rfp_problem.pkl`` exist in ``line 271`` of  ``off_moo_bench/problem/lambo/lambo/optimizers/pymoo.py`` such that 
 ```python
 if round_idx == self.num_rounds:
     import pickle
