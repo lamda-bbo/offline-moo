@@ -25,8 +25,10 @@ for small_name, full_name in task_dict.items():
         print(np.abs(y_true - y_pred))
 
         max_diff = np.max(np.abs(y_true - y_pred))
-        if max_diff > 1e-3:  
-            problematic_tasks.append(f"{small_name}: big predictions differences ({max_diff:.6f})")
+        if max_diff > 1e-3:
+            problematic_tasks.append(
+                f"{small_name}: big predictions differences ({max_diff:.6f})"
+            )
             continue
 
         # save
@@ -41,6 +43,6 @@ for small_name, full_name in task_dict.items():
         problematic_tasks.append(f"{small_name}: {str(e)}")
 
 if problematic_tasks:
-    with open("problematic_tasks.txt", "w", encoding='utf-8') as f:
+    with open("problematic_tasks.txt", "w", encoding="utf-8") as f:
         for task in problematic_tasks:
             f.write(f"{task}\n")

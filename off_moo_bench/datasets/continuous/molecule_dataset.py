@@ -3,6 +3,7 @@ from off_moo_bench.disk_resource import DiskResource
 
 MOLECULE_FILES = ["molecule/molecule-x-0.npy"]
 MOLECULE_TEST_FILES = ["molecule/molecule-test-x-0.npy"]
+MOLECULE_FRONTS_FILE = "molecule/molecule_fronts.json"
 
 
 class MoleculeDataset(ContinuousDataset):
@@ -50,11 +51,19 @@ class MoleculeDataset(ContinuousDataset):
             for file in MOLECULE_TEST_FILES
         ]
 
+    @classmethod
+    def register_fronts_shards(cls):
+        return DiskResource(
+            MOLECULE_FRONTS_FILE,
+            is_absolute=False,
+        )
+
     def __init__(self, **kwargs):
         super(MoleculeDataset, self).__init__(
             self.register_x_shards(),
             self.register_y_shards(),
             self.register_x_test_shards(),
             self.register_y_test_shards(),
+            self.register_fronts_shards(),
             **kwargs
         )

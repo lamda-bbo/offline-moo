@@ -1,7 +1,7 @@
 import abc
+import json
 import os
 from typing import List, Optional, Union
-import json
 
 import numpy as np
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
@@ -686,14 +686,15 @@ class DatasetBuilder(abc.ABC):
             if self.fronts_disk_resource.is_downloaded:
                 with open(self.fronts_disk_resource.disk_target, "r") as f:
                     fronts = json.load(f)
-                    return fronts 
+                    return fronts
         elif isinstance(self.fronts_disk_resource, List):
             fronts = self.fronts_disk_resource
-            return fronts 
-        
+            return fronts
+
         fronts = NonDominatedSorting().do(y)
-        with open(self.fronts_disk_resource.disk_target, "w") as f:
-            json.dump(fronts, f)
+        fronts = [front.tolist() for front in fronts]
+        with open(self.fronts_disk_resource.disk_target, "w", encoding="utf-8") as f:
+            json.dump(fronts, f, indent=4)
 
         return fronts
 

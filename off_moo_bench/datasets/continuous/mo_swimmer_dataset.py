@@ -6,6 +6,7 @@ from off_moo_bench.disk_resource import DiskResource
 MO_SWIMMER_V2_FILES = ["mo_swimmer_v2/mo_swimmer_v2-x-0.npy"]
 MO_SWIMMER_V2_TEST_FILES = ["mo_swimmer_v2/mo_swimmer_v2-test-x-0.npy"]
 PARAMS_SHAPES_FILE = "mo_swimmer_v2/params_shapes.pkl"
+mo_swimmer_v2_FRONTS_FILE = "mo_swimmer_v2/mo_swimmer_v2_fronts.json"
 
 
 class MOSwimmerV2Dataset(ContinuousDataset):
@@ -53,6 +54,13 @@ class MOSwimmerV2Dataset(ContinuousDataset):
             for file in MO_SWIMMER_V2_TEST_FILES
         ]
 
+    @classmethod
+    def register_fronts_shards(cls):
+        return DiskResource(
+            mo_swimmer_v2_FRONTS_FILE,
+            is_absolute=False,
+        )
+
     def __init__(self, **kwargs):
         self.params_shapes = DiskResource(PARAMS_SHAPES_FILE, is_absolute=False)
         assert (
@@ -64,6 +72,7 @@ class MOSwimmerV2Dataset(ContinuousDataset):
             self.register_y_shards(),
             self.register_x_test_shards(),
             self.register_y_test_shards(),
+            self.register_fronts_shards(),
             **kwargs,
         )
         with open(self.params_shapes.disk_target, "rb+") as f:

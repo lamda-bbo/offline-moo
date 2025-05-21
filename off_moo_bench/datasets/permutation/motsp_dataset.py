@@ -20,6 +20,10 @@ def _get_x_test_files_from_name(env_name):
     return [f"{env_name}/{env_name}-test-x-0.npy"]
 
 
+def _get_fronts_files_from_name(env_name):
+    return f"{env_name}/{env_name}_fronts.json"
+
+
 class MOTSPDataset(PermutationDataset):
     name = "mo_travel_salesman_problem"
     x_name = "order_of_travel_nodes"
@@ -65,6 +69,13 @@ class MOTSPDataset(PermutationDataset):
             for file in _get_x_test_files_from_name(cls.name)
         ]
 
+    @classmethod
+    def register_fronts_shards(cls):
+        return DiskResource(
+            _get_fronts_files_from_name(cls.name),
+            is_absolute=False,
+        )
+
     def __init__(self, **kwargs):
         self.name = self.name.lower()
         assert self.name in MOTSPNames
@@ -73,6 +84,7 @@ class MOTSPDataset(PermutationDataset):
             self.register_y_shards(),
             self.register_x_test_shards(),
             self.register_y_test_shards(),
+            self.register_fronts_shards(),
             **kwargs,
         )
 
