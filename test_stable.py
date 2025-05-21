@@ -131,8 +131,8 @@ task_dict = {
     "in1kmop8": "IN1KMOP8-Exact-v0",
     "in1kmop9": "IN1KMOP9-Exact-v0",
     "nb201_test": "NASBench201Test-Exact-v0",
-    "mo_swimmer_v2": "MOSwimmerV2-Exact-v0",
-    "mo_hopper_v2": "MOHopperV2-Exact-v0",
+    # "mo_swimmer_v2": "MOSwimmerV2-Exact-v0",
+    # "mo_hopper_v2": "MOHopperV2-Exact-v0",
 }
 
 start_time = time.time()

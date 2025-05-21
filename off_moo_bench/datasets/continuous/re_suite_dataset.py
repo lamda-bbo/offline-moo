@@ -76,14 +76,13 @@ class RESuiteDataset(ContinuousDataset):
             )
             for file in _get_x_test_files_from_name(cls.name)
         ]
-    
+
     @classmethod
     def register_fronts_shards(cls):
-        return   DiskResource(
-                 _get_fronts_files_from_name(cls.name),
-                is_absolute=False,
-            )
-        
+        return DiskResource(
+            _get_fronts_files_from_name(cls.name),
+            is_absolute=False,
+        )
 
     def __init__(self, **kwargs):
         self.name = self.name.lower()

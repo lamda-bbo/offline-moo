@@ -3,6 +3,7 @@ from off_moo_bench.disk_resource import DiskResource
 
 NASBENCH201TESTFILES = ["nb201_test/nb201_test-x-0.npy"]
 NASBENCH201TESTTESTFILES = ["nb201_test/nb201_test-test-x-0.npy"]
+nb201_test_FRONTS_FILE = "nb201_test/nb201_test_fronts.json"
 
 
 class NB201TestDataset(DiscreteDataset):
@@ -50,12 +51,20 @@ class NB201TestDataset(DiscreteDataset):
             for file in NASBENCH201TESTTESTFILES
         ]
 
+    @classmethod
+    def register_fronts_shards(cls):
+        return DiskResource(
+            nb201_test_FRONTS_FILE,
+            is_absolute=False,
+        )
+
     def __init__(self, soft_interpolation=0.6, **kwargs):
         super(NB201TestDataset, self).__init__(
             self.register_x_shards(),
             self.register_y_shards(),
             self.register_x_test_shards(),
             self.register_y_test_shards(),
+            self.register_fronts_shards(),
             is_logits=False,
             num_classes=5,
             soft_interpolation=soft_interpolation,
