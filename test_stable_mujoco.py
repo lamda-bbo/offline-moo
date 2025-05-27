@@ -51,7 +51,7 @@ def analyze_single_task(
         # print(f'obj{obj_idx}', obj_diff)
         # continue
 
-        obj_stats = { 
+        obj_stats = {
             "prediction_variance": float(obj_variance),
             "max_difference": float(np.max(obj_diff)),
             "mean_difference": float(np.mean(obj_diff)),

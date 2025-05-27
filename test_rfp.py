@@ -17,7 +17,7 @@ def predict_batch(task, x_batch):
 def analyze_single_task(
     small_name: str,
     full_name: str,
-    batch_size: int = 10,  
+    batch_size: int = 10,
     error_threshold: float = 1e-3,
 ) -> Dict:
     print(f"\nAnalyzing task: {small_name}")
@@ -30,17 +30,17 @@ def analyze_single_task(
     print(f"Total samples: {total_samples}")
 
     ray.init(ignore_reinit_error=True)
-    
+
     num_batches = (total_samples + batch_size - 1) // batch_size
     predictions = []
     failed_batches = []
-    valid_indices = []  
-    
+    valid_indices = []
+
     for i in range(num_batches):
         start_idx = i * batch_size
         end_idx = min((i + 1) * batch_size, total_samples)
         x_batch = task.x[start_idx:end_idx]
-        
+
         try:
             futures = predict_batch.remote(task, x_batch)
             batch_predictions = ray.get(futures)
@@ -48,19 +48,21 @@ def analyze_single_task(
             valid_indices.extend(range(start_idx, end_idx))
         except Exception as e:
             print(f"Error in batch {i} (indices {start_idx}-{end_idx}): {str(e)}")
-            failed_batches.append({
-                "batch_index": i,
-                "start_idx": start_idx,
-                "end_idx": end_idx,
-                "error": str(e)
-            })
+            failed_batches.append(
+                {
+                    "batch_index": i,
+                    "start_idx": start_idx,
+                    "end_idx": end_idx,
+                    "error": str(e),
+                }
+            )
             batch_predictions = np.full((end_idx - start_idx, n_objectives), np.nan)
             predictions.append(batch_predictions)
-    
+
     ray.shutdown()
 
     full_predictions = np.concatenate(predictions, axis=0)
-    valid_indices = np.array(valid_indices)  
+    valid_indices = np.array(valid_indices)
 
     objective_analysis = {}
     update_needed = False
@@ -76,8 +78,10 @@ def analyze_single_task(
             "max_difference": float(np.max(obj_diff)) if len(obj_diff) > 0 else None,
             "mean_difference": float(np.mean(obj_diff)) if len(obj_diff) > 0 else None,
             "std_difference": float(np.std(obj_diff)) if len(obj_diff) > 0 else None,
-            "has_significant_diff": np.max(obj_diff) > error_threshold if len(obj_diff) > 0 else None,
-            "failed_samples_count": np.sum(~valid_mask)
+            "has_significant_diff": np.max(obj_diff) > error_threshold
+            if len(obj_diff) > 0
+            else None,
+            "failed_samples_count": np.sum(~valid_mask),
         }
 
         objective_analysis[f"objective_{obj_idx}"] = obj_stats
@@ -96,7 +100,7 @@ def analyze_single_task(
         "objective_analysis": objective_analysis,
         "update_recommendation": update_recommendation,
         "failed_batches": failed_batches,
-        "valid_samples_count": len(valid_indices)
+        "valid_samples_count": len(valid_indices),
     }
 
     if update_needed:
@@ -114,9 +118,7 @@ def analyze_single_task(
     return result
 
 
-task_dict = {
-    "rfp": "RFP-Exact-v0"
-}
+task_dict = {"rfp": "RFP-Exact-v0"}
 
 start_time = time.time()
 results = {}
@@ -139,8 +141,16 @@ for task_name, analysis in results.items():
     print("\nObjective-wise Analysis:")
     for obj_name, obj_stats in analysis["objective_analysis"].items():
         print(f"\n{obj_name}:")
-        print(f"Maximum difference: {obj_stats['max_difference']:.6f}" if obj_stats['max_difference'] is not None else "Maximum difference: N/A")
-        print(f"Mean difference: {obj_stats['mean_difference']:.6f}" if obj_stats['mean_difference'] is not None else "Mean difference: N/A")
+        print(
+            f"Maximum difference: {obj_stats['max_difference']:.6f}"
+            if obj_stats["max_difference"] is not None
+            else "Maximum difference: N/A"
+        )
+        print(
+            f"Mean difference: {obj_stats['mean_difference']:.6f}"
+            if obj_stats["mean_difference"] is not None
+            else "Mean difference: N/A"
+        )
         print(f"Has significant difference: {obj_stats['has_significant_diff']}")
         print(f"Failed samples count: {obj_stats['failed_samples_count']}")
 
@@ -150,9 +160,11 @@ for task_name, analysis in results.items():
         print(
             f"Objectives with significant differences: {analysis['update_recommendation']['significant_diff_objectives']}"
         )
-    
+
     if analysis["failed_batches"]:
         print("\nFailed Batches:")
         for batch in analysis["failed_batches"]:
-            print(f"Batch {batch['batch_index']}: indices {batch['start_idx']}-{batch['end_idx']}")
+            print(
+                f"Batch {batch['batch_index']}: indices {batch['start_idx']}-{batch['end_idx']}"
+            )
             print(f"Error: {batch['error']}")

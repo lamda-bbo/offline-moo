@@ -2,7 +2,7 @@ benchmarks="adaptec1 adaptec2 adaptec3 adaptec4 bigblue1 bigblue3"
 # "Vallina GradNorm PcGrad"
 
 MAX_JOBS=16
-AVAILABLE_GPUS="0 1 2 3"
+AVAILABLE_GPUS="0 2"
 MAX_RETRIES=1
 
 get_gpu_allocation() {

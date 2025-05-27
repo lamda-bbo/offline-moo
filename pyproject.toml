@@ -1,0 +1,18 @@
+[tool.black]
+line-length = 88
+exclude = '''
+(
+  off_moo_bench/problem/BBOPlace-miniBench/*
+  | off_moo_bench/problem/mo_nas/database/*
+  | off_moo_bench/problem/mo_nas/data/*
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip_glob = [
+    "off_moo_bench/problem/BBOPlace-miniBench/*",
+    "off_moo_bench/problem/mo_nas/database/*",
+    "off_moo_bench/problem/mo_nas/data/*"
+]
