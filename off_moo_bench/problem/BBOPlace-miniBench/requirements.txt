@@ -1,0 +1,11 @@
+numpy==1.24.4
+ray==2.10.0
+matplotlib==3.7.5
+igraph==0.11.8
+pymoo==0.6.1.2
+torch==2.4.1
+torchaudio==2.4.1
+torchvision==0.19.1
+gpytorch==1.10
+botorch==0.8.5
+pypop7==0.0.82

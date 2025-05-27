@@ -1,0 +1,1 @@
+python ../src/main.py --benchmark=ispd2005/adaptec1 --placer=gg --algorithm=sa

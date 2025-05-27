@@ -19,7 +19,7 @@
 # "zinc regex rfp molecule"
 
 seeds="1000"
-tasks="re21 bi_tsp_20 regex c10mop3"
+tasks="re21"
 model="MOBO"
 train_modes="Vallina"
 # "Vallina ParEGO JES"

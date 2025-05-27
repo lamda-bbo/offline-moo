@@ -60,7 +60,7 @@ def analyze_single_task(
         if obj_stats["has_significant_diff"]:
             significant_diff_objectives.append(obj_idx)
 
-        if obj_stats["has_significant_diff"] and obj_stats["is_stable"]:
+        if obj_stats["has_significant_diff"]:  # and obj_stats["is_stable"]:
             update_needed = True
 
     # 3. update objs
@@ -117,22 +117,29 @@ def analyze_multiobjective_stability_parallel(
 
 
 task_dict = {
-    "c10mop1": "C10MOP1-Exact-v0",
-    "c10mop2": "C10MOP2-Exact-v0",
-    "c10mop5": "C10MOP5-Exact-v0",
-    "c10mop6": "C10MOP6-Exact-v0",
-    "c10mop7": "C10MOP7-Exact-v0",
-    "c10mop8": "C10MOP8-Exact-v0",
-    "c10mop9": "C10MOP9-Exact-v0",
-    "in1kmop1": "IN1KMOP1-Exact-v0",
-    "in1kmop2": "IN1KMOP1-Exact-v0",
-    "in1kmop3": "IN1KMOP3-Exact-v0",
-    "in1kmop7": "IN1KMOP7-Exact-v0",
-    "in1kmop8": "IN1KMOP8-Exact-v0",
-    "in1kmop9": "IN1KMOP9-Exact-v0",
-    "nb201_test": "NASBench201Test-Exact-v0",
+    # "c10mop1": "C10MOP1-Exact-v0",
+    # "c10mop2": "C10MOP2-Exact-v0",
+    # "c10mop5": "C10MOP5-Exact-v0",
+    # "c10mop6": "C10MOP6-Exact-v0",
+    # "c10mop7": "C10MOP7-Exact-v0",
+    # "c10mop8": "C10MOP8-Exact-v0",
+    # "c10mop9": "C10MOP9-Exact-v0",
+    # "in1kmop1": "IN1KMOP1-Exact-v0",
+    # "in1kmop2": "IN1KMOP1-Exact-v0",
+    # "in1kmop3": "IN1KMOP3-Exact-v0",
+    # "in1kmop7": "IN1KMOP7-Exact-v0",
+    # "in1kmop8": "IN1KMOP8-Exact-v0",
+    # "in1kmop9": "IN1KMOP9-Exact-v0",
+    # "nb201_test": "NASBench201Test-Exact-v0",
     # "mo_swimmer_v2": "MOSwimmerV2-Exact-v0",
     # "mo_hopper_v2": "MOHopperV2-Exact-v0",
+    # "dtlz2": "DTLZ2-Exact-v0",
+    # "dtlz3": "DTLZ3-Exact-v0",
+    # "dtlz4": "DTLZ4-Exact-v0",
+    # "dtlz5": "DTLZ5-Exact-v0",
+    # "dtlz6": "DTLZ6-Exact-v0",
+    # "dtlz7": "DTLZ7-Exact-v0",
+    "rfp": "RFP-Exact-v0"
 }
 
 start_time = time.time()

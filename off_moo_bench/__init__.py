@@ -511,7 +511,12 @@ try:
         "off_moo_bench.datasets.discrete.nb201_test_dataset:NB201TestDataset",
         "off_moo_bench.problem.mo_nas.mo_nas:NASBench201Test",
         # keyword arguments for building the dataset
-        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[5, 5, 5, 5, 5, 5],
+        ),
         # keyword arguments for building the exact oracle
         problem_kwargs=dict(),
     )
@@ -522,6 +527,52 @@ except:
 try:
     register(
         "C10MOP1-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP1Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP1",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                3,
+                3,
+            ],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+
+try:
+    register(
+        "C10MOP1Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP1Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP1",
         # keyword arguments for building the dataset
@@ -532,10 +583,54 @@ try:
 except:
     pass
 
-
 try:
     register(
         "C10MOP2-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP2Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP2",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                3,
+                3,
+            ],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "C10MOP2Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP2Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP2",
         # keyword arguments for building the dataset
@@ -546,10 +641,27 @@ try:
 except:
     pass
 
-
 try:
     register(
         "C10MOP3-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP3Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP3",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[8, 8, 8, 8, 8],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "C10MOP3Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP3Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP3",
         # keyword arguments for building the dataset
@@ -564,6 +676,24 @@ except:
 try:
     register(
         "C10MOP4-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP4Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP4",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[8, 8, 8, 8, 8],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "C10MOP4Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP4Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP4",
         # keyword arguments for building the dataset
@@ -578,6 +708,24 @@ except:
 try:
     register(
         "C10MOP5-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP5Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP5",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[5, 5, 5, 5, 5, 5],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "C10MOP5Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP5Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP5",
         # keyword arguments for building the dataset
@@ -592,6 +740,24 @@ except:
 try:
     register(
         "C10MOP6-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP6Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP6",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[5, 5, 5, 5, 5, 5],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "C10MOP6Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP6Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP6",
         # keyword arguments for building the dataset
@@ -606,6 +772,24 @@ except:
 try:
     register(
         "C10MOP7-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP7Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP7",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[5, 5, 5, 5, 5, 5],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "C10MOP7Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP7Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP7",
         # keyword arguments for building the dataset
@@ -616,10 +800,23 @@ try:
 except:
     pass
 
-
 try:
     register(
         "C10MOP8-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP8Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP8",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[7, 2, 7, 2, 7, 3, 7, 3, 7, 4, 7, 4, 7, 5, 7, 5, 7, 2, 7, 2, 7, 3, 7, 3, 7, 4, 7, 4, 7, 5, 7, 5]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "C10MOP8Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP8Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP8",
         # keyword arguments for building the dataset
@@ -634,6 +831,20 @@ except:
 try:
     register(
         "C10MOP9-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:C10MOP9Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:C10MOP9",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[7, 2, 7, 2, 7, 3, 7, 3, 7, 4, 7, 4, 7, 5, 7, 5, 7, 2, 7, 2, 7, 3, 7, 3, 7, 4, 7, 4, 7, 5, 7, 5]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "C10MOP9Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:C10MOP9Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:C10MOP9",
         # keyword arguments for building the dataset
@@ -644,10 +855,23 @@ try:
 except:
     pass
 
-
 try:
     register(
         "IN1KMOP1-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP1Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP1",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[8, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 4, 4, 3, 3, 3, 3, 4, 4, 3, 3, 4, 4]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP1Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP1Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP1",
         # keyword arguments for building the dataset
@@ -662,6 +886,20 @@ except:
 try:
     register(
         "IN1KMOP2-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP2Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP2",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[8, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 4, 4, 3, 3, 3, 3, 4, 4, 3, 3, 4, 4]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP2Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP2Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP2",
         # keyword arguments for building the dataset
@@ -676,6 +914,20 @@ except:
 try:
     register(
         "IN1KMOP3-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP3Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP3",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[8, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 4, 4, 3, 3, 3, 3, 4, 4, 3, 3, 4, 4]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP3Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP3Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP3",
         # keyword arguments for building the dataset
@@ -686,10 +938,23 @@ try:
 except:
     pass
 
-
 try:
     register(
         "IN1KMOP4-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP4Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP4",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP4Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP4Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP4",
         # keyword arguments for building the dataset
@@ -704,6 +969,20 @@ except:
 try:
     register(
         "IN1KMOP5-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP5Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP5",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP5Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP5Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP5",
         # keyword arguments for building the dataset
@@ -715,9 +994,24 @@ except:
     pass
 
 
+
 try:
     register(
         "IN1KMOP6-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP6Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP6",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP6Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP6Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP6",
         # keyword arguments for building the dataset
@@ -729,9 +1023,24 @@ except:
     pass
 
 
+
 try:
     register(
         "IN1KMOP7-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP7Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP7",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[5, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP7Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP7Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP7",
         # keyword arguments for building the dataset
@@ -742,10 +1051,23 @@ try:
 except:
     pass
 
-
 try:
     register(
         "IN1KMOP8-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP8Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP8",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[5, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP8Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP8Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP8",
         # keyword arguments for building the dataset
@@ -760,6 +1082,20 @@ except:
 try:
     register(
         "IN1KMOP9-Exact-v0",
+        "off_moo_bench.datasets.discrete.monas_dataset:IN1KMOP9Dataset",
+        "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP9",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0,
+                            num_classes_on_each_position=[5, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10, 9, 9, 10, 10]),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "IN1KMOP9Sequence-Exact-v0",
         "off_moo_bench.datasets.sequence.monas_dataset:IN1KMOP9Dataset",
         "off_moo_bench.problem.mo_nas.mo_nas:IN1KMOP9",
         # keyword arguments for building the dataset
@@ -774,10 +1110,15 @@ except:
 try:
     register(
         "Regex-Exact-v0",
-        "off_moo_bench.datasets.sequence.regex_dataset:RegexDataset",
+        "off_moo_bench.datasets.discrete.regex_dataset:RegexDataset",
         "off_moo_bench.problem.lambo.lambo_mole_task:REGEX",
         # keyword arguments for building the dataset
-        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[16, 73, 20, 3],
+        ),
         # keyword arguments for building the exact oracle
         problem_kwargs=dict(),
     )
@@ -787,7 +1128,38 @@ except:
 
 try:
     register(
+        "RegexSequence-Exact-v0",
+        "off_moo_bench.datasets.sequence.regex_dataset:ZINCDataset",
+        "off_moo_bench.problem.lambo.lambo_mole_task:REGEX",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
         "ZINC-Exact-v0",
+        "off_moo_bench.datasets.discrete.zinc_dataset:ZINCDataset",
+        "off_moo_bench.problem.lambo.lambo_mole_task:ZINC",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[16, 257, 106, 3],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "ZINCSequence-Exact-v0",
         "off_moo_bench.datasets.sequence.zinc_dataset:ZINCDataset",
         "off_moo_bench.problem.lambo.lambo_mole_task:ZINC",
         # keyword arguments for building the dataset
@@ -798,10 +1170,27 @@ try:
 except:
     pass
 
-
 try:
     register(
         "RFP-Exact-v0",
+        "off_moo_bench.datasets.discrete.rfp_dataset:RFPDataset",
+        "off_moo_bench.problem.lambo.lambo_mole_task:RFP",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(
+            max_samples=None,
+            max_percentile=100,
+            min_percentile=0,
+            num_classes_on_each_position=[25, 489, 20, 1],
+        ),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "RFPSequence-Exact-v0",
         "off_moo_bench.datasets.sequence.rfp_dataset:RFPDataset",
         "off_moo_bench.problem.lambo.lambo_mole_task:RFP",
         # keyword arguments for building the dataset
