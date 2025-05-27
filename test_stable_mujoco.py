@@ -10,6 +10,10 @@ import off_moo_bench as ob
 
 
 @ray.remote
+def run_single_trial(task, x):
+    return task.predict(x)
+
+
 def analyze_single_task(
     small_name: str,
     full_name: str,
@@ -24,12 +28,12 @@ def analyze_single_task(
 
     print(f"Number of objectives: {n_objectives}")
 
-    # stability
-    full_predictions = []
-    for _ in range(n_trials):
-        full_predictions.append(task.predict(task.x))
+    # Parallelize trials using Ray
+    ray.init(ignore_reinit_error=True)
+    futures = [run_single_trial.remote(task, task.x[:]) for _ in range(n_trials)]
+    full_predictions = np.array(ray.get(futures))
+    ray.shutdown()
 
-    full_predictions = np.array(full_predictions)  # [n_trials, n_samples, n_objectives]
     mean_prediction = np.mean(full_predictions, axis=0)
 
     # at each objectives
@@ -44,7 +48,10 @@ def analyze_single_task(
 
         obj_diff = np.abs(task.y[:, obj_idx] - mean_prediction[:, obj_idx])
 
-        obj_stats = {
+        # print(f'obj{obj_idx}', obj_diff)
+        # continue
+
+        obj_stats = { 
             "prediction_variance": float(obj_variance),
             "max_difference": float(np.max(obj_diff)),
             "mean_difference": float(np.mean(obj_diff)),
@@ -63,7 +70,8 @@ def analyze_single_task(
         if obj_stats["has_significant_diff"]:  # and obj_stats["is_stable"]:
             update_needed = True
 
-    # 3. update objs
+    # assert 0
+
     update_recommendation = {
         "should_update": update_needed,
         "reason": "",
@@ -77,7 +85,6 @@ def analyze_single_task(
         "update_recommendation": update_recommendation,
     }
 
-    # 4. save new ground truth
     if update_needed:
         save_dir = f"./data/{small_name}"
         os.makedirs(save_dir, exist_ok=True)
@@ -88,32 +95,7 @@ def analyze_single_task(
         print(f"\nTask {small_name} requires ground truth update:")
         print(f"New ground truth saved to: {save_dir}/new_ground_truth.npy")
 
-    return small_name, result
-
-
-def analyze_multiobjective_stability_parallel(
-    task_dict: Dict[str, str],
-    n_trials: int = 5,
-    error_threshold: float = 1e-3,
-    variance_threshold: float = 1e-5,
-) -> Dict:
-    ray.init()
-
-    futures = [
-        analyze_single_task.remote(
-            small_name, full_name, n_trials, error_threshold, variance_threshold
-        )
-        for small_name, full_name in task_dict.items()
-    ]
-
-    # collect results
-    results = {}
-    for future in ray.get(futures):
-        small_name, result = future
-        results[small_name] = result
-
-    ray.shutdown()
-    return results
+    return result
 
 
 task_dict = {
@@ -133,17 +115,15 @@ task_dict = {
     # "nb201_test": "NASBench201Test-Exact-v0",
     # "mo_swimmer_v2": "MOSwimmerV2-Exact-v0",
     # "mo_hopper_v2": "MOHopperV2-Exact-v0",
-    # "dtlz2": "DTLZ2-Exact-v0",
-    # "dtlz3": "DTLZ3-Exact-v0",
-    # "dtlz4": "DTLZ4-Exact-v0",
-    # "dtlz5": "DTLZ5-Exact-v0",
-    # "dtlz6": "DTLZ6-Exact-v0",
-    # "dtlz7": "DTLZ7-Exact-v0",
     "rfp": "RFP-Exact-v0"
 }
 
 start_time = time.time()
-results = analyze_multiobjective_stability_parallel(task_dict)
+results = {}
+
+for small_name, full_name in task_dict.items():
+    results[small_name] = analyze_single_task(small_name, full_name)
+
 end_time = time.time()
 print(f"\nTotal execution time: {end_time - start_time:.2f} seconds")
 

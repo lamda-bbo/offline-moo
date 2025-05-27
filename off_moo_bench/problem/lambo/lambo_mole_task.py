@@ -94,7 +94,6 @@ class RFP(BaseProblem):
             xu=rfp_task_instance.xu,
         )
         self.task_instance = rfp_task_instance
-        print(type(self.task_instance))
         self.__dict__.update(self.task_instance.__dict__)
 
     def _evaluate(self, X, out, *args, **kwargs):

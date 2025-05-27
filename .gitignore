@@ -10,6 +10,11 @@
 /off_moo_bench/problem/lambo/data/experiments/test/black_box_opt.log
 /off_moo_bench/problem/lambo/data/experiments/test/hydra_config.txt
 /off_moo_bench/problem/lambo/data/experiments/test/proxy_rfp_problem.pkl
+/off_moo_bench/problem/BBOPlace-miniBench/benchmarks/
+/off_moo_bench/problem/BBOPlace-miniBench/results/
+/off_moo_bench/problem/BBOPlace-miniBench/script/nsgaii_results/
+/off_moo_bench/problem/BBOPlace-miniBench/script/nsgaii_results_0526/
+/off_moo_bench/problem/BBOPlace-miniBench/script/nsgaii_results_0526_1816/
 /*.npy
 /*.pkl
 /*.tar.gz
