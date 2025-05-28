@@ -154,20 +154,23 @@ def process_args(return_dict=False):
         config_dict[key] = value
 
     # model config
-    model_config_path = os.path.join(
-        base_path,
-        "configs",
-        "algorithm",
-        f"{config_dict['model']}-{config_dict['train_mode']}.yaml",
-    )
-    assert os.path.exists(
-        model_config_path
-    ), f"Model config {model_config_path} not found"
-    with open(model_config_path, "r") as f:
-        try:
-            config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
-        except:
-            pass
+    try:
+        model_config_path = os.path.join(
+            base_path,
+            "configs",
+            "algorithm",
+            f"{config_dict['model']}-{config_dict['train_mode']}.yaml",
+        )
+        assert os.path.exists(
+            model_config_path
+        ), f"Model config {model_config_path} not found"
+        with open(model_config_path, "r") as f:
+            try:
+                config_dict.update(yaml.load(f, Loader=yaml.FullLoader))
+            except:
+                pass
+    except:
+        pass
 
     # task config
     task_config_path = os.path.join(

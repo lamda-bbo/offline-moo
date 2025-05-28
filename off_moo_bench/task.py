@@ -4,6 +4,7 @@ from typing import Union
 
 from off_moo_bench.datasets.dataset_builder import DatasetBuilder
 from off_moo_bench.datasets.discrete_dataset import DiscreteDataset
+from off_moo_bench.datasets.sequence_dataset import SequenceDataset
 from off_moo_bench.disk_resource import DiskResource
 from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.problem.base import BaseProblem
@@ -124,6 +125,16 @@ class Task(object):
         """
 
         return isinstance(self.dataset, DiscreteDataset)
+    
+    @property
+    def is_sequence(self):
+        """Attribute that specifies whether the task dataset is discrete or
+        continuous determined by whether the dataset instance task.dataset
+        inherits from SequenceDataset or ContinuousDataset
+
+        """
+
+        return isinstance(self.dataset, SequenceDataset)
 
     @property
     def problem_name(self):
@@ -490,7 +501,7 @@ class Task(object):
     def get_N_non_dominated_solutions(self, *args, **kwargs):
         return self.dataset.get_N_non_dominated_solutions(*args, **kwargs)
 
-    def normalize_x(self, x):
+    def normalize_x(self, x, normalization_method="z-score"):
         """a function that standardizes the design values 'x' to have
         zero empirical mean and unit empirical variance
 
@@ -501,6 +512,11 @@ class Task(object):
             given as a batch of designs which
             shall be normalized according to dataset statistics
 
+        normalization_method: str
+            a string that specifies the normalization method to use
+            "min-max" for min-max normalization
+            "z-score" for z-score normalization
+
         Returns:
 
         x: np.ndarray
@@ -509,10 +525,13 @@ class Task(object):
             has been normalized using dataset statistics
 
         """
+        original_x_norm_method = self.dataset.x_normalize_method
+        self.dataset.x_normalize_method = normalization_method
+        x_ret = self.dataset.normalize_x(x)
+        self.dataset.x_normalize_method = original_x_norm_method
+        return x_ret
 
-        return self.dataset.normalize_x(x)
-
-    def normalize_y(self, y):
+    def normalize_y(self, y, normalization_method="z-score"):
         """a function that standardizes the prediction values 'y' to have
         zero empirical mean and unit empirical variance
 
@@ -523,6 +542,11 @@ class Task(object):
             given as a batch of predictions which
             shall be normalized according to dataset statistics
 
+        normalization_method: str
+            a string that specifies the normalization method to use
+            "min-max" for min-max normalization
+            "z-score" for z-score normalization
+
         Returns:
 
         y: np.ndarray
@@ -531,10 +555,13 @@ class Task(object):
             has been normalized using dataset statistics
 
         """
+        original_y_norm_method = self.dataset.y_normalize_method
+        self.dataset.y_normalize_method = normalization_method
+        y_ret = self.dataset.normalize_y(y)
+        self.dataset.y_normalize_method = original_y_norm_method
+        return y_ret
 
-        return self.dataset.normalize_y(y)
-
-    def denormalize_x(self, x):
+    def denormalize_x(self, x, normalization_method="z-score"):
         """a function that un-standardizes the design values 'x' which have
         zero empirical mean and unit empirical variance
 
@@ -545,6 +572,11 @@ class Task(object):
             given as a batch of designs which
             shall be denormalized according to dataset statistics
 
+        normalization_method: str
+            a string that specifies the normalization method to use
+            "min-max" for min-max normalization
+            "z-score" for z-score normalization
+
         Returns:
 
         x: np.ndarray
@@ -553,10 +585,13 @@ class Task(object):
             has been denormalized using dataset statistics
 
         """
+        original_x_norm_method = self.dataset.x_normalize_method
+        self.dataset.x_normalize_method = normalization_method
+        x_ret = self.dataset.denormalize_x(x)
+        self.dataset.x_normalize_method = original_x_norm_method
+        return x_ret
 
-        return self.dataset.denormalize_x(x)
-
-    def denormalize_y(self, y):
+    def denormalize_y(self, y, normalization_method="z-score"):
         """a function that un-standardizes the prediction values 'y' which
         have zero empirical mean and unit empirical variance
 
@@ -567,6 +602,11 @@ class Task(object):
             given as a batch of predictions which
             shall be denormalized according to dataset statistics
 
+        normalization_method: str
+            a string that specifies the normalization method to use
+            "min-max" for min-max normalization
+            "z-score" for z-score normalization
+
         Returns:
 
         y: np.ndarray
@@ -575,8 +615,11 @@ class Task(object):
             has been denormalized using dataset statistics
 
         """
-
-        return self.dataset.denormalize_y(y)
+        original_y_norm_method = self.dataset.y_normalize_method
+        self.dataset.y_normalize_method = normalization_method
+        y_ret = self.dataset.denormalize_y(y)
+        self.dataset.y_normalize_method = original_y_norm_method
+        return y_ret
 
     def to_integers(self, x):
         """A helper function that accepts design values represented as a numpy
