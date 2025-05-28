@@ -10,10 +10,10 @@ from off_moo_bench.task_set import ALLTASKSDICT
 
 @ray.remote
 def process_task(small_name, full_name):
-    try:
+    # try:
         task = ob.make(full_name)
-        y_true = task.y[:50]
-        y_pred = task.predict(task.x[:50])
+        y_true = task.y[:10]
+        y_pred = task.predict(task.x[:10])
 
         print(y_true.shape, y_pred.shape)
         print(y_true)
@@ -33,8 +33,8 @@ def process_task(small_name, full_name):
 
         return None
 
-    except Exception as e:
-        return f"{small_name}: {str(e)}"
+    # except Exception as e:
+    #     return f"{small_name}: {str(e)}"
 
 
 task_dict = {
