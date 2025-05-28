@@ -11,30 +11,31 @@ from off_moo_bench.task_set import ALLTASKSDICT
 @ray.remote
 def process_task(small_name, full_name):
     # try:
-        task = ob.make(full_name)
-        y_true = task.y[:10]
-        y_pred = task.predict(task.x[:10])
+    task = ob.make(full_name)
+    y_true = task.y[:10]
+    y_pred = task.predict(task.x[:10])
 
-        print(y_true.shape, y_pred.shape)
-        print(y_true)
-        print(np.abs(y_true - y_pred))
+    print(y_true.shape, y_pred.shape)
+    print(y_true)
+    print(np.abs(y_true - y_pred))
 
-        max_diff = np.max(np.abs(y_true - y_pred))
-        if max_diff > 1e-3:
-            return f"{small_name}: big predictions differences ({max_diff:.6f})"
+    max_diff = np.max(np.abs(y_true - y_pred))
+    if max_diff > 1e-3:
+        return f"{small_name}: big predictions differences ({max_diff:.6f})"
 
-        # save
-        fronts = [front.tolist() for front in task.dataset.fronts]
-        os.makedirs(f"./data/{small_name}", exist_ok=True)
-        with open(
-            f"./data/{small_name}/{small_name}_fronts.json", "w", encoding="utf-8"
-        ) as f:
-            json.dump(fronts, f, indent=4)
+    # save
+    fronts = [front.tolist() for front in task.dataset.fronts]
+    os.makedirs(f"./data/{small_name}", exist_ok=True)
+    with open(
+        f"./data/{small_name}/{small_name}_fronts.json", "w", encoding="utf-8"
+    ) as f:
+        json.dump(fronts, f, indent=4)
 
-        return None
+    return None
 
-    # except Exception as e:
-    #     return f"{small_name}: {str(e)}"
+
+# except Exception as e:
+#     return f"{small_name}: {str(e)}"
 
 
 task_dict = {

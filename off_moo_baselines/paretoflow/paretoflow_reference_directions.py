@@ -4,7 +4,6 @@ from scipy import special
 
 # the newest version of pymoo is not compatible with the code
 class ReferenceDirectionFactory:
-
     def __init__(
         self, n_dim, scaling=None, lexsort=True, verbose=False, seed=None, **kwargs
     ) -> None:
@@ -19,7 +18,6 @@ class ReferenceDirectionFactory:
         return self.do()
 
     def do(self):
-
         # set the random seed if it is provided
         if self.seed is not None:
             np.random.seed(self.seed)
@@ -27,7 +25,6 @@ class ReferenceDirectionFactory:
         if self.n_dim == 1:
             return np.array([[1.0]])
         else:
-
             val = self._do()
             if isinstance(val, tuple):
                 ref_dirs, other = val[0], val[1:]
@@ -102,7 +99,6 @@ def das_dennis_recursion(ref_dirs, ref_dir, n_partitions, beta, depth):
 
 
 class UniformReferenceDirectionFactory(ReferenceDirectionFactory):
-
     def __init__(
         self, n_dim, scaling=None, n_points=None, n_partitions=None, **kwargs
     ) -> None:
