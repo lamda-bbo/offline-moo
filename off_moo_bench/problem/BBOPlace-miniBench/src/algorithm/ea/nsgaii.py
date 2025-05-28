@@ -13,7 +13,7 @@ from utils.debug import *
 
 from ..basic_algo import BasicAlgo
 from .ops import REGISTRY as OPS_REGISTRY
-from .problem import PlacementProblem
+from .problem import MOPlacementProblem
 
 
 class NSGAII(BasicAlgo):
@@ -22,7 +22,7 @@ class NSGAII(BasicAlgo):
         self.node_cnt = evaluator.node_cnt
         self.best_hpwl = INF
 
-        self.problem = PlacementProblem(evaluator=evaluator)
+        self.problem = MOPlacementProblem(evaluator=evaluator)
 
     def run(self):
         checkpoint = self._load_checkpoint()
@@ -32,7 +32,7 @@ class NSGAII(BasicAlgo):
         if checkpoint is not None:
             assert len(checkpoint["population"]) == self.args.n_population
             initial_population = Population.new(
-                X=checkpoint["population"], F=checkpoint["fitness"]
+                X=checkpoint["popul ation"], F=checkpoint["fitness"]
             )
             initial_algo_n_gen = checkpoint["n_gen"] - 1
 
@@ -55,7 +55,7 @@ class NSGAII(BasicAlgo):
                 x = SAMPLE_REGISTRY[self.args.placer](
                     self.args, self.evaluator, self._record_results
                 ).do(self.args.n_population)
-                sampling = Population.new(X=x)
+                sampling = Population.new(X=x) 
             else:
                 sampling = current_population
 

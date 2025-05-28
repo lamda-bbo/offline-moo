@@ -107,29 +107,6 @@ class DiscreteDataset(DatasetBuilder):
         # call the normalization method of the super class
         return super(DiscreteDataset, self).denormalize_x(x)
 
-    # def to_logits(self, x):
-    #     # check that the input format is correct
-    #     if not np.issubdtype(x.dtype, np.integer):
-    #         raise ValueError("cannot convert non-integers to logits")
-
-    #     # convert the integers to one hot vectors
-    #     one_hot_x = one_hot(x, self.num_classes)
-
-    #     # build a uniform distribution to interpolate between
-    #     uniform_prior = np.full_like(one_hot_x, 1 / float(self.num_classes))
-
-    #     # interpolate between a dirac distribution and a uniform prior
-    #     soft_x = (
-    #         self.soft_interpolation * one_hot_x
-    #         + (1.0 - self.soft_interpolation) * uniform_prior
-    #     )
-
-    #     # convert to log probabilities
-    #     x = np.log(soft_x)
-
-    #     # remove one degree of freedom caused by \sum_i p_i = 1.0
-    #     return (x[:, :, 1:] - x[:, :, :1]).astype(np.float32)
-
     def help_to_logits(
         self, x: np.ndarray, num_classes: int, soft_interpolation: float = 0.6
     ):
