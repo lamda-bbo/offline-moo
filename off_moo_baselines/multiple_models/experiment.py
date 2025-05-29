@@ -213,6 +213,8 @@ def run(config: dict):
         res_y_50_percent = task.normalize_y(res_y_50_percent)
         res_y_75_percent = task.normalize_y(res_y_75_percent)
 
+    nadir_point = nadir_point.reshape(-1,)
+
     _, d_best = task.get_N_non_dominated_solutions(
         N=config["num_solutions"], return_x=False, return_y=True
     )

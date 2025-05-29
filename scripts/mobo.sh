@@ -18,8 +18,8 @@
 # Scientific Design
 # "zinc regex rfp molecule"
 
-seeds="1000"
-tasks="re21"
+seeds="1000 2000"
+tasks="adaptec1 adaptec2 adaptec3 adaptec4 bigblue1 bigblue3"
 model="MOBO"
 train_modes="Vallina"
 # "Vallina ParEGO JES"
