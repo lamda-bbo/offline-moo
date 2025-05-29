@@ -1,7 +1,7 @@
+import datetime
 import json
 import os
 import sys
-import datetime 
 from time import time
 
 BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")

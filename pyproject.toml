@@ -5,6 +5,7 @@ exclude = '''
   off_moo_bench/problem/BBOPlace-miniBench/*
   | off_moo_bench/problem/mo_nas/database/*
   | off_moo_bench/problem/mo_nas/data/*
+  | thirdparty/*
 )
 '''
 
@@ -14,5 +15,6 @@ line_length = 88
 skip_glob = [
     "off_moo_bench/problem/BBOPlace-miniBench/*",
     "off_moo_bench/problem/mo_nas/database/*",
-    "off_moo_bench/problem/mo_nas/data/*"
+    "off_moo_bench/problem/mo_nas/data/*",
+    "thirdparty/*"
 ]

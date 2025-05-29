@@ -26,7 +26,7 @@ train_modes="Vallina"
 
 MAX_JOBS=8
 AVAILABLE_GPUS="0 1 2 3"
-MAX_RETRIES=1
+MAX_RETRIES=0
 
 get_gpu_allocation() {
     local job_number=$1

@@ -3,7 +3,6 @@ import re
 from copy import deepcopy
 
 import numpy as np
-
 from bboplace_utils.read_benchmark.rules import (
     AlwaysDismatchedRule,
     AlwaysMatchedRule,

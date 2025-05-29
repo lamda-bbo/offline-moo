@@ -1,7 +1,6 @@
 import numpy as np
-from pymoo.core.problem import Problem
-
 from bboplace_utils.debug import *
+from pymoo.core.problem import Problem
 
 
 class PlacementProblem(Problem):

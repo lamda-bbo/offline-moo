@@ -179,6 +179,7 @@ def run(config: dict):
         res_x = task.to_integers(res_x)
 
     res_y = task.predict(res_x)
+    print(res_y)
     visible_masks = np.ones(len(res_y))
     visible_masks[np.where(np.logical_or(np.isinf(res_y), np.isnan(res_y)))[0]] = 0
     visible_masks[np.where(np.logical_or(np.isinf(res_x), np.isnan(res_x)))[0]] = 0
@@ -190,13 +191,14 @@ def run(config: dict):
 
     nadir_point = task.nadir_point
     if config["normalize_ys"]:
-        res_y = task.normalize_y(res_y)
-        nadir_point = task.normalize_y(nadir_point)
-        res_y_50_percent = task.normalize_y(res_y_50_percent)
-        res_y_75_percent = task.normalize_y(res_y_75_percent)
+        res_y = task.normalize_y(res_y, normalization_method='min-max')
+        nadir_point = task.normalize_y(nadir_point, normalization_method='min-max')
+        res_y_50_percent = task.normalize_y(res_y_50_percent, normalization_method='min-max')
+        res_y_75_percent = task.normalize_y(res_y_75_percent, normalization_method='min-max')
 
     # assert 0, (nadir_point.shape, res_y.shape)
     nadir_point = nadir_point.reshape(-1,)
+    print(res_y, nadir_point)
 
     _, d_best = task.get_N_non_dominated_solutions(
         N=config["num_solutions"], return_x=False, return_y=True

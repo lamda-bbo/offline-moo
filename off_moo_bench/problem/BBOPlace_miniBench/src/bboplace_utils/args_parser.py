@@ -1,12 +1,13 @@
-import os
-import sys
-import yaml
 import datetime
-import random
-import psutil
-import numpy as np
-
 import logging
+import os
+import random
+import sys
+
+import numpy as np
+import psutil
+import yaml
+
 logging.root.name = 'BBOPlace-miniBench'
 logging.basicConfig(level=logging.INFO,
                     format='[%(levelname)-7s] %(name)s - %(message)s',

@@ -2,9 +2,8 @@ import argparse
 
 import cma
 import numpy as np
-from evaluator import Evaluator
-
 from bboplace_utils.args_parser import parse_args
+from evaluator import Evaluator
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--sigma", type=float, default=0.5)

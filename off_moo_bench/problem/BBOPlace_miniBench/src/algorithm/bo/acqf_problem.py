@@ -1,8 +1,7 @@
 import numpy as np
 import torch
-from pymoo.core.problem import Problem
-
 from bboplace_utils.debug import *
+from pymoo.core.problem import Problem
 
 tkwargs = {
     "dtype": torch.double,

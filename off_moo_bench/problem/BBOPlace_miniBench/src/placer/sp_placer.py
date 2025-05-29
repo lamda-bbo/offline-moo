@@ -2,7 +2,6 @@ import copy
 
 import igraph as ig
 import numpy as np
-
 from bboplace_utils.debug import *
 
 from .basic_placer import BasicPlacer

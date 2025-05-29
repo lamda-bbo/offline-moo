@@ -5,7 +5,6 @@ from abc import abstractmethod
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
-
 from bboplace_utils.compute_res import comp_res
 from bboplace_utils.constant import get_n_power
 

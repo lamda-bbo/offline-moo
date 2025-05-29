@@ -4,7 +4,6 @@ import pickle
 from abc import abstractmethod
 
 import numpy as np
-
 from bboplace_utils.constant import INF
 from bboplace_utils.debug import *
 from bboplace_utils.random_parser import set_state
