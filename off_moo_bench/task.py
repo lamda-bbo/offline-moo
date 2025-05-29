@@ -501,7 +501,7 @@ class Task(object):
     def get_N_non_dominated_solutions(self, *args, **kwargs):
         return self.dataset.get_N_non_dominated_solutions(*args, **kwargs)
 
-    def normalize_x(self, x, normalization_method="z-score"):
+    def normalize_x(self, x, normalization_method="min-max"):
         """a function that standardizes the design values 'x' to have
         zero empirical mean and unit empirical variance
 

@@ -1,5 +1,7 @@
-import off_moo_bench as ob 
-import numpy as np 
+import numpy as np
+
+import off_moo_bench as ob
+
 task = ob.make("Bigblue3-Exact-v0")
 print(task.predict(task.x[:5]))
 print(task.y[:5])

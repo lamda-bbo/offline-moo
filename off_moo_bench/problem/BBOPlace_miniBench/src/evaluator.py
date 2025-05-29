@@ -1,11 +1,11 @@
-import ray
-import numpy as np
 import logging
 import os
 
-from src.bboplace_utils.args_parser import parse_args
+import numpy as np
+import ray
 from placedb import PlaceDB
 from placer import REGISTRY as PLACER_REGISTRY
+from src.bboplace_utils.args_parser import parse_args
 
 
 @ray.remote(num_cpus=1)  

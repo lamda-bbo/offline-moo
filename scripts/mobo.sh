@@ -18,15 +18,15 @@
 # Scientific Design
 # "zinc regex rfp molecule"
 
-seeds="1000"
-tasks="re21"
+seeds="1000 2000"
+tasks="adaptec1 adaptec2 adaptec3 adaptec4 bigblue1 bigblue3"
 model="MOBO"
 train_modes="Vallina"
 # "Vallina ParEGO JES"
 
 MAX_JOBS=8
 AVAILABLE_GPUS="0 1 2 3"
-MAX_RETRIES=1
+MAX_RETRIES=0
 
 get_gpu_allocation() {
     local job_number=$1

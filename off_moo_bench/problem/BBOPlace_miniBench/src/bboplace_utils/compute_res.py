@@ -2,10 +2,9 @@ import heapq
 import math
 
 import numpy as np
-from src.placedb import PlaceDB
-
 from bboplace_utils.constant import INF
 from bboplace_utils.debug import *
+from src.placedb import PlaceDB
 
 
 def _comp_net_hpwl(macro_pos, placedb: PlaceDB):

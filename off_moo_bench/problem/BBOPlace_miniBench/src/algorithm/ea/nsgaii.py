@@ -3,13 +3,12 @@ import pickle
 import time
 
 import numpy as np
+from bboplace_utils.constant import INF
+from bboplace_utils.debug import *
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.core.population import Population
 from pymoo.optimize import minimize
 from src.algorithm.sampling import REGISTRY as SAMPLE_REGISTRY
-
-from bboplace_utils.constant import INF
-from bboplace_utils.debug import *
 
 from ..basic_algo import BasicAlgo
 from .ops import REGISTRY as OPS_REGISTRY

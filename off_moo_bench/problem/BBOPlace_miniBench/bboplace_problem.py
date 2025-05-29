@@ -25,7 +25,7 @@ class PlacementProblem(BaseProblem):
     def __init__(
         self,
         benchmark_name: str,
-        num_cpus: int = 16,
+        num_cpus: int = 12,
         problem_type: str = "continuous",
         nadir_point=None,
         ideal_point=None,

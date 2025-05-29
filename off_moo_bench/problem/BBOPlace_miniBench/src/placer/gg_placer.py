@@ -2,7 +2,6 @@ import logging
 import math
 
 import numpy as np
-
 from bboplace_utils.constant import INF
 from bboplace_utils.debug import *
 

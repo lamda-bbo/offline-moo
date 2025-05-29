@@ -4,12 +4,11 @@ import pickle
 import time
 
 import numpy as np
+from bboplace_utils.constant import INF
+from bboplace_utils.debug import *
 from pypop7.optimizers.core.optimizer import Optimizer
 from pypop7.optimizers.pso.pso import PSO as PYPSO
 from src.algorithm.sampling import REGISTRY as SAMPLE_REGISTRY
-
-from bboplace_utils.constant import INF
-from bboplace_utils.debug import *
 
 from ..basic_algo import BasicAlgo
 from .problem import PlacementProblem

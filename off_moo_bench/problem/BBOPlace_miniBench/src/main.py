@@ -1,12 +1,12 @@
-import sys
 import logging
+import sys
 from types import SimpleNamespace
 
-from logger import Logger
-from evaluator import Evaluator
 from algorithm import REGISTRY as ALGO_REGISTRY
-
 from bboplace_utils.args_parser import parse_args
+from evaluator import Evaluator
+from logger import Logger
+
 
 def terminal_input():
     params = [arg.lstrip("--") for arg in sys.argv if arg.startswith("--")]
