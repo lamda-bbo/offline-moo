@@ -22,13 +22,13 @@
 # "zinc regex rfp molecule re21 re22 re23 re24 re25 re31 re32 re33 re34 re35 re36 re37 re41 re42 re61 dtlz1 dtlz2 dtlz3 dtlz4 dtlz5 dtlz6 dtlz7 zdt1 zdt2 zdt3 zdt4 zdt6 vlmop1 vlmop2 vlmop3 omnitest nb201_test c10mop1 c10mop2 c10mop3 c10mop4 c10mop5 c10mop6 c10mop7 c10mop8 c10mop9 in1kmop1 in1kmop2 in1kmop3 in1kmop4 in1kmop5 in1kmop6 in1kmop7 in1kmop8 in1kmop9 bi_tsp_20 bi_tsp_50 bi_tsp_100 bi_tsp_500 tri_tsp_20 tri_tsp_50 tri_tsp_100 bi_cvrp_20 bi_cvrp_50 bi_cvrp_100 bi_kp_50 bi_kp_100 bi_kp_200 mo_hopper_v2 mo_swimmer_v2"
 
 seeds="1000"
-tasks="re21 bi_tsp_20 regex c10mop3"
+tasks="adaptec1"
 model="End2End"
 train_modes="Vallina"
 
 MAX_JOBS=8
 AVAILABLE_GPUS="0"
-MAX_RETRIES=1
+MAX_RETRIES=0
 
 get_gpu_allocation() {
     local job_number=$1
@@ -84,6 +84,7 @@ for seed in $seeds; do
             --use_wandb=False \
             --n_epochs=10 \
             --retrain_model=False \
+            --record_hist=False \
             --seed=${seed}" \
             "$gpu_allocation" & 
 

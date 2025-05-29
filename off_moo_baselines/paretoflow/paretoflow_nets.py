@@ -6,15 +6,15 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
+from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+from tqdm import tqdm
+
+from off_moo_baselines.paretoflow.paretoflow_utils import get_reference_directions
 from off_moo_bench.evaluation.metrics import hv
 from off_moo_bench.problem.dtlz import DTLZ
 from off_moo_bench.problem.synthetic_func import SyntheticProblem
 from off_moo_bench.utils import get_N_nondominated_indices
 from utils import get_quantile_solutions
-from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
-from tqdm import tqdm
-
-from off_moo_baselines.paretoflow.paretoflow_utils import get_reference_directions
 
 # get the device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -557,13 +557,17 @@ class FlowMatching(nn.Module):
     @classmethod
     def get_N_non_dominated_solutions(cls, res_x, res_y, N, classifiers):
         if isinstance(res_x, np.ndarray):
-            res_x_torch = torch.from_numpy(res_x).to(device=classifiers[0].parameters().__next__().device,
-                                               dtype=classifiers[0].parameters().__next__().dtype)
+            res_x_torch = torch.from_numpy(res_x).to(
+                device=classifiers[0].parameters().__next__().device,
+                dtype=classifiers[0].parameters().__next__().dtype,
+            )
         predicted_scores = []
         with torch.no_grad():
             for classifier in classifiers:
                 predicted_scores.append(-1 * classifier(res_x_torch))
-        predicted_res_y = torch.stack(predicted_scores, dim=1).squeeze().detach().cpu().numpy()
+        predicted_res_y = (
+            torch.stack(predicted_scores, dim=1).squeeze().detach().cpu().numpy()
+        )
         fronts = NonDominatedSorting().do(predicted_res_y)
         N_best_indices = get_N_nondominated_indices(
             Y=predicted_res_y, num_ret=N, fronts=fronts
@@ -653,7 +657,10 @@ class FlowMatching(nn.Module):
         if (
             task.xl is not None
             and task.xu is not None
-            and (isinstance(task.problem, DTLZ) or isinstance(task.problem, SyntheticProblem))
+            and (
+                isinstance(task.problem, DTLZ)
+                or isinstance(task.problem, SyntheticProblem)
+            )
         ):
             xl = task.xl
             xu = task.xu
@@ -839,10 +846,10 @@ class FlowMatching(nn.Module):
         #     len(temp_pareto_set) >= num_solutions
         # ), "Error: The number of solutions in the pareto set is less than the number of solutions we want to keep"
         temp_pareto_set = torch.stack(temp_pareto_set, dim=0).squeeze()
-        print(temp_pareto_set.max(dim=0), temp_pareto_set.min(dim=0))
+        # print(temp_pareto_set.max(dim=0), temp_pareto_set.min(dim=0))
         temp_pareto_set = task.denormalize_x(temp_pareto_set.cpu().detach().numpy())
-        print(temp_pareto_set.max(axis=0), temp_pareto_set.min(axis=0))
-        print(task.xl, task.xu)
+        # print(temp_pareto_set.max(axis=0), temp_pareto_set.min(axis=0))
+        # print(task.xl, task.xu)
         if task.is_discrete:
             temp_pareto_set = temp_pareto_set.reshape(
                 temp_pareto_set.shape[0], task.x.shape[1], -1
@@ -872,10 +879,8 @@ class FlowMatching(nn.Module):
         res_y_75_percent = get_quantile_solutions(res_y, 0.75)
         res_y_50_percent = get_quantile_solutions(res_y, 0.50)
         # To calculate hypervolume, we use the min-max normalization as suggested by the benchmark
-        res_y = task.normalize_y(res_y, normalization_method="min-max"
-                                 )
-        nadir_point = task.normalize_y(nadir_point, normalization_method="min-max"
-                                       )
+        res_y = task.normalize_y(res_y, normalization_method="min-max")
+        nadir_point = task.normalize_y(nadir_point, normalization_method="min-max")
         res_y_50_percent = task.normalize_y(
             res_y_50_percent, normalization_method="min-max"
         )
@@ -887,8 +892,7 @@ class FlowMatching(nn.Module):
             N=256, return_x=False, return_y=True
         )
 
-        d_best = task.normalize_y(d_best, normalization_method="min-max"
-                                  )
+        d_best = task.normalize_y(d_best, normalization_method="min-max")
 
         d_best_hv = hv(nadir_point, d_best, task_name)
         hv_value = hv(nadir_point, res_y, task_name)

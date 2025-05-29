@@ -1739,3 +1739,84 @@ try:
     )
 except:
     pass
+
+
+try:
+    register(
+        "Adaptec1-Exact-v0",
+        "off_moo_bench.datasets.continuous.placement_dataset:Adaptec1Dataset",
+        "off_moo_bench.problem.BBOPlace_miniBench.bboplace_problem:Adaptec1",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+
+try:
+    register(
+        "Adaptec2-Exact-v0",
+        "off_moo_bench.datasets.continuous.placement_dataset:Adaptec2Dataset",
+        "off_moo_bench.problem.BBOPlace_miniBench.bboplace_problem:Adaptec2",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "Adaptec3-Exact-v0",
+        "off_moo_bench.datasets.continuous.placement_dataset:Adaptec3Dataset",
+        "off_moo_bench.problem.BBOPlace_miniBench.bboplace_problem:Adaptec3",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "Adaptec4-Exact-v0",
+        "off_moo_bench.datasets.continuous.placement_dataset:Adaptec4Dataset",
+        "off_moo_bench.problem.BBOPlace_miniBench.bboplace_problem:Adaptec4",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+try:
+    register(
+        "Bigblue1-Exact-v0",
+        "off_moo_bench.datasets.continuous.placement_dataset:Bigblue1Dataset",
+        "off_moo_bench.problem.BBOPlace_miniBench.bboplace_problem:Bigblue1",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass
+
+
+try:
+    register(
+        "Bigblue3-Exact-v0",
+        "off_moo_bench.datasets.continuous.placement_dataset:Bigblue3Dataset",
+        "off_moo_bench.problem.BBOPlace_miniBench.bboplace_problem:Bigblue3",
+        # keyword arguments for building the dataset
+        dataset_kwargs=dict(max_samples=None, max_percentile=100, min_percentile=0),
+        # keyword arguments for building the exact oracle
+        problem_kwargs=dict(),
+    )
+except:
+    pass

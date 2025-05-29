@@ -2,12 +2,10 @@ import json
 import os
 
 import numpy as np
-import off_moo_bench as ob
 import torch
-from off_moo_bench.evaluation.metrics import hv
-from utils import get_quantile_solutions, set_seed
 from torch.utils.data import DataLoader
 
+import off_moo_bench as ob
 from off_moo_baselines.paretoflow.paretoflow_args import parse_args
 from off_moo_baselines.paretoflow.paretoflow_nets import FlowMatching, VectorFieldNet
 from off_moo_baselines.paretoflow.paretoflow_utils import (
@@ -20,6 +18,8 @@ from off_moo_baselines.paretoflow.paretoflow_utils import (
     tkwargs,
     training,
 )
+from off_moo_bench.evaluation.metrics import hv
+from utils import get_quantile_solutions, set_seed
 
 # get the device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -32,10 +32,10 @@ def train_proxies(args):
 
     set_seed(args.seed)
 
-    task = ob.make(task_name, dataset_kwargs=dict(
-        x_normalize_method='z-score',
-        y_normalize_method='z-score'
-    ))
+    task = ob.make(
+        task_name,
+        dataset_kwargs=dict(x_normalize_method="z-score", y_normalize_method="z-score"),
+    )
 
     X = task.x.copy()
     y = task.y.copy()
@@ -70,7 +70,6 @@ def train_proxies(args):
     trainer_func = SingleModelBaseTrainer
 
     for which_obj in range(n_obj):
-
         y0 = y[:, which_obj].copy().reshape(-1, 1)
 
         trainer = trainer_func(
@@ -97,10 +96,10 @@ def train_flow_matching(args):
 
     # Get the task
     task_name = ALLTASKSDICT[args.task_name]
-    task = ob.make(task_name, dataset_kwargs=dict(
-        x_normalize_method='z-score',
-        y_normalize_method='z-score'
-    ))
+    task = ob.make(
+        task_name,
+        dataset_kwargs=dict(x_normalize_method="z-score", y_normalize_method="z-score"),
+    )
     print(f"Task: {task_name}")
 
     # Get the data
@@ -177,7 +176,7 @@ def train_flow_matching(args):
 
     # Training procedure
     nll_val = training(
-        name=model_store_dir + name,
+        name=model_store_dir + "/" + name,
         max_patience=args.fm_patience,
         num_epochs=args.fm_epochs,
         model=model,
@@ -195,10 +194,10 @@ def sampling(args):
 
     # Get the task
     task_name = ALLTASKSDICT[args.task_name]
-    task = ob.make(task_name, dataset_kwargs=dict(
-        x_normalize_method='z-score',
-        y_normalize_method='z-score'
-    ))
+    task = ob.make(
+        task_name,
+        dataset_kwargs=dict(x_normalize_method="z-score", y_normalize_method="z-score"),
+    )
     print(f"Task: {task_name}")
 
     # Get the data
@@ -244,7 +243,7 @@ def sampling(args):
         + "_"
         + f"gamma={args.fm_gamma}"
     )
-    model_name = args.fm_prob_path + "_" + str(1000) + "_" + task_name + "_" + str(0)
+    model_name = args.fm_prob_path + "_" + str(1000) + "_" + task_name + "_" + str(args.seed)
     model_store_dir = args.fm_store_path
 
     # Load the best model
@@ -254,7 +253,7 @@ def sampling(args):
         net, args.fm_sigma, n_dim, args.fm_sampling_steps, prob_path=args.fm_prob_path
     )
     model_best = model_best.to(device)
-    model_best = torch.load(model_store_dir + model_name + ".model")
+    model_best = torch.load(model_store_dir + "/" + model_name + ".model")
     model_best = model_best.to(device)
     print(
         f"Succesfully loaded the model from {model_store_dir + model_name + '.model'}"
@@ -268,7 +267,7 @@ def sampling(args):
             which_obj=i,
             hidden_size=[2048, 2048],
             save_dir=args.proxies_store_path,
-            save_prefix=f"MultipleModels-Vallina-{task_name}-{0}",
+            save_prefix=f"MultipleModels-Vallina-{task_name}-{args.seed}",
         )
         classifier.load()
         classifier = classifier.to(device)
@@ -316,13 +315,13 @@ def sampling(args):
     if not (os.path.exists(args.samples_store_path)):
         os.makedirs(args.samples_store_path)
 
-    np.save(args.samples_store_path + name + "_x.npy", res_x)
-    np.save(args.samples_store_path + name + "_y.npy", res_y)
+    np.save(args.samples_store_path + '/' + name + "_x.npy", res_x)
+    np.save(args.samples_store_path + '/' + name + "_y.npy", res_y)
 
     if not (os.path.exists(args.results_store_path)):
         os.makedirs(args.results_store_path)
 
-    with open(args.results_store_path + name + "_hv_results.json", "w") as f:
+    with open(args.results_store_path + '/' + name + "_hv_results.json", "w") as f:
         json.dump(hv_results, f, indent=4)
 
     return res_x, res_y

@@ -107,6 +107,15 @@ RESuiteDict = {
     "re61": "RE61-Exact-v0",
 }
 
+PlacementDict = {
+    "adaptec1": "Adaptec1-Exact-v0",
+    "adaptec2": "Adaptec2-Exact-v0",
+    "adaptec3": "Adaptec3-Exact-v0",
+    "adaptec4": "Adaptec4-Exact-v0",
+    "bigblue1": "Bigblue1-Exact-v0",
+    "bigblue3": "Bigblue3-Exact-v0",
+}
+
 SyntheticFunction = list(SyntheticFunctionDict.values())
 MONASSequence = list(MONASSequenceDict.values())
 MONASLogits = list(MONASLogitsDict.values())
@@ -116,12 +125,13 @@ MORL = list(MORLDict.values())
 ScientificDesignContinuous = list(ScientificDesignContinuousDict.values())
 ScientificDesignSequence = list(ScientificDesignSequenceDict.values())
 RESuite = list(RESuiteDict.values())
+Placement = list(PlacementDict.values())
 
 MONAS = MONASSequence + MONASLogits
 MOCO = MOCOPermutation + MOCOContinuous
 ScientificDesign = ScientificDesignContinuous + ScientificDesignSequence
 
-ALLTASKS = SyntheticFunction + MONAS + MOCO + MORL + ScientificDesign + RESuite
+ALLTASKS = SyntheticFunction + MONAS + MOCO + MORL + ScientificDesign + RESuite + Placement
 ALLTASKSDICT = {
     **SyntheticFunctionDict,
     **MONASSequenceDict,
@@ -132,6 +142,7 @@ ALLTASKSDICT = {
     **ScientificDesignContinuousDict,
     **ScientificDesignSequenceDict,
     **RESuiteDict,
+    **PlacementDict,
 }
 
 CONTINUOUSTASKS = (
@@ -141,6 +152,7 @@ CONTINUOUSTASKS = (
     + MORL
     + ScientificDesignContinuous
     + RESuite
+    + Placement
 )
 PERMUTATIONTASKS = MOCOPermutation
 SEQUENCETASKS = MONASSequence + ScientificDesignSequence

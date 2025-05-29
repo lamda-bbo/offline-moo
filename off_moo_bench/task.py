@@ -125,7 +125,7 @@ class Task(object):
         """
 
         return isinstance(self.dataset, DiscreteDataset)
-    
+
     @property
     def is_sequence(self):
         """Attribute that specifies whether the task dataset is discrete or

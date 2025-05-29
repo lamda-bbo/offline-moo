@@ -3,12 +3,14 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
-from off_moo_baselines.data import spearman_correlation
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split
 from tqdm import tqdm
 
-from off_moo_baselines.paretoflow.paretoflow_reference_directions import UniformReferenceDirectionFactory
+from off_moo_baselines.data import spearman_correlation
+from off_moo_baselines.paretoflow.paretoflow_reference_directions import (
+    UniformReferenceDirectionFactory,
+)
 
 tkwargs = {
     "device": torch.device("cuda" if torch.cuda.is_available() else "cpu"),
@@ -61,9 +63,16 @@ def evaluation(test_loader, name=None, model_best=None, epoch=None):
 
 
 def training(
-    name, max_patience, num_epochs, model, optimizer, training_loader, val_loader,
-    retrain_model: bool = False
+    name,
+    max_patience,
+    num_epochs,
+    model,
+    optimizer,
+    training_loader,
+    val_loader,
+    retrain_model: bool = False,
 ):
+    print(name + ".model")
     if not retrain_model and os.path.exists(name + ".model"):
         return
 
@@ -251,7 +260,6 @@ all_task_names = list(ALLTASKSDICT.keys())
 
 
 class SingleModelBaseTrainer(nn.Module):
-
     def __init__(self, model, which_obj, args):
         super(SingleModelBaseTrainer, self).__init__()
         self.args = args
@@ -292,9 +300,9 @@ class SingleModelBaseTrainer(nn.Module):
 
             statistics[f"model_{self.which_obj}/train/mse"] = train_mse.item()
             for i in range(self.n_obj):
-                statistics[f"model_{self.which_obj}/train/rank_corr_{i + 1}"] = (
-                    train_corr[i].item()
-                )
+                statistics[
+                    f"model_{self.which_obj}/train/rank_corr_{i + 1}"
+                ] = train_corr[i].item()
 
             print(
                 "Epoch [{}/{}], MSE: {:}, PCC: {:}".format(
@@ -320,9 +328,10 @@ class SingleModelBaseTrainer(nn.Module):
 
             statistics[f"model_{self.which_obj}/valid/mse"] = val_mse.item()
             for i in range(self.n_obj):
-                statistics[f"model_{self.which_obj}/valid/rank_corr_{i + 1}"] = (
-                    val_corr[i].item()
-                )
+                statistics[
+                    f"model_{self.which_obj}/valid/rank_corr_{i + 1}"
+                ] = val_corr[i].item()
+            statistics[f"model_{self.which_obj}/valid/pcc"] = val_pcc
 
             print(
                 "Valid MSE: {:}, Valid PCC: {:}".format(val_mse.item(), val_pcc.item())
@@ -340,7 +349,6 @@ class SingleModelBaseTrainer(nn.Module):
         val_loader=None,
         retrain_model: bool = False,
     ):
-
         def update_lr(optimizer, lr):
             for param_group in optimizer.param_groups:
                 param_group["lr"] = lr
@@ -388,12 +396,15 @@ class SingleModelBaseTrainer(nn.Module):
             statistics[f"model_{self.which_obj}/train/lr"] = self.forward_lr
             self.forward_lr *= self.forward_lr_decay
             update_lr(self.forward_opt, self.forward_lr)
+            if statistics[f"model_{self.which_obj}/valid/pcc"] == 1.0:
+                break
 
     def compute_pcc(self, valid_preds, valid_labels):
         vx = valid_preds - torch.mean(valid_preds)
         vy = valid_labels - torch.mean(valid_labels)
         pcc = torch.sum(vx * vy) / (
-            torch.sqrt(torch.sum(vx**2) + 1e-12) * torch.sqrt(torch.sum(vy**2) + 1e-12)
+            torch.sqrt(torch.sum(vx**2) + 1e-12)
+            * torch.sqrt(torch.sum(vy**2) + 1e-12)
         )
         return pcc
 
@@ -526,7 +537,6 @@ def get_dataloader(
     val_ratio: float = 0.9,
     batch_size: int = 32,
 ):
-
     if isinstance(X, np.ndarray):
         X = torch.from_numpy(X).to(**tkwargs)
     if isinstance(y, np.ndarray):
@@ -540,14 +550,20 @@ def get_dataloader(
     train_dataset, val_dataset = random_split(tensor_dataset, lengths)
 
     train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, drop_last=False,
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        drop_last=False,
         # num_workers= 64,
         # persistent_workers= True,
         # pin_memory= False,
     )
 
     val_loader = DataLoader(
-        val_dataset, batch_size=batch_size * 4, shuffle=False, drop_last=False,
+        val_dataset,
+        batch_size=batch_size * 4,
+        shuffle=False,
+        drop_last=False,
         # num_workers= 64,
         # persistent_workers= True,
         # pin_memory= False,

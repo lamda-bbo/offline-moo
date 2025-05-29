@@ -32,7 +32,7 @@ def parse_args():  # Parse command line arguments
     parser.add_argument(
         "--task_name",
         # required=True,
-        default='re21',
+        default="re21",
         type=str,
         choices=all_task_names,
         help="Which task we will use",

@@ -54,13 +54,22 @@ def plot_y(y, save_dir, config, pareto_front=None, nadir_point=None, d_best=None
                 label="Pareto Front",
             )
         if nadir_point is not None:
-            ax.scatter(
-                nadir_point[0],
-                nadir_point[1],
-                nadir_point[2],
-                color="green",
-                label="Nadir Point",
-            )
+            try:
+                ax.scatter(
+                    nadir_point[0],
+                    nadir_point[1],
+                    nadir_point[2],
+                    color="green",
+                    label="Nadir Point",
+                )
+            except:
+                ax.scatter(
+                    nadir_point[:, 0],
+                    nadir_point[:, 1],
+                    nadir_point[:, 2],
+                    color="green",
+                    label="Nadir Point",
+                )
         if d_best is not None:
             ax.scatter(
                 d_best[:, 0],
