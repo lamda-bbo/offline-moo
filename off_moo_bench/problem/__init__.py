@@ -40,7 +40,14 @@ except:
         "Failed to config Molecule module. It might fail when you are running with Sci-Design tasks."
     )
 
-# load_bboplacement
+load_bboplacement = True
+try:
+    from off_moo_bench.problem.BBOPlace_miniBench import *
+except:
+    load_bboplacement = False
+    warnings.warn(
+        "Failed to config BBOPlacement module. It might fail when you are running with Sci-Design tasks."
+    )
 
 
 def get_problem(env_name, *args, **kwargs):
@@ -96,9 +103,6 @@ def get_problem(env_name, *args, **kwargs):
         "motsp3obj_100": TriTSP100,
         "motsp3obj_50": TriTSP50,
         "motsp3obj_20": TriTSP20
-        # 'mo_nas': MO_NAS,
-        #     'mo_hopper_v2': MO_Hopper_V2,
-        #     'mo_swimmer_v2': MO_Swimmer_V2,
     }
 
     if load_nas:
@@ -135,6 +139,14 @@ def get_problem(env_name, *args, **kwargs):
         PROBLEMS["regex"] = REGEX
         PROBLEMS["rfp"] = RFP
         PROBLEMS["zinc"] = ZINC
+
+    if load_bboplacement:
+        PROBLEMS['adaptec1'] = Adaptec1
+        PROBLEMS['adaptec2'] = Adaptec2
+        PROBLEMS['adaptec3'] = Adaptec3
+        PROBLEMS['adaptec4'] = Adaptec4
+        PROBLEMS['bigblue1'] = Bigblue1
+        PROBLEMS['bigblue3'] = Bigblue3
 
     if env_name not in PROBLEMS.keys():
         raise Exception(f"Problem {env_name} not found or an importing error occurred.")
