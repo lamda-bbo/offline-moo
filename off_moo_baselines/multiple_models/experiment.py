@@ -93,19 +93,20 @@ def run(config: dict):
         y = task.normalize_y(y)
         y_test = task.normalize_y(y_test)
 
-    if config["to_logits"]:
-        data_size, n_dim, n_classes = tuple(X.shape)
-        X = X.reshape(-1, n_dim * n_classes)
-        X_test = X_test.reshape(-1, n_dim * n_classes)
-    else:
-        data_size, n_dim = tuple(X.shape)
+    # if config["to_logits"]:
+    #     data_size, n_dim, n_classes = tuple(X.shape)
+    #     X = X.reshape(-1, n_dim * n_classes)
+    #     X_test = X_test.reshape(-1, n_dim * n_classes)
+    # else:
+    data_size, n_dim = tuple(X.shape)
     n_obj = y.shape[1]
 
     model_save_dir = config["model_save_dir"]
     os.makedirs(model_save_dir, exist_ok=True)
 
     model = MultipleModels(
-        n_dim=n_dim * n_classes if config["to_logits"] else n_dim,
+        # n_dim=n_dim * n_classes if config["to_logits"] else n_dim,
+        n_dim=n_dim,
         n_obj=n_obj,
         train_mode=config["train_mode"],
         hidden_size=[2048, 2048],
@@ -143,11 +144,14 @@ def run(config: dict):
         trainer.launch(
             train_loader, val_loader, test_loader, retrain_model=config["retrain_model"]
         )
-
+        
     surrogate_problem = MultipleSurrogateProblem(
-        n_var=n_dim * n_classes if config["to_logits"] else n_dim,
+        # n_var=n_dim * n_classes if config["to_logits"] else n_dim,
+        n_var=n_dim,
         n_obj=n_obj,
         model=model,
+        # xl=task.normalize_x(task.xl),
+        # xu=task.normalize_x(task.xu),
     )
 
     if config["task"] in ScientificDesignSequenceDict.values():
@@ -159,9 +163,9 @@ def run(config: dict):
         )
         surrogate_problem.candidate_pool = task.problem.task_instance.candidate_pool
         surrogate_problem.op_types = task.problem.task_instance.op_types
-    elif config["task"] in MONASSequenceDict.values():
-        surrogate_problem.xl = task.problem.xl
-        surrogate_problem.xu = task.problem.xu
+    # elif config["task"] in MONASSequenceDict.values():
+    #     surrogate_problem.xl = task.problem.xl
+    #     surrogate_problem.xu = task.problem.xu
 
     callback = RecordCallback(
         task=task,
@@ -172,6 +176,7 @@ def run(config: dict):
     )
 
     genetic_operators = get_operator_dict(config)
+    # print(genetic_operators)
 
     solver = MOEASolver(
         n_gen=config["solver_n_gen"],
@@ -187,8 +192,8 @@ def run(config: dict):
     res = solver.solve(surrogate_problem, X=X, Y=y)
 
     res_x = res["x"]
-    if config["to_logits"]:
-        res_x = res_x.reshape(-1, n_dim, n_classes)
+    # if config["to_logits"]:
+    #     res_x = res_x.reshape(-1, n_dim, n_classes)
     if config["normalize_xs"]:
         task.map_denormalize_x()
         res_x = task.denormalize_x(res_x)
@@ -214,7 +219,7 @@ def run(config: dict):
         res_y_75_percent = task.normalize_y(res_y_75_percent, normalization_method='min-max')
 
     nadir_point = nadir_point.reshape(-1,)
-
+    print(res_y)
     _, d_best = task.get_N_non_dominated_solutions(
         N=config["num_solutions"], return_x=False, return_y=True
     )

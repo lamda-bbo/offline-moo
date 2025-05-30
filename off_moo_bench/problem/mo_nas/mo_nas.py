@@ -162,8 +162,7 @@ class MONASProblem(BaseProblem):
         self.benchmark = benchmark
 
     def _evaluate(self, x, out, *args, **kwargs):
-        F = self.benchmark.evaluate(x, true_eval=False)
-
+        F = self.benchmark.evaluate(x, true_eval=True)
         out["F"] = F
 
     def get_nadir_point(self):

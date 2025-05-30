@@ -4,8 +4,8 @@ to_logits: True
 
 is_discrete: True
 
-record_hist: True
+record_hist: False
 
-crossover: evox_crossover
-mutation: evox_mutation
-repair: evox_repair
+# crossover: evox_crossover
+# mutation: evox_mutation
+# repair: evox_repair
