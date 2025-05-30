@@ -185,9 +185,10 @@ class DiscreteDataset(DatasetBuilder):
 
         # add an additional component of zero and find the class
         # with maximum probability
-        return np.argmax(
+        res = np.argmax(
             np.pad(x, [[0, 0]] * (len(x.shape) - 1) + [[1, 0]]), axis=-1
         ).astype(np.int32)
+        return res
 
     def to_integers(self, x: np.ndarray):
         """
@@ -199,11 +200,9 @@ class DiscreteDataset(DatasetBuilder):
         :return: np.ndarray: the integers, with shape (n_samples, seq_len)
         """
         true_num_classes = self.num_classes_on_each_position
-        true_num_classes = [i + 1 for i in true_num_classes]
-        # if count[i] = 1, then we will have a single class, so we
-        # add 1 to the such cases, this is only happening for RFP-Exact-v0
-        # treat this as adding a dummy class
-        num_classes = [i + 1 if i == 1 else i for i in true_num_classes]
+        num_classes = true_num_classes
+        # num_classes = [i + 1 if i == 1 else i for i in true_num_classes]
+        
         integers = []
         start = 0
         sequence_length = len(num_classes)
@@ -214,6 +213,75 @@ class DiscreteDataset(DatasetBuilder):
             integers.append(self.help_to_integers(temp_x, num_classes[i]))
             start += num_classes[i] - 1
         return np.concatenate(integers, axis=1)
+
+    # def help_to_integers(self, x: np.ndarray, true_num_of_classes: int):
+    #     """
+    #     Convert the logits to integers.
+    #     :param x: np.ndarray: the input data, with shape (n_samples, 1, n_classes)
+    #     :param true_num_of_classes: int: the true number of classes
+    #     :return: np.ndarray: the integers, with shape (n_samples, 1)
+    #     """
+    #     # Debug prints focused on batch 20
+    #     print(f"help_to_integers batch 20 data:\n{x[20]}")
+    #     print(f"true_num_of_classes: {true_num_of_classes}")
+        
+    #     if not np.issubdtype(x.dtype, np.floating):
+    #         raise ValueError("cannot convert non-floats to integers")
+
+    #     if true_num_of_classes == 1:
+    #         return np.zeros(x.shape[:-1], dtype=np.int32)
+
+    #     padded = np.pad(x, [[0, 0]] * (len(x.shape) - 1) + [[1, 0]])
+    #     print(f"After padding batch 20:\n{padded[20]}")
+        
+    #     result = np.argmax(padded, axis=-1).astype(np.int32)
+    #     print(f"Result for batch 20: {result[20]}")
+        
+    #     return result
+
+    # def to_integers(self, x: np.ndarray):
+    #     """
+    #     :param x: np.ndarray: shape (n_samples, seq_len, n_classes)
+    #     """
+    #     print(f"Original x[20]:\n{x[20]}")
+        
+    #     true_num_classes = self.num_classes_on_each_position
+    #     true_num_classes = [i + 1 for i in true_num_classes]
+    #     num_classes = [i + 1 if i == 1 else i for i in true_num_classes]
+        
+    #     print(f"Num classes for each position: {num_classes}")
+        
+    #     integers = []
+    #     start = 0
+    #     sequence_length = len(num_classes)
+        
+    #     for i in range(sequence_length):
+    #         print(f"\nPosition {i}:")
+    #         print(f"Start index: {start}")
+    #         print(f"Num classes: {num_classes[i]}")
+            
+    #         slice_x = x[:, start : (start + num_classes[i] - 1)]
+    #         print(f"Batch 20 before reshape:\n{slice_x[20]}")
+            
+    #         temp_x = slice_x.reshape(-1, 1, num_classes[i] - 1)
+    #         print(f"Batch 20 after reshape:\n{temp_x[20]}")
+            
+    #         pos_result = self.help_to_integers(temp_x, num_classes[i])
+    #         print(f"Position {i} result for batch 20: {pos_result[20]}")
+            
+    #         integers.append(pos_result)
+    #         start += num_classes[i] - 1
+        
+    #     final_result = np.concatenate(integers, axis=1)
+    #     print(f"\nFinal result for batch 20: {final_result[20]}")
+        
+    #     # Check bounds
+    #     print("\nChecking bounds:")
+    #     for pos, val in enumerate(final_result[20]):
+    #         if val > num_classes[pos] - 1:
+    #             print(f"Position {pos}: value {val} exceeds bound {num_classes[pos] - 1}")
+        
+    #     return final_result
 
     def map_to_logits(self):
         # check that statistics are not frozen for this dataset

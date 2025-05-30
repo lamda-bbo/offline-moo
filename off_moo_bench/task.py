@@ -531,7 +531,7 @@ class Task(object):
         self.dataset.x_normalize_method = original_x_norm_method
         return x_ret
 
-    def normalize_y(self, y, normalization_method="z-score"):
+    def normalize_y(self, y, normalization_method="min-max"):
         """a function that standardizes the prediction values 'y' to have
         zero empirical mean and unit empirical variance
 
@@ -561,7 +561,7 @@ class Task(object):
         self.dataset.y_normalize_method = original_y_norm_method
         return y_ret
 
-    def denormalize_x(self, x, normalization_method="z-score"):
+    def denormalize_x(self, x, normalization_method="min-max"):
         """a function that un-standardizes the design values 'x' which have
         zero empirical mean and unit empirical variance
 
@@ -591,7 +591,7 @@ class Task(object):
         self.dataset.x_normalize_method = original_x_norm_method
         return x_ret
 
-    def denormalize_y(self, y, normalization_method="z-score"):
+    def denormalize_y(self, y, normalization_method="min-max"):
         """a function that un-standardizes the prediction values 'y' which
         have zero empirical mean and unit empirical variance
 
@@ -692,11 +692,11 @@ class Task(object):
 
         """
 
-        if self.is_discrete and self.is_logits:
-            if len(x_batch.shape) == 2:
-                x_batch = x_batch.reshape(
-                    x_batch.shape[0], -1, self.dataset.num_classes - 1
-                )
+        # if self.is_discrete and self.is_logits:
+        #     if len(x_batch.shape) == 2:
+        #         x_batch = x_batch.reshape(
+        #             x_batch.shape[0], -1, self.dataset.num_classes - 1
+        #         )
 
         if not self.forbidden_normalize_x:
             if self.problem.requires_normalized_x and not self.is_normalized_x:
@@ -708,5 +708,5 @@ class Task(object):
             self.map_to_integers()
             x_batch = self.to_integers(x_batch)
             self.map_to_logits()
-
+            
         return self.problem.evaluate(x_batch, **kwargs)

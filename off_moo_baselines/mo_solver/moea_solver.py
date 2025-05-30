@@ -35,6 +35,7 @@ class MOEASolver(Solver):
             self.pop_size = len(self.algo_kwargs["ref_dirs"])
         else:
             self.pop_size = self.algo_kwargs["pop_size"]
+        
 
     def solve(self, problem, X, Y):
         """
@@ -51,7 +52,7 @@ class MOEASolver(Solver):
                 algo.callback = self.callback
 
         # optimization
-        res = minimize(problem, algo, ("n_gen", self.n_gen))
+        res = minimize(problem, algo, ("n_gen", self.n_gen), verbose=True)
 
         # construct solution
         self.solution = {
