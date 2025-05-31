@@ -873,6 +873,7 @@ class RoMATrainer(SingleModelBaseTrainer):
 
         self.n_obj = None
         self.min_mse = float("inf")
+        self.max_rank_corr = -1.
         statistics = {}
 
         self.n_epochs = self.warmup_epochs
