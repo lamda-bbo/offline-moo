@@ -1,6 +1,6 @@
 import importlib
 import re
-from typing import Union
+from typing import Optional, Union
 
 from off_moo_bench.datasets.dataset_builder import DatasetBuilder
 from off_moo_bench.datasets.discrete_dataset import DiscreteDataset
@@ -501,7 +501,7 @@ class Task(object):
     def get_N_non_dominated_solutions(self, *args, **kwargs):
         return self.dataset.get_N_non_dominated_solutions(*args, **kwargs)
 
-    def normalize_x(self, x, normalization_method="min-max"):
+    def normalize_x(self, x, normalization_method: Optional[str] = None):
         """a function that standardizes the design values 'x' to have
         zero empirical mean and unit empirical variance
 
@@ -525,13 +525,16 @@ class Task(object):
             has been normalized using dataset statistics
 
         """
-        original_x_norm_method = self.dataset.x_normalize_method
-        self.dataset.x_normalize_method = normalization_method
-        x_ret = self.dataset.normalize_x(x)
-        self.dataset.x_normalize_method = original_x_norm_method
+        if normalization_method is None:
+            x_ret = self.dataset.normalize_x(x)
+        else:
+            original_x_norm_method = self.dataset.x_normalize_method
+            self.dataset.x_normalize_method = normalization_method
+            x_ret = self.dataset.normalize_x(x)
+            self.dataset.x_normalize_method = original_x_norm_method
         return x_ret
 
-    def normalize_y(self, y, normalization_method="min-max"):
+    def normalize_y(self, y, normalization_method: Optional[str] = None):
         """a function that standardizes the prediction values 'y' to have
         zero empirical mean and unit empirical variance
 
@@ -555,13 +558,16 @@ class Task(object):
             has been normalized using dataset statistics
 
         """
-        original_y_norm_method = self.dataset.y_normalize_method
-        self.dataset.y_normalize_method = normalization_method
-        y_ret = self.dataset.normalize_y(y)
-        self.dataset.y_normalize_method = original_y_norm_method
+        if normalization_method is None:
+            y_ret = self.dataset.normalize_y(y)
+        else:
+            original_y_norm_method = self.dataset.y_normalize_method
+            self.dataset.y_normalize_method = normalization_method
+            y_ret = self.dataset.normalize_y(y)
+            self.dataset.y_normalize_method = original_y_norm_method
         return y_ret
 
-    def denormalize_x(self, x, normalization_method="min-max"):
+    def denormalize_x(self, x, normalization_method: Optional[str] = None):
         """a function that un-standardizes the design values 'x' which have
         zero empirical mean and unit empirical variance
 
@@ -585,13 +591,16 @@ class Task(object):
             has been denormalized using dataset statistics
 
         """
-        original_x_norm_method = self.dataset.x_normalize_method
-        self.dataset.x_normalize_method = normalization_method
-        x_ret = self.dataset.denormalize_x(x)
-        self.dataset.x_normalize_method = original_x_norm_method
+        if normalization_method is None:
+            x_ret = self.dataset.denormalize_x(x)
+        else:
+            original_x_norm_method = self.dataset.x_normalize_method
+            self.dataset.x_normalize_method = normalization_method
+            x_ret = self.dataset.denormalize_x(x)
+            self.dataset.x_normalize_method = original_x_norm_method
         return x_ret
 
-    def denormalize_y(self, y, normalization_method="min-max"):
+    def denormalize_y(self, y, normalization_method: Optional[str] = None):
         """a function that un-standardizes the prediction values 'y' which
         have zero empirical mean and unit empirical variance
 
@@ -615,10 +624,13 @@ class Task(object):
             has been denormalized using dataset statistics
 
         """
-        original_y_norm_method = self.dataset.y_normalize_method
-        self.dataset.y_normalize_method = normalization_method
-        y_ret = self.dataset.denormalize_y(y)
-        self.dataset.y_normalize_method = original_y_norm_method
+        if normalization_method is None:
+            y_ret = self.dataset.denormalize_y(y)
+        else:
+            original_y_norm_method = self.dataset.y_normalize_method
+            self.dataset.y_normalize_method = normalization_method
+            y_ret = self.dataset.denormalize_y(y)
+            self.dataset.y_normalize_method = original_y_norm_method
         return y_ret
 
     def to_integers(self, x):

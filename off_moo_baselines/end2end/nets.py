@@ -44,7 +44,7 @@ class End2EndModel(nn.Module):
             save_path = self.save_path
         return os.path.exists(save_path)
 
-    def save(self, val_mse=None, save_path=None):
+    def save(self, val_mse=None, val_rank_corr=None, save_path=None):
         assert (
             self.save_path is not None or save_path is not None
         ), "save path should be specified"
@@ -59,6 +59,8 @@ class End2EndModel(nn.Module):
         }
         if val_mse is not None:
             checkpoint["valid_mse"] = val_mse
+        if val_rank_corr is not None:
+            checkpoint["valid_rank_corr"] = val_rank_corr
 
         torch.save(checkpoint, save_path)
         self = self.to(**tkwargs)
@@ -72,8 +74,8 @@ class End2EndModel(nn.Module):
 
         checkpoint = torch.load(save_path)
         self.load_state_dict(checkpoint["model_state_dict"])
-        valid_mse = checkpoint["valid_mse"]
-        print(
-            f"Successfully load trained model from {save_path} "
-            f"with valid MSE = {valid_mse}"
-        )
+        print(f"Successfully load trained model from {save_path} ")
+        if "valid_mse" in checkpoint.keys():
+            print(f"Validation MSE = {checkpoint['valid_mse']}")
+        if "valid_rank_corr" in checkpoint.keys():
+            print(f"Validation rank_corr = {checkpoint['valid_rank_corr']}")
