@@ -708,5 +708,5 @@ class Task(object):
             self.map_to_integers()
             x_batch = self.to_integers(x_batch)
             self.map_to_logits()
-            
+
         return self.problem.evaluate(x_batch, **kwargs)

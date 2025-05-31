@@ -243,7 +243,9 @@ MONAS = MONASSequence + MONASLogits
 MOCO = MOCOContinuous
 ScientificDesign = ScientificDesignContinuous + ScientificDesignSequence
 
-ALLTASKS = SyntheticFunction + MONAS + MOCO + MORL + ScientificDesign + RESuite + Placement
+ALLTASKS = (
+    SyntheticFunction + MONAS + MOCO + MORL + ScientificDesign + RESuite + Placement
+)
 ALLTASKSDICT = {
     **SyntheticFunctionDict,
     **MONASSequenceDict,

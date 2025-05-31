@@ -102,7 +102,7 @@ def get_problem(env_name, *args, **kwargs):
         "mocvrp_20": BiCVRP20,
         "motsp3obj_100": TriTSP100,
         "motsp3obj_50": TriTSP50,
-        "motsp3obj_20": TriTSP20
+        "motsp3obj_20": TriTSP20,
     }
 
     if load_nas:
@@ -141,12 +141,12 @@ def get_problem(env_name, *args, **kwargs):
         PROBLEMS["zinc"] = ZINC
 
     if load_bboplacement:
-        PROBLEMS['adaptec1'] = Adaptec1
-        PROBLEMS['adaptec2'] = Adaptec2
-        PROBLEMS['adaptec3'] = Adaptec3
-        PROBLEMS['adaptec4'] = Adaptec4
-        PROBLEMS['bigblue1'] = Bigblue1
-        PROBLEMS['bigblue3'] = Bigblue3
+        PROBLEMS["adaptec1"] = Adaptec1
+        PROBLEMS["adaptec2"] = Adaptec2
+        PROBLEMS["adaptec3"] = Adaptec3
+        PROBLEMS["adaptec4"] = Adaptec4
+        PROBLEMS["bigblue1"] = Bigblue1
+        PROBLEMS["bigblue3"] = Bigblue3
 
     if env_name not in PROBLEMS.keys():
         raise Exception(f"Problem {env_name} not found or an importing error occurred.")

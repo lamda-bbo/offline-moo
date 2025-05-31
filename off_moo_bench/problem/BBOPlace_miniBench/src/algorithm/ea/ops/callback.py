@@ -3,8 +3,8 @@ import os
 import numpy as np
 from pymoo.core.callback import Callback
 
-_all_X = None 
-_all_F = None 
+_all_X = None
+_all_F = None
 
 
 class HistoryCallback(Callback):
@@ -30,6 +30,6 @@ class HistoryCallback(Callback):
 
             np.save(os.path.join(self.save_path, "all_X.npy"), _all_X)
             np.save(os.path.join(self.save_path, "all_F.npy"), _all_F)
-        
+
         np.save(os.path.join(self.save_path, "all_X.npy"), _all_X)
         np.save(os.path.join(self.save_path, "all_F.npy"), _all_F)

@@ -22,7 +22,7 @@ from off_moo_baselines.multiple_models.nets import MultipleModels
 from off_moo_baselines.multiple_models.surrogate_problem import MultipleSurrogateProblem
 from off_moo_baselines.multiple_models.trainer import get_trainer
 from off_moo_bench.collecter import get_operator_dict
-from off_moo_bench.evaluation.metrics import hv
+from off_moo_bench.evaluation.metrics import hv, igd
 from off_moo_bench.evaluation.plot import plot_y
 from off_moo_bench.task_set import *
 from utils import get_quantile_solutions, set_seed
@@ -144,7 +144,7 @@ def run(config: dict):
         trainer.launch(
             train_loader, val_loader, test_loader, retrain_model=config["retrain_model"]
         )
-        
+
     surrogate_problem = MultipleSurrogateProblem(
         # n_var=n_dim * n_classes if config["to_logits"] else n_dim,
         n_var=n_dim,
@@ -154,15 +154,15 @@ def run(config: dict):
         # xu=task.normalize_x(task.xu),
     )
 
-    if config["task"] in ScientificDesignSequenceDict.values():
-        surrogate_problem.x_to_query_batches = (
-            task.problem.task_instance.x_to_query_batches
-        )
-        surrogate_problem.query_batches_to_x = (
-            task.problem.task_instance.query_batches_to_x
-        )
-        surrogate_problem.candidate_pool = task.problem.task_instance.candidate_pool
-        surrogate_problem.op_types = task.problem.task_instance.op_types
+    # if config["task"] in ScientificDesignSequenceDict.values():
+    #     surrogate_problem.x_to_query_batches = (
+    #         task.problem.task_instance.x_to_query_batches
+    #     )
+    #     surrogate_problem.query_batches_to_x = (
+    #         task.problem.task_instance.query_batches_to_x
+    #     )
+    #     surrogate_problem.candidate_pool = task.problem.task_instance.candidate_pool
+    #     surrogate_problem.op_types = task.problem.task_instance.op_types
     # elif config["task"] in MONASSequenceDict.values():
     #     surrogate_problem.xl = task.problem.xl
     #     surrogate_problem.xu = task.problem.xu
@@ -212,14 +212,24 @@ def run(config: dict):
     res_y_50_percent = get_quantile_solutions(res_y, 0.50)
 
     nadir_point = task.nadir_point
+    pareto_front = task.problem.get_pareto_front()
     if config["normalize_ys"]:
-        res_y = task.normalize_y(res_y, normalization_method='min-max')
-        nadir_point = task.normalize_y(nadir_point, normalization_method='min-max')
-        res_y_50_percent = task.normalize_y(res_y_50_percent, normalization_method='min-max')
-        res_y_75_percent = task.normalize_y(res_y_75_percent, normalization_method='min-max')
+        res_y = task.normalize_y(res_y, normalization_method="min-max")
+        nadir_point = task.normalize_y(nadir_point, normalization_method="min-max")
+        res_y_50_percent = task.normalize_y(
+            res_y_50_percent, normalization_method="min-max"
+        )
+        res_y_75_percent = task.normalize_y(
+            res_y_75_percent, normalization_method="min-max"
+        )
+        if pareto_front is not None:
+            pareto_front = task.normalize_y(
+                pareto_front, normalization_method="min-max"
+            )
 
-    nadir_point = nadir_point.reshape(-1,)
-    print(res_y)
+    nadir_point = nadir_point.reshape(
+        -1,
+    )
     _, d_best = task.get_N_non_dominated_solutions(
         N=config["num_solutions"], return_x=False, return_y=True
     )
@@ -252,12 +262,28 @@ def run(config: dict):
         "evaluation_step": 1,
     }
 
-    df = pd.DataFrame([hv_results])
-    filename = os.path.join(logging_dir, "hv_results.csv")
-    df.to_csv(filename, index=False)
+    with open(os.path.join(logging_dir, "hv_results.json"), "w") as f:
+        json.dump(hv_results, f, indent=4)
+
+    metrics = hv_results
+
+    if pareto_front is not None:
+        d_best_igd = igd(pareto_front, d_best)
+        res_igd = igd(pareto_front, res_y)
+        res_igd_75_percent = igd(pareto_front, res_y_75_percent)
+        res_igd_50_percent = igd(pareto_front, res_y_50_percent)
+        igd_results = {
+            "igd/D(best)": d_best_igd,
+            "igd/100th": res_igd,
+            "igd/75th": res_igd_75_percent,
+            "igd/50th": res_igd_50_percent,
+        }
+        with open(os.path.join(logging_dir, "igd_results.json"), "w") as f:
+            json.dump(igd_results, f, indent=4)
+        metrics = {**metrics, **igd_results}
 
     if config["use_wandb"]:
-        wandb.log(hv_results)
+        wandb.log(metrics)
 
 
 if __name__ == "__main__":

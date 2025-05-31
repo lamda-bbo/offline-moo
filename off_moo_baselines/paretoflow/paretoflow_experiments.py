@@ -243,7 +243,9 @@ def sampling(args):
         + "_"
         + f"gamma={args.fm_gamma}"
     )
-    model_name = args.fm_prob_path + "_" + str(1000) + "_" + task_name + "_" + str(args.seed)
+    model_name = (
+        args.fm_prob_path + "_" + str(1000) + "_" + task_name + "_" + str(args.seed)
+    )
     model_store_dir = args.fm_store_path
 
     # Load the best model
@@ -315,13 +317,13 @@ def sampling(args):
     if not (os.path.exists(args.samples_store_path)):
         os.makedirs(args.samples_store_path)
 
-    np.save(args.samples_store_path + '/' + name + "_x.npy", res_x)
-    np.save(args.samples_store_path + '/' + name + "_y.npy", res_y)
+    np.save(args.samples_store_path + "/" + name + "_x.npy", res_x)
+    np.save(args.samples_store_path + "/" + name + "_y.npy", res_y)
 
     if not (os.path.exists(args.results_store_path)):
         os.makedirs(args.results_store_path)
 
-    with open(args.results_store_path + '/' + name + "_hv_results.json", "w") as f:
+    with open(args.results_store_path + "/" + name + "_hv_results.json", "w") as f:
         json.dump(hv_results, f, indent=4)
 
     return res_x, res_y

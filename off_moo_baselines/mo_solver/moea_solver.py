@@ -35,7 +35,6 @@ class MOEASolver(Solver):
             self.pop_size = len(self.algo_kwargs["ref_dirs"])
         else:
             self.pop_size = self.algo_kwargs["pop_size"]
-        
 
     def solve(self, problem, X, Y):
         """

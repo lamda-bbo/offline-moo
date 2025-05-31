@@ -15,10 +15,14 @@ sys.path.append(BASE_PATH)
 from pymoo.algorithms.moo.nsga2 import NSGA2
 
 import off_moo_bench as ob
-from off_moo_baselines.data import get_dataloader
-from off_moo_baselines.mobo import get_mobo_solver
-from off_moo_baselines.mobo.mobo_utils import tkwargs
-from off_moo_bench.evaluation.metrics import hv
+from off_moo_baselines.data import get_dataloader, tkwargs
+from off_moo_baselines.mo_solver.callback import IGDRecordCallback, RecordCallback
+from off_moo_baselines.mo_solver.moea_solver import MOEASolver
+from off_moo_baselines.multiple_models.nets import MultipleModels
+from off_moo_baselines.multiple_models.surrogate_problem import MultipleSurrogateProblem
+from off_moo_baselines.multiple_models.trainer import get_trainer
+from off_moo_bench.collecter import get_operator_dict
+from off_moo_bench.evaluation.metrics import hv, igd
 from off_moo_bench.evaluation.plot import plot_y
 from off_moo_bench.task_set import *
 from utils import get_quantile_solutions, set_seed
@@ -89,34 +93,107 @@ def run(config: dict):
         y = task.normalize_y(y)
         y_test = task.normalize_y(y_test)
 
-    if config["to_logits"]:
-        data_size, n_dim, n_classes = tuple(X.shape)
-        X = X.reshape(-1, n_dim * n_classes)
-        X_test = X_test.reshape(-1, n_dim * n_classes)
-    else:
-        data_size, n_dim = tuple(X.shape)
+    # if config["to_logits"]:
+    #     data_size, n_dim, n_classes = tuple(X.shape)
+    #     X = X.reshape(-1, n_dim * n_classes)
+    #     X_test = X_test.reshape(-1, n_dim * n_classes)
+    # else:
+    data_size, n_dim = tuple(X.shape)
     n_obj = y.shape[1]
 
     model_save_dir = config["model_save_dir"]
     os.makedirs(model_save_dir, exist_ok=True)
 
-    MOBO_Solver = get_mobo_solver(config["train_mode"])(
-        config=config,
-        X_init=torch.Tensor(X).to(**tkwargs),
-        Y_init=torch.Tensor(y).to(**tkwargs),
-        solver_kwargs={
-            "ref_point": torch.Tensor(1.1 * task.nadir_point).to(**tkwargs),
-            "xl": task.xl,
-            "xu": task.xu,
-        },
-        train_gp_data_size=config["train_gp_data_size"],
-        output_size=config["num_solutions"],
-        negate=True,
+    model = MultipleModels(
+        # n_dim=n_dim * n_classes if config["to_logits"] else n_dim,
+        n_dim=n_dim,
+        n_obj=n_obj,
+        train_mode=config["train_mode"],
+        hidden_size=[2048, 2048],
+        save_dir=config["model_save_dir"],
+        save_prefix=f"{config['model']}-{config['train_mode']}-{config['task']}-{config['seed']}",
+    )
+    model.set_kwargs(**tkwargs)
+
+    trainer_func = get_trainer(config["train_mode"])
+
+    for which_obj in range(n_obj):
+        y0 = y[:, which_obj].copy().reshape(-1, 1)
+        y0_test = y_test[:, which_obj].copy().reshape(-1, 1)
+
+        config["which_obj"] = which_obj
+        config["input_shape"] = X[0].shape
+
+        indexs = np.argsort(y0.squeeze())
+        index = indexs[: config["num_solutions"]]
+        config["best_x"] = torch.from_numpy(deepcopy(X[index])).to(**tkwargs)
+        config["best_y"] = torch.from_numpy(deepcopy(y0[index])).to(**tkwargs)
+
+        config["x"] = torch.from_numpy(deepcopy(X)).to(**tkwargs)
+        config["y"] = torch.from_numpy(deepcopy(y0)).to(**tkwargs)
+
+        trainer = trainer_func(
+            model=list(model.obj2model.values())[which_obj],
+            config=config,
+        )
+
+        (train_loader, val_loader, test_loader) = get_dataloader(
+            X, y0, X_test, y0_test, val_ratio=0.9, batch_size=config["batch_size"]
+        )
+
+        trainer.launch(
+            train_loader, val_loader, test_loader, retrain_model=config["retrain_model"]
+        )
+
+    surrogate_problem = MultipleSurrogateProblem(
+        # n_var=n_dim * n_classes if config["to_logits"] else n_dim,
+        n_var=n_dim,
+        n_obj=n_obj,
+        model=model,
+        # xl=task.normalize_x(task.xl),
+        # xu=task.normalize_x(task.xu),
     )
 
-    res_x = MOBO_Solver.run()
-    if config["to_logits"]:
-        res_x = res_x.reshape(-1, n_dim, n_classes)
+    # if config["task"] in ScientificDesignSequenceDict.values():
+    #     surrogate_problem.x_to_query_batches = (
+    #         task.problem.task_instance.x_to_query_batches
+    #     )
+    #     surrogate_problem.query_batches_to_x = (
+    #         task.problem.task_instance.query_batches_to_x
+    #     )
+    #     surrogate_problem.candidate_pool = task.problem.task_instance.candidate_pool
+    #     surrogate_problem.op_types = task.problem.task_instance.op_types
+    # elif config["task"] in MONASSequenceDict.values():
+    #     surrogate_problem.xl = task.problem.xl
+    #     surrogate_problem.xu = task.problem.xu
+
+    callback = IGDRecordCallback(
+        task=task,
+        surrogate_problem=surrogate_problem,
+        config=config,
+        logging_dir=logging_dir,
+        iters_to_record=1,
+    )
+
+    genetic_operators = get_operator_dict(config)
+    # print(genetic_operators)
+
+    solver = MOEASolver(
+        n_gen=config["solver_n_gen"],
+        pop_init_method=config["solver_init_method"],
+        batch_size=config["num_solutions"],
+        pop_size=config["num_solutions"],
+        algo=NSGA2,
+        callback=callback if config["record_hist"] else None,
+        eliminate_duplicates=True,
+        **genetic_operators,
+    )
+
+    res = solver.solve(surrogate_problem, X=X, Y=y)
+
+    res_x = res["x"]
+    # if config["to_logits"]:
+    #     res_x = res_x.reshape(-1, n_dim, n_classes)
     if config["normalize_xs"]:
         task.map_denormalize_x()
         res_x = task.denormalize_x(res_x)
@@ -135,6 +212,7 @@ def run(config: dict):
     res_y_50_percent = get_quantile_solutions(res_y, 0.50)
 
     nadir_point = task.nadir_point
+    pareto_front = task.problem.get_pareto_front()
     if config["normalize_ys"]:
         res_y = task.normalize_y(res_y, normalization_method="min-max")
         nadir_point = task.normalize_y(nadir_point, normalization_method="min-max")
@@ -144,11 +222,14 @@ def run(config: dict):
         res_y_75_percent = task.normalize_y(
             res_y_75_percent, normalization_method="min-max"
         )
+        if pareto_front is not None:
+            pareto_front = task.normalize_y(
+                pareto_front, normalization_method="min-max"
+            )
 
     nadir_point = nadir_point.reshape(
         -1,
     )
-
     _, d_best = task.get_N_non_dominated_solutions(
         N=config["num_solutions"], return_x=False, return_y=True
     )
@@ -181,12 +262,28 @@ def run(config: dict):
         "evaluation_step": 1,
     }
 
-    df = pd.DataFrame([hv_results])
-    filename = os.path.join(logging_dir, "hv_results.csv")
-    df.to_csv(filename, index=False)
+    with open(os.path.join(logging_dir, "hv_results.json"), "w") as f:
+        json.dump(hv_results, f, indent=4)
+
+    metrics = hv_results
+
+    if pareto_front is not None:
+        d_best_igd = igd(pareto_front, d_best)
+        res_igd = igd(pareto_front, res_y)
+        res_igd_75_percent = igd(pareto_front, res_y_75_percent)
+        res_igd_50_percent = igd(pareto_front, res_y_50_percent)
+        igd_results = {
+            "igd/D(best)": d_best_igd,
+            "igd/100th": res_igd,
+            "igd/75th": res_igd_75_percent,
+            "igd/50th": res_igd_50_percent,
+        }
+        with open(os.path.join(logging_dir, "igd_results.json"), "w") as f:
+            json.dump(igd_results, f, indent=4)
+        metrics = {**metrics, **igd_results}
 
     if config["use_wandb"]:
-        wandb.log(hv_results)
+        wandb.log(metrics)
 
 
 if __name__ == "__main__":

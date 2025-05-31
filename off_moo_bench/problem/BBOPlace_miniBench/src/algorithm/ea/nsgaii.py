@@ -54,7 +54,7 @@ class NSGAII(BasicAlgo):
                 x = SAMPLE_REGISTRY[self.args.placer](
                     self.args, self.evaluator, self._record_results
                 ).do(self.args.n_population)
-                sampling = Population.new(X=x) 
+                sampling = Population.new(X=x)
             else:
                 sampling = current_population
 
@@ -78,13 +78,17 @@ class NSGAII(BasicAlgo):
 
             remaining_gen -= iter_size
             if len(res.pop.get("X")) == len(res.pop.get("F")):
-                current_population = Population.new(X=res.pop.get("X"), F=res.pop.get("F"))
+                current_population = Population.new(
+                    X=res.pop.get("X"), F=res.pop.get("F")
+                )
             else:
                 print(
                     f"Warning: Population size mismatch. X: {len(res.pop.get('X'))}, F: {len(res.pop.get('F'))}"
                 )
                 n = min(len(res.pop.get("X")), len(res.pop.get("F")))
-                current_population = Population.new(X=res.pop.get("X")[:n], F=res.pop.get("F")[:n])
+                current_population = Population.new(
+                    X=res.pop.get("X")[:n], F=res.pop.get("F")[:n]
+                )
 
         return res
 

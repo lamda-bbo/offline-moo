@@ -83,32 +83,36 @@ def _comp_res_congestion_old(net_hpwl: dict, placedb: PlaceDB):
     )
     return congestion_mean
 
+
 def _comp_res_congestion(net_hpwl: dict, placedb: PlaceDB):
-    congestion = np.zeros((placedb.canvas_width, placedb.canvas_height), dtype=np.float32)
-    
+    congestion = np.zeros(
+        (placedb.canvas_width, placedb.canvas_height), dtype=np.float32
+    )
+
     coords = np.array(list(net_hpwl.values()))
     if len(coords) == 0:
         return 0.0
-        
+
     coords[:, 0] = np.maximum(0, np.ceil(coords[:, 0]))  # min_x
     coords[:, 1] = np.maximum(0, np.ceil(coords[:, 1]))  # min_y
-    coords[:, 2] = np.minimum(placedb.canvas_width, np.ceil(coords[:, 2]))   # max_x
+    coords[:, 2] = np.minimum(placedb.canvas_width, np.ceil(coords[:, 2]))  # max_x
     coords[:, 3] = np.minimum(placedb.canvas_height, np.ceil(coords[:, 3]))  # max_y
-    
+
     delta_x = coords[:, 2] - coords[:, 0]
     delta_y = coords[:, 3] - coords[:, 1]
-    
+
     valid_nets = (delta_x > 0) & (delta_y > 0)
     coords = coords[valid_nets]
     delta_x = delta_x[valid_nets]
     delta_y = delta_y[valid_nets]
-    
+
     for i in range(len(coords)):
         min_x, min_y, max_x, max_y = coords[i].astype(int)
-        congestion[min_x:max_x, min_y:max_y] += 1/delta_x[i] + 1/delta_y[i]
-    
+        congestion[min_x:max_x, min_y:max_y] += 1 / delta_x[i] + 1 / delta_y[i]
+
     k = max(1, int(congestion.size * 0.1))
     return np.partition(congestion.ravel(), -k)[-k:].mean()
+
 
 def _comp_res_regularity(macro_pos: dict, placedb: PlaceDB):
     # FIXME: Warning, regularity is not feasible for sequence pair formulation
