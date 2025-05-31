@@ -42,6 +42,7 @@ class RecordCallback:
         #     x = self.task.to_integers(x)
         self.X.append(x)
         self.Y.append(y)
+        x = self.task.denormalize_x(x, normalization_method='min-max')
         y_real = self.task.predict(x)
         self.Y_real.append(y_real)
 
@@ -304,6 +305,7 @@ class IGDRecordCallback:
 
         self.X.append(x)
         self.Y.append(y)
+        x = self.task.denormalize_x(x, normalization_method='min-max')
 
         y_real = self.task.predict(x)
         self.Y_real.append(y_real)

@@ -53,6 +53,9 @@ class SingleModelBaseTrainer(nn.Module):
         ################## TODO: to be fixed ################
         try:
             self.forward_opt = Adam(model.parameters(), lr=config["forward_lr"])
+            self.forward_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                self.forward_opt, T_max=self.n_epochs, eta_min=0  # minimum learning rate
+            )
         except:
             pass
         #####################################################
@@ -63,6 +66,8 @@ class SingleModelBaseTrainer(nn.Module):
             else torch.sum(torch.mean((yhat - y) ** 2, dim=1))
         )
         self.mse_criterion = nn.MSELoss()
+
+        self.save_ckpt_metric = config["save_ckpt_metric"]
 
     def _evaluate_performance(
         self, statistics, epoch, train_loader, val_loader, test_loader
@@ -117,8 +122,10 @@ class SingleModelBaseTrainer(nn.Module):
                 statistics[
                     f"model_{self.which_obj}/valid/rank_corr_{i + 1}"
                 ] = val_corr[i].item()
-
+                
+            val_corr_avg = val_corr.item()
             print("Valid MSE: {:}".format(val_mse.item()))
+            print("Valid rank_corr: {:}".format(val_corr_avg))
 
             if len(test_loader) != 0:
                 y_all = torch.zeros((0, self.n_obj)).to(**tkwargs)
@@ -143,10 +150,18 @@ class SingleModelBaseTrainer(nn.Module):
 
                 print("Test MSE: {:}".format(test_mse.item()))
 
-            if val_mse.item() < self.min_mse:
-                print("🌸 New best epoch! 🌸")
-                self.min_mse = val_mse.item()
-                self.model.save(val_mse=self.min_mse)
+            if self.save_ckpt_metric.lower() == "mse":
+                if val_mse.item() < self.min_mse:
+                    print("🌸 New best epoch! 🌸")
+                    self.min_mse = val_mse.item()
+                    self.model.save(val_mse=self.min_mse)
+            elif self.save_ckpt_metric.lower() == "rank_corr":
+                if val_corr_avg > self.max_rank_corr:
+                    print("🌸 New best epoch! 🌸")
+                    self.max_rank_corr = val_corr_avg
+                    self.model.save(val_rank_corr=val_corr_avg)
+            else:
+                raise NotImplementedError
         return statistics
 
     def launch(
@@ -156,10 +171,6 @@ class SingleModelBaseTrainer(nn.Module):
         test_loader: Optional[DataLoader] = None,
         retrain_model: bool = True,
     ):
-        def update_lr(optimizer, lr):
-            for param_group in optimizer.param_groups:
-                param_group["lr"] = lr
-
         if not retrain_model and os.path.exists(self.model.save_path):
             self.model.load()
             return
@@ -169,6 +180,7 @@ class SingleModelBaseTrainer(nn.Module):
 
         self.n_obj = None
         self.min_mse = float("inf")
+        self.max_rank_corr = -1.
         statistics = {}
 
         for epoch in range(self.n_epochs):
@@ -188,6 +200,8 @@ class SingleModelBaseTrainer(nn.Module):
                 loss.backward()
                 self.forward_opt.step()
 
+            self.forward_scheduler.step()
+
             statistics[f"model_{self.which_obj}/train/loss/mean"] = np.array(
                 losses
             ).mean()
@@ -202,9 +216,7 @@ class SingleModelBaseTrainer(nn.Module):
                 statistics, epoch, train_loader, val_loader, test_loader
             )
 
-            statistics[f"model_{self.which_obj}/train/lr"] = self.forward_lr
-            self.forward_lr *= self.forward_lr_decay
-            update_lr(self.forward_opt, self.forward_lr)
+            statistics["train/lr"] = self.forward_scheduler.get_last_lr()[0]
 
             if self.use_wandb:
                 statistics[f"model_{self.which_obj}/train_epoch"] = epoch
@@ -298,6 +310,7 @@ class ConservativeObjectiveTrainer(SingleModelBaseTrainer):
 
         # loss that combines maximum likelihood with a constraint
         model_loss = mse + self.alpha * overestimation
+        
         if self.config["data_pruning"]:
             model_loss = model_loss * (1 / self.config["data_preserved_ratio"])
         total_loss = model_loss.mean()
@@ -310,15 +323,14 @@ class ConservativeObjectiveTrainer(SingleModelBaseTrainer):
         model_grads = torch.autograd.grad(total_loss, self.model.parameters())
 
         # take gradient steps on the model
-        with torch.no_grad():
-            self.log_alpha.grad = alpha_grads
-            self.alpha_opt.step()
-            self.alpha_opt.zero_grad()
+        self.log_alpha.grad = alpha_grads
+        self.alpha_opt.step()
+        self.alpha_opt.zero_grad()
 
-            for param, grad in zip(self.model.parameters(), model_grads):
-                param.grad = grad
-            self.forward_opt.step()
-            self.forward_opt.zero_grad()
+        for param, grad in zip(self.model.parameters(), model_grads):
+            param.grad = grad
+        self.forward_opt.step()
+        self.forward_opt.zero_grad()
 
         return statistics
 
@@ -339,6 +351,7 @@ class ConservativeObjectiveTrainer(SingleModelBaseTrainer):
         self.n_obj = None
         iters = 0
         self.min_mse = float("inf")
+        self.max_rank_corr = -1.
         statistics = {}
 
         for epoch in range(self.n_epochs):
@@ -350,7 +363,7 @@ class ConservativeObjectiveTrainer(SingleModelBaseTrainer):
                     self.n_obj = batch_y.shape[1]
 
                 statistics = self.train_step(batch_x, batch_y, statistics)
-
+            self.forward_scheduler.step()
             self._evaluate_performance(
                 statistics, epoch, train_loader, val_loader, test_loader
             )
@@ -410,6 +423,7 @@ class InvariantObjectiveTrainer(SingleModelBaseTrainer):
         self.register_parameter("g0", nn.Parameter(g.clone().detach()))
 
         self.mse_criterion = nn.MSELoss()
+        self.save_ckpt_metric = config["save_ckpt_metric"]
 
     @property
     def alpha(self):
@@ -577,6 +591,7 @@ class InvariantObjectiveTrainer(SingleModelBaseTrainer):
 
         self.n_obj = None
         self.min_mse = float("inf")
+        self.max_rank_corr = -1.
         statistics = {}
 
         for epoch in range(self.n_epochs):
@@ -942,6 +957,7 @@ class TriMentoringTrainer(SingleModelBaseTrainer):
         forward_opt = Adam(model.parameters(), lr=lr)
         statistics = {}
         min_mse = float("inf")
+        max_rank_corr = -1.
         best_state_dict = None
         self.n_obj = None
         for epoch in range(self.n_epochs):
@@ -1027,7 +1043,9 @@ class TriMentoringTrainer(SingleModelBaseTrainer):
                         f"model_{self.which_obj}_{model.seed}/valid/rank_corr_{i + 1}"
                     ] = val_corr[i].item()
 
+                val_corr_avg = torch.mean(val_corr).item()
                 print("Valid MSE: {:}".format(val_mse.item()))
+                print("Valid rank_corr: {:}".format(val_corr_avg))
 
                 if len(test_loader) != 0:
                     y_all = torch.zeros((0, 1)).to(**tkwargs)
@@ -1054,10 +1072,18 @@ class TriMentoringTrainer(SingleModelBaseTrainer):
 
                     print("Test MSE: {:}".format(test_mse.item()))
 
-                if val_mse.item() < min_mse:
-                    print("🌸 New best epoch! 🌸")
-                    min_mse = val_mse.item()
-                    best_state_dict = model.state_dict()
+                if self.save_ckpt_metric.lower() == "mse":
+                    if val_mse.item() < min_mse:
+                        print("🌸 New best epoch! 🌸")
+                        min_mse = val_mse.item()
+                        best_state_dict = model.state_dict()
+                elif self.save_ckpt_metric.lower() == "rank_corr":
+                    if val_corr_avg > max_rank_corr:
+                        print("🌸 New best epoch! 🌸")
+                        max_rank_corr = val_corr_avg
+                        best_state_dict = model.state_dict()
+                else:
+                    raise NotImplementedError
 
             statistics[
                 f"model_{self.which_obj}_{model.seed}/train/lr"
@@ -1133,15 +1159,6 @@ class TriMentoringTrainer(SingleModelBaseTrainer):
                 candidate_opt.zero_grad()
                 loss.backward()
                 candidate_opt.step()
-
-            # self._evaluate_performance(statistics, x_i,
-            #                            train_loader,
-            #                            val_loader,
-            #                            test_loader)
-
-            # if self.use_wandb:
-            #     statistics[f"model_{self.which_obj}/finetune_epoch"] = x_i
-            #     wandb.log(statistics)
 
 
 class ICTTrainer(TriMentoringTrainer):
