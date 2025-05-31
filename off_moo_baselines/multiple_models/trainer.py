@@ -1161,6 +1161,8 @@ class TriMentoringTrainer(SingleModelBaseTrainer):
                 loss.backward()
                 candidate_opt.step()
 
+        self.model.save()
+
 
 class ICTTrainer(TriMentoringTrainer):
     def __init__(self, model, config):
@@ -1431,3 +1433,5 @@ class ICTTrainer(TriMentoringTrainer):
             optimizer3.zero_grad()
             loss3.backward()
             optimizer3.step()
+
+        self.model.save()
