@@ -377,6 +377,8 @@ class End2EndPcGradTrainer(End2EndBaseTrainer):
                 )
                 self.forward_opt.pc_backward(loss)
                 self.forward_opt.step()
+            
+            self.forward_scheduler.step()
 
             statistics["train/loss/mean"] = np.array(losses).mean()
             statistics["train/loss/std"] = np.array(losses).std()

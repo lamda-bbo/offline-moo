@@ -45,7 +45,7 @@ class MultiHeadModel(nn.Module):
             save_path = self.save_path
         return os.path.exists(save_path)
 
-    def save(self, val_mse=None, save_path=None):
+    def save(self, val_mse=None, val_rank_corr=None, save_path=None):
         assert (
             self.save_path is not None or save_path is not None
         ), "save path should be specified"
@@ -63,6 +63,8 @@ class MultiHeadModel(nn.Module):
 
         if val_mse is not None:
             checkpoint["valid_mse"] = val_mse
+        if val_rank_corr is not None:
+            checkpoint["valid_rank_corr"] = val_rank_corr
 
         torch.save(checkpoint, save_path)
         self.set_kwargs(**tkwargs)
@@ -78,11 +80,13 @@ class MultiHeadModel(nn.Module):
         self.feature_extractor.load_state_dict(checkpoint["feature_extractor"])
         for obj, head in self.obj2head.items():
             head.load_state_dict(checkpoint[f"head_{obj}"])
-        valid_mse = checkpoint["valid_mse"]
         print(
             f"Successfully load trained model from {save_path} "
-            f"with valid MSE = {valid_mse}"
         )
+        if "valid_mse" in checkpoint.keys():
+            print(f"Validation MSE = {checkpoint['valid_mse']}")
+        if "valid_rank_corr" in checkpoint.keys():
+            print(f"Validation rank_corr = {checkpoint['valid_rank_corr']}")
 
 
 class FeatureExtractor(nn.Module):

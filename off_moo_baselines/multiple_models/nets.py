@@ -109,7 +109,7 @@ class SingleModel(nn.Module):
             save_path = self.save_path
         return os.path.exists(save_path)
 
-    def save(self, val_mse=None, save_path=None):
+    def save(self, val_mse=None, val_rank_corr=None, save_path=None):
         assert (
             self.save_path is not None or save_path is not None
         ), "save path should be specified"
@@ -122,8 +122,11 @@ class SingleModel(nn.Module):
         checkpoint = {
             "model_state_dict": self.state_dict(),
         }
+
         if val_mse is not None:
             checkpoint["valid_mse"] = val_mse
+        if val_rank_corr is not None:
+            checkpoint["valid_rank_corr"] = val_rank_corr
 
         torch.save(checkpoint, save_path)
         self = self.to(**tkwargs)
@@ -137,11 +140,13 @@ class SingleModel(nn.Module):
 
         checkpoint = torch.load(save_path)
         self.load_state_dict(checkpoint["model_state_dict"])
-        valid_mse = checkpoint["valid_mse"]
         print(
             f"Successfully load trained model from {save_path} "
-            f"with valid MSE = {valid_mse}"
         )
+        if "valid_mse" in checkpoint.keys():
+            print(f"Validation MSE = {checkpoint['valid_mse']}")
+        if "valid_rank_corr" in checkpoint.keys():
+            print(f"Validation rank_corr = {checkpoint['valid_rank_corr']}")
 
 
 class ConservativeObjectiveModel(SingleModel):
@@ -209,7 +214,7 @@ class InvariantObjectiveModel(nn.Module):
             save_path = self.save_path
         return os.path.exists(save_path)
 
-    def save(self, val_mse=None, save_path=None):
+    def save(self, val_mse=None, val_rank_corr=None, save_path=None):
         assert (
             self.save_path is not None or save_path is not None
         ), "save path should be specified"
@@ -226,6 +231,8 @@ class InvariantObjectiveModel(nn.Module):
 
         if val_mse is not None:
             checkpoint["valid_mse"] = val_mse
+        if val_rank_corr is not None:
+            checkpoint["valid_rank_corr"] = val_rank_corr
 
         torch.save(checkpoint, save_path)
         self.set_kwargs(**tkwargs)
@@ -241,12 +248,13 @@ class InvariantObjectiveModel(nn.Module):
         self.representation_model.load_state_dict(checkpoint["representation"])
         self.forward_model.load_state_dict(checkpoint["forward"])
         self.discriminator_model.load_state_dict(checkpoint["discriminator"])
-
-        valid_mse = checkpoint["valid_mse"]
         print(
             f"Successfully load trained model from {save_path} "
-            f"with valid MSE = {valid_mse}"
         )
+        if "valid_mse" in checkpoint.keys():
+            print(f"Validation MSE = {checkpoint['valid_mse']}")
+        if "valid_rank_corr" in checkpoint.keys():
+            print(f"Validation rank_corr = {checkpoint['valid_rank_corr']}")
 
 
 class IOMForwardModel(nn.Module):
@@ -418,7 +426,7 @@ class RoMAModel(nn.Module):
             save_path = self.save_path
         return os.path.exists(save_path)
 
-    def save(self, val_mse=None, save_path=None):
+    def save(self, val_mse=None, val_rank_corr=None, save_path=None):
         assert (
             self.save_path is not None or save_path is not None
         ), "save path should be specified"
@@ -433,6 +441,8 @@ class RoMAModel(nn.Module):
 
         if val_mse is not None:
             checkpoint["valid_mse"] = val_mse
+        if val_rank_corr is not None:
+            checkpoint["valid_rank_corr"] = val_rank_corr
 
         torch.save(checkpoint, save_path)
         self.set_kwargs(**tkwargs)
@@ -446,12 +456,13 @@ class RoMAModel(nn.Module):
 
         checkpoint = torch.load(save_path)
         self.forward_model.load_state_dict(checkpoint["forward"])
-
-        valid_mse = checkpoint["valid_mse"]
         print(
             f"Successfully load trained model from {save_path} "
-            f"with valid MSE = {valid_mse}"
         )
+        if "valid_mse" in checkpoint.keys():
+            print(f"Validation MSE = {checkpoint['valid_mse']}")
+        if "valid_rank_corr" in checkpoint.keys():
+            print(f"Validation rank_corr = {checkpoint['valid_rank_corr']}")
 
 
 class TriMentoringBaseModel(SingleModel):
@@ -530,7 +541,7 @@ class TriMentoringModel(nn.Module):
             save_path = self.save_path
         return os.path.exists(save_path)
 
-    def save(self, val_mse=None, save_path=None):
+    def save(self, val_mse=None, val_rank_corr=None, save_path=None):
         assert (
             self.save_path is not None or save_path is not None
         ), "save path should be specified"
@@ -546,6 +557,8 @@ class TriMentoringModel(nn.Module):
 
         if val_mse is not None:
             checkpoint["valid_mse"] = val_mse
+        if val_rank_corr is not None:
+            checkpoint["valid_rank_corr"] = val_rank_corr
 
         torch.save(checkpoint, save_path)
         self.set_kwargs(**tkwargs)
@@ -560,12 +573,13 @@ class TriMentoringModel(nn.Module):
         checkpoint = torch.load(save_path)
         for seed, model in zip(self.train_seeds, self.models):
             model.load_state_dict(checkpoint[seed])
-
-        valid_mse = checkpoint["valid_mse"]
         print(
             f"Successfully load trained model from {save_path} "
-            f"with valid MSE = {valid_mse}"
         )
+        if "valid_mse" in checkpoint.keys():
+            print(f"Validation MSE = {checkpoint['valid_mse']}")
+        if "valid_rank_corr" in checkpoint.keys():
+            print(f"Validation rank_corr = {checkpoint['valid_rank_corr']}")
 
 
 class ICTBaseModel(TriMentoringBaseModel):
