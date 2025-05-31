@@ -62,7 +62,13 @@ def run(config: dict):
 
     set_seed(config["seed"])
 
-    task = ob.make(config["task"])
+    task = ob.make(
+        config["task"],
+        dataset_kwargs={
+            "x_normalize_method": "z-score",
+            "y_normalize_method": "z-score",
+        },
+    )
 
     X = task.x.copy()
     y = task.y.copy()
@@ -79,15 +85,12 @@ def run(config: dict):
 
     if config["to_logits"]:
         assert task.is_discrete
-        task.map_to_logits()
         X = task.to_logits(X)
         X_test = task.to_logits(X_test)
     if config["normalize_xs"]:
-        task.map_normalize_x()
         X = task.normalize_x(X)
         X_test = task.normalize_x(X_test)
     if config["normalize_ys"]:
-        task.map_normalize_y()
         y = task.normalize_y(y)
         y_test = task.normalize_y(y_test)
 
@@ -111,7 +114,6 @@ def run(config: dict):
         # n_dim=n_dim * n_classes if config["to_logits"] else n_dim,
         n_dim=n_dim,
         n_obj=n_obj,
-        n_obj=n_obj,
         hidden_size=[2048, 2048],
         save_path=model_save_path,
     ).to(**tkwargs)
@@ -133,6 +135,7 @@ def run(config: dict):
         n_var=n_dim,
         n_obj=n_obj,
         model=model,
+        task=task,
     )
 
     # if config["task"] in ScientificDesignSequenceDict.values():
@@ -169,20 +172,25 @@ def run(config: dict):
         **genetic_operators,
     )
 
-    res = solver.solve(surrogate_problem, X=X, Y=y)
+    res = solver.solve(
+        surrogate_problem,
+        X=task.normalize_x(task.denormalize_x(X), normalization_method="min-max"),
+        Y=task.normalize_y(task.denormalize_y(y), normalization_method="min-max"),
+    )
 
     res_x = res["x"]
     # if config["to_logits"]:
     #     res_x = res_x.reshape(-1, n_dim, n_classes)
-    if config["normalize_xs"]:
-        task.map_denormalize_x()
-        res_x = task.denormalize_x(res_x)
+    res_x = task.denormalize_x(res_x, normalization_method="min-max")
+    # if config["normalize_xs"]:
+    #     task.map_denormalize_x()
+    #     res_x = task.denormalize_x(res_x)
     if config["to_logits"]:
-        task.map_to_integers()
         res_x = task.to_integers(res_x)
 
     res_y = task.predict(res_x)
-    print(res_y)
+    np.save(file="res_x.npy", arr=res_x)
+    np.save(file="res_y.npy", arr=res_y)
     visible_masks = np.ones(len(res_y))
     visible_masks[np.where(np.logical_or(np.isinf(res_y), np.isnan(res_y)))[0]] = 0
     visible_masks[np.where(np.logical_or(np.isinf(res_x), np.isnan(res_x)))[0]] = 0
@@ -194,6 +202,11 @@ def run(config: dict):
 
     nadir_point = task.nadir_point
     pareto_front = task.problem.get_pareto_front()
+
+    _, d_best = task.get_N_non_dominated_solutions(
+        N=config["num_solutions"], return_x=False, return_y=True
+    )
+
     if config["normalize_ys"]:
         res_y = task.normalize_y(res_y, normalization_method="min-max")
         nadir_point = task.normalize_y(nadir_point, normalization_method="min-max")
@@ -203,6 +216,7 @@ def run(config: dict):
         res_y_75_percent = task.normalize_y(
             res_y_75_percent, normalization_method="min-max"
         )
+        d_best = task.normalize_y(d_best, normalization_method="min-max")
         if pareto_front is not None:
             pareto_front = task.normalize_y(
                 pareto_front, normalization_method="min-max"
@@ -210,10 +224,6 @@ def run(config: dict):
 
     nadir_point = nadir_point.reshape(
         -1,
-    )
-
-    _, d_best = task.get_N_non_dominated_solutions(
-        N=config["num_solutions"], return_x=False, return_y=True
     )
 
     np.save(file=os.path.join(logging_dir, "res_x.npy"), arr=res_x)

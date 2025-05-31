@@ -71,7 +71,8 @@ class RecordCallback:
         np.save(arr=y, file=os.path.join(save_dir, "y_surrogate.npy"))
         np.save(arr=y_real, file=os.path.join(save_dir, "y_predict.npy"))
 
-        self.plot_hist(save_dir)
+        if self.n_gen == self.config["solver_n_gen"]:
+            self.plot_hist(save_dir)
 
     def plot_hist(self, save_dir):
         n_obj = self.Y_real[0].shape[1]
@@ -265,9 +266,7 @@ class RecordCallback:
 
 
 class IGDRecordCallback:
-    def __init__(
-        self, task, surrogate_problem, config, logging_dir, iters_to_record=1
-    ):
+    def __init__(self, task, surrogate_problem, config, logging_dir, iters_to_record=1):
         self.iters_to_record = iters_to_record
         self.config = config
         self.X = []

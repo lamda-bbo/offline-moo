@@ -922,7 +922,6 @@ class DatasetBuilder(abc.ABC):
 
         # calculate the mean and standard deviation
         if self.x_mean is None or self.x_standard_dev is None:
-            assert 0
             self.update_x_statistics()
 
         # denormalize the prediction values

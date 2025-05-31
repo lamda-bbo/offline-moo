@@ -10,3 +10,5 @@ num_solutions: 256
 
 solver_n_gen: 50
 solver_init_method: nds
+
+save_ckpt_metric: rank_corr
