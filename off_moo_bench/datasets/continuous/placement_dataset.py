@@ -91,17 +91,22 @@ class PlacementDataset(ContinuousDataset):
 class Adaptec1Dataset(PlacementDataset):
     name = "adaptec1"
 
+
 class Adaptec2Dataset(PlacementDataset):
     name = "adaptec2"
+
 
 class Adaptec3Dataset(PlacementDataset):
     name = "adaptec3"
 
+
 class Adaptec4Dataset(PlacementDataset):
     name = "adaptec4"
 
+
 class Bigblue1Dataset(PlacementDataset):
     name = "bigblue1"
+
 
 class Bigblue3Dataset(PlacementDataset):
     name = "bigblue3"

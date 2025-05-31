@@ -51,8 +51,8 @@ class MORLProblem(BaseProblem):
             n_dim,
             nadir_point=nadir_point,
             ideal_point=ideal_point,
-            xu=3.,
-            xl=-3.,
+            xu=3.0,
+            xl=-3.0,
         )
 
     def generate_x(self, size):

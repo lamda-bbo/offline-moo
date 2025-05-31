@@ -2,11 +2,9 @@ import datetime
 import json
 import os
 import sys
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-import torch
 import wandb
 
 BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
@@ -15,10 +13,14 @@ sys.path.append(BASE_PATH)
 from pymoo.algorithms.moo.nsga2 import NSGA2
 
 import off_moo_bench as ob
-from off_moo_baselines.data import get_dataloader
-from off_moo_baselines.mobo import get_mobo_solver
-from off_moo_baselines.mobo.mobo_utils import tkwargs
-from off_moo_bench.evaluation.metrics import hv
+from off_moo_baselines.data import get_dataloader, tkwargs
+from off_moo_baselines.end2end.nets import End2EndModel
+from off_moo_baselines.end2end.surrogate_problem import End2EndSurrogateProblem
+from off_moo_baselines.end2end.trainer import get_trainer
+from off_moo_baselines.mo_solver.callback import IGDRecordCallback, RecordCallback
+from off_moo_baselines.mo_solver.moea_solver import MOEASolver
+from off_moo_bench.collecter import get_operator_dict
+from off_moo_bench.evaluation.metrics import hv, igd
 from off_moo_bench.evaluation.plot import plot_y
 from off_moo_bench.task_set import *
 from utils import get_quantile_solutions, set_seed
@@ -30,7 +32,7 @@ def run(config: dict):
 
     results_dir = os.path.join(
         config["results_dir"],
-        f"{config['model']}-{config['train_mode']}-{config['task']}",
+        f"Stability-{config['model']}-{config['train_mode']}-{config['task']}",
     )
     config["results_dir"] = results_dir
 
@@ -89,34 +91,88 @@ def run(config: dict):
         y = task.normalize_y(y)
         y_test = task.normalize_y(y_test)
 
-    if config["to_logits"]:
-        data_size, n_dim, n_classes = tuple(X.shape)
-        X = X.reshape(-1, n_dim * n_classes)
-        X_test = X_test.reshape(-1, n_dim * n_classes)
-    else:
-        data_size, n_dim = tuple(X.shape)
+    # if config["to_logits"]:
+    #     data_size, n_dim, n_classes = tuple(X.shape)
+    #     X = X.reshape(-1, n_dim * n_classes)
+    #     X_test = X_test.reshape(-1, n_dim * n_classes)
+    # else:
+    data_size, n_dim = tuple(X.shape)
     n_obj = y.shape[1]
 
     model_save_dir = config["model_save_dir"]
     os.makedirs(model_save_dir, exist_ok=True)
 
-    MOBO_Solver = get_mobo_solver(config["train_mode"])(
-        config=config,
-        X_init=torch.Tensor(X).to(**tkwargs),
-        Y_init=torch.Tensor(y).to(**tkwargs),
-        solver_kwargs={
-            "ref_point": torch.Tensor(1.1 * task.nadir_point).to(**tkwargs),
-            "xl": task.xl,
-            "xu": task.xu,
-        },
-        train_gp_data_size=config["train_gp_data_size"],
-        output_size=config["num_solutions"],
-        negate=True,
+    model_save_path = os.path.join(
+        model_save_dir,
+        f"{config['model']}-{config['train_mode']}-{config['task']}-{config['seed']}.pt",
     )
 
-    res_x = MOBO_Solver.run()
-    if config["to_logits"]:
-        res_x = res_x.reshape(-1, n_dim, n_classes)
+    model = End2EndModel(
+        # n_dim=n_dim * n_classes if config["to_logits"] else n_dim,
+        n_dim=n_dim,
+        n_obj=n_obj,
+        hidden_size=[2048, 2048],
+        save_path=model_save_path,
+    ).to(**tkwargs)
+
+    trainer_func = get_trainer(config["train_mode"])
+
+    trainer = trainer_func(forward_model=model, config=config)
+
+    (train_loader, val_loader, test_loader) = get_dataloader(
+        X, y, X_test, y_test, val_ratio=0.9, batch_size=config["batch_size"]
+    )
+
+    trainer.launch(
+        train_loader, val_loader, test_loader, retrain_model=config["retrain_model"]
+    )
+
+    surrogate_problem = End2EndSurrogateProblem(
+        # n_var=n_dim * n_classes if config["to_logits"] else n_dim,
+        n_var=n_dim,
+        n_obj=n_obj,
+        model=model,
+    )
+
+    # if config["task"] in ScientificDesignSequenceDict.values():
+    #     surrogate_problem.x_to_query_batches = (
+    #         task.problem.task_instance.x_to_query_batches
+    #     )
+    #     surrogate_problem.query_batches_to_x = (
+    #         task.problem.task_instance.query_batches_to_x
+    #     )
+    #     surrogate_problem.candidate_pool = task.problem.task_instance.candidate_pool
+    #     surrogate_problem.op_types = task.problem.task_instance.op_types
+    # elif config["task"] in MONASSequenceDict.values():
+    #     surrogate_problem.xl = task.problem.xl
+    #     surrogate_problem.xu = task.problem.xu
+
+    callback = IGDRecordCallback(
+        task=task,
+        surrogate_problem=surrogate_problem,
+        config=config,
+        logging_dir=logging_dir,
+        iters_to_record=1,
+    )
+
+    genetic_operators = get_operator_dict(config)
+
+    solver = MOEASolver(
+        n_gen=config["solver_n_gen"],
+        pop_init_method=config["solver_init_method"],
+        batch_size=config["num_solutions"],
+        pop_size=config["num_solutions"],
+        algo=NSGA2,
+        callback=callback if config["record_hist"] else None,
+        eliminate_duplicates=True,
+        **genetic_operators,
+    )
+
+    res = solver.solve(surrogate_problem, X=X, Y=y)
+
+    res_x = res["x"]
+    # if config["to_logits"]:
+    #     res_x = res_x.reshape(-1, n_dim, n_classes)
     if config["normalize_xs"]:
         task.map_denormalize_x()
         res_x = task.denormalize_x(res_x)
@@ -135,6 +191,7 @@ def run(config: dict):
     res_y_50_percent = get_quantile_solutions(res_y, 0.50)
 
     nadir_point = task.nadir_point
+    pareto_front = task.problem.get_pareto_front()
     if config["normalize_ys"]:
         res_y = task.normalize_y(res_y, normalization_method="min-max")
         nadir_point = task.normalize_y(nadir_point, normalization_method="min-max")
@@ -144,6 +201,10 @@ def run(config: dict):
         res_y_75_percent = task.normalize_y(
             res_y_75_percent, normalization_method="min-max"
         )
+        if pareto_front is not None:
+            pareto_front = task.normalize_y(
+                pareto_front, normalization_method="min-max"
+            )
 
     nadir_point = nadir_point.reshape(
         -1,
@@ -178,15 +239,30 @@ def run(config: dict):
         "hypervolume/100th": hv_value,
         "hypervolume/75th": hv_value_75_percentile,
         "hypervolume/50th": hv_value_50_percentile,
-        "evaluation_step": 1,
     }
 
-    df = pd.DataFrame([hv_results])
-    filename = os.path.join(logging_dir, "hv_results.csv")
-    df.to_csv(filename, index=False)
+    with open(os.path.join(logging_dir, "hv_results.json"), "w") as f:
+        json.dump(hv_results, f, indent=4)
+
+    metrics = hv_results
+
+    if pareto_front is not None:
+        d_best_igd = igd(pareto_front, d_best)
+        res_igd = igd(pareto_front, res_y)
+        res_igd_75_percent = igd(pareto_front, res_y_75_percent)
+        res_igd_50_percent = igd(pareto_front, res_y_50_percent)
+        igd_results = {
+            "igd/D(best)": d_best_igd,
+            "igd/100th": res_igd,
+            "igd/75th": res_igd_75_percent,
+            "igd/50th": res_igd_50_percent,
+        }
+        with open(os.path.join(logging_dir, "igd_results.json"), "w") as f:
+            json.dump(igd_results, f, indent=4)
+        metrics = {**metrics, **igd_results}
 
     if config["use_wandb"]:
-        wandb.log(hv_results)
+        wandb.log(metrics)
 
 
 if __name__ == "__main__":

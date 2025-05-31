@@ -28,8 +28,12 @@ class MOPlacementProblem(Problem):
     def _evaluate(self, x, out, *args, **kwargs):
         y, macro_pos = self.evaluator.evaluate(x)
 
-        out["F"] = np.concatenate([y["hpwl"].reshape(-1, 1), 
-                                   y["congestion"].reshape(-1, 1), 
-                                   y["regularity"].reshape(-1, 1)],
-                                   axis=1)
+        out["F"] = np.concatenate(
+            [
+                y["hpwl"].reshape(-1, 1),
+                y["congestion"].reshape(-1, 1),
+                y["regularity"].reshape(-1, 1),
+            ],
+            axis=1,
+        )
         out["macro_pos"] = macro_pos

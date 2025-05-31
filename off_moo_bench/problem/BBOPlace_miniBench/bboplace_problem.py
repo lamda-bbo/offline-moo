@@ -82,6 +82,7 @@ class PlacementProblem(BaseProblem):
     def get_ideal_point(self):
         return self.ideal_point
 
+
 class Adaptec1(PlacementProblem):
     def __init__(
         self,

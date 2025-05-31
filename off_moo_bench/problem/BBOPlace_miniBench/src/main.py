@@ -13,7 +13,7 @@ def terminal_input():
 
     config_dict = {}
     for arg in params:
-        key, value = arg.split('=')
+        key, value = arg.split("=")
         try:
             config_dict[key] = eval(value)
         except:
@@ -22,13 +22,16 @@ def terminal_input():
     args = SimpleNamespace(**config_dict)
     return args
 
+
 def main(args):
     logger = Logger(args=args)
     evaluator = Evaluator(args=args)
-    runner = ALGO_REGISTRY[args.algorithm.lower()](args=args, evaluator=evaluator, logger=logger)
+    runner = ALGO_REGISTRY[args.algorithm.lower()](
+        args=args, evaluator=evaluator, logger=logger
+    )
     runner.run()
     logging.info("Exit single run")
-    
+
 
 if __name__ == "__main__":
     args = terminal_input()
