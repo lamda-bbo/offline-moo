@@ -873,6 +873,7 @@ class RoMATrainer(SingleModelBaseTrainer):
 
         self.n_obj = None
         self.min_mse = float("inf")
+        self.max_rank_corr = -1.
         statistics = {}
 
         self.n_epochs = self.warmup_epochs
@@ -1160,6 +1161,8 @@ class TriMentoringTrainer(SingleModelBaseTrainer):
                 loss.backward()
                 candidate_opt.step()
 
+        self.model.save()
+
 
 class ICTTrainer(TriMentoringTrainer):
     def __init__(self, model, config):
@@ -1430,3 +1433,5 @@ class ICTTrainer(TriMentoringTrainer):
             optimizer3.zero_grad()
             loss3.backward()
             optimizer3.step()
+
+        self.model.save()
