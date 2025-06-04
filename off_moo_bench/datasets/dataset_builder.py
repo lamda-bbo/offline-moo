@@ -583,7 +583,7 @@ class DatasetBuilder(abc.ABC):
             self.x_standard_dev == 0.0, 1.0, self.x_standard_dev
         )
 
-        # (self.x_min, self.x_max, self.y_min, self.y_max) = self.get_xy_min_max()
+        (self.x_min, self.x_max, self.y_min, self.y_max) = self.get_xy_min_max()
 
         # reset the normalized state to what it originally was
         self.is_normalized_x = original_is_normalized_x

@@ -50,14 +50,21 @@ def get_dataloader(
 
 def spearman_correlation(x, y):
     n = x.size(0)
-    _, rank_x = x.sort(0)
-    _, rank_y = y.sort(0)
-
-    d = rank_x - rank_y
-    d_squared_sum = (d**2).sum(0).float()
-
-    rho = 1 - (6 * d_squared_sum) / (n * (n**2 - 1))
-    return rho
+    rank_x = torch.zeros_like(x)
+    rank_y = torch.zeros_like(y)
+    
+    for i in range(x.size(1)):
+        rank_x[:, i] = torch.argsort(torch.argsort(x[:, i])).float()
+        rank_y[:, i] = torch.argsort(torch.argsort(y[:, i])).float()
+    
+    rank_x = rank_x - rank_x.mean(dim=0)
+    rank_y = rank_y - rank_y.mean(dim=0)
+    
+    covariance = (rank_x * rank_y).mean(dim=0)
+    rank_x_std = rank_x.std(dim=0)
+    rank_y_std = rank_y.std(dim=0)
+    
+    return covariance / (rank_x_std * rank_y_std + 1e-8)
 
 
 task2fullname = {

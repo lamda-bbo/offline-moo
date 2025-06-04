@@ -28,25 +28,24 @@ MODEL2MODES = {
     "End2End": ["Vallina", "GradNorm", "PcGrad"],
     "MultiHead": ["Vallina", "GradNorm", "PcGrad"],
     "MultipleModels": ["Vallina", "COM", "IOM", "RoMA", "ICT", "TriMentoring"],
-    "MOBO": ["Vallina", "ParEGO", "JES"],
+    # "MOBO": ["Vallina", "ParEGO", "JES"],
 }
 
 TASK_SET_PARTITION = {
-    "Synthetic": SyntheticFunction,
-    "MONAS": MONAS,
-    "MORL": MORL,
-    "MOCO": MOCO,
-    "Sci-Design": ScientificDesign,
-    "RE Suite": RESuite,
+    # "Synthetic": SyntheticFunction,
+    # "MONAS": MONAS,
+    # "MORL": MORL,
+    # "MOCO": MOCO,
+    # "Sci-Design": ScientificDesign,
+    # "RE Suite": RESuite,
+    "Placement": Placement
 }
 
 
-def find_and_read_latest_csv(root_dir, target_filename="hv_results.csv"):
+def find_and_read_latest_files(root_dir, target_filenames=["hv_results.csv", "hv_results.json"]):
     results = {}
-    # iterate over roodt_dir
     for root, dirs, files in os.walk(root_dir):
         for dir_name in dirs:
-            # use regular expression to match seed and timestamp
             match = re.search(
                 r"seed(\d+).*?(\d{4}-\d{1,2}-\d{1,2}_\d{1,2}-\d{1,2}-\d{1,2})", dir_name
             )
@@ -57,14 +56,22 @@ def find_and_read_latest_csv(root_dir, target_filename="hv_results.csv"):
                     timestamp_str, "%Y-%m-%d_%H-%M-%S"
                 )
 
-                file_path = os.path.join(root, dir_name, target_filename)
-                # if file exists, decide whether to update according to timestamp
-                if os.path.exists(file_path):
-                    if seed not in results or results[seed][1] < timestamp:
-                        results[seed] = (file_path, timestamp)
+                # 检查所有可能的文件名
+                for filename in target_filenames:
+                    file_path = os.path.join(root, dir_name, filename)
+                    if os.path.exists(file_path):
+                        if seed not in results or results[seed][1] < timestamp:
+                            results[seed] = (file_path, timestamp)
 
-    # read every latest file
-    return {key: pd.read_csv(result[0]) for key, result in results.items()}
+    # 读取每个最新的文件
+    data = {}
+    for key, (file_path, _) in results.items():
+        if file_path.endswith('.csv'):
+            data[key] = pd.read_csv(file_path)
+        elif file_path.endswith('.json'):
+            data[key] = pd.read_json(file_path)
+            
+    return data
 
 
 def get_statistics(hv_array: np.ndarray):
@@ -149,14 +156,14 @@ def highlight_best_two(s, ascending: bool = True):
 
 
 def read_hypervolume_data(current_results_dir, percentile):
-    all_csv_files = list(
-        find_and_read_latest_csv(current_results_dir, "hv_results.csv").values()
+    all_files = list(
+        find_and_read_latest_files(current_results_dir, ["hv_results.csv", "hv_results.json"]).values()
     )
-    if not all_csv_files:
+    if not all_files:
         return None, None
 
     hv_data = np.array(
-        [csv_file[f"hypervolume/{percentile}"][0] for csv_file in all_csv_files]
+        [file[f"hypervolume/{percentile}"][0] for file in all_files]
     )
     return get_statistics(hv_data)
 
@@ -192,15 +199,16 @@ def fill_hv_dataframe(task_set, hv_dfs, percentiles):
                     algo_entry = f"{model} + {mode}"
                     hv_dfs[percentile][task_entry][algo_entry] = f"{mean} $\pm$ {std}"
 
-                all_csv_files = list(
-                    find_and_read_latest_csv(
-                        current_results_dir, "hv_results.csv"
+                all_result_files = list(
+                    find_and_read_latest_files(
+                        current_results_dir,
+                        ["hv_results.csv", "hv_results.json"]
                     ).values()
                 )
-                if all_csv_files:
+                if all_result_files:
                     d_best_values[
                         task_entry
-                    ] = f"{all_csv_files[0]['hypervolume/D(best)'].item()} $\pm$ 0.0"
+                    ] = f"{all_result_files[0]['hypervolume/D(best)'].item()} $\pm$ 0.0"
 
     for percentile in percentiles:
         for task_entry, value in d_best_values.items():
@@ -294,8 +302,8 @@ def calculate_mean_rank():
                     if not os.path.exists(current_results_dir):
                         continue
 
-                    seed2csv_files = find_and_read_latest_csv(
-                        current_results_dir, "hv_results.csv"
+                    seed2csv_files = find_and_read_latest_files(
+                        current_results_dir, ["hv_results.csv", "hv_results.json"]
                     )
                     if len(seed2csv_files) == 0:
                         continue

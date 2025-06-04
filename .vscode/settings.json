@@ -1,0 +1,6 @@
+{
+    "editor.fontSize": 14,
+    "files.autoSave": "afterDelay",
+    "editor.fontFamily": "Menlo, Monaco, 'Courier New', monospace",
+    "terminal.integrated.defaultProfile.linux": "bash"
+}
