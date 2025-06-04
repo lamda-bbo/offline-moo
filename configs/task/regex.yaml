@@ -1,10 +1,10 @@
-normalize_xs: False
+normalize_xs: True
 normalize_ys: True 
-to_logits: False
+to_logits: True
 
 is_discrete: True
 
 record_hist: True
 
-crossover: lambo_sbx
-mutation: lambo_local
+# crossover: lambo_sbx
+# mutation: lambo_local

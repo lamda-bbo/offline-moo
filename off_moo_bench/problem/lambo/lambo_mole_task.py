@@ -1,73 +1,32 @@
 import os
-
+import pickle
 import numpy as np
-
 from off_moo_bench.problem.base import BaseProblem
-
 from .lambo.tasks.regex import RegexTask as InnerRegexTask
 
-regex_task_instance_file = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "data",
-    "experiments",
-    "test",
-    "regex_problem.pkl",
-)
-rfp_task_instance_file = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "data",
-    "experiments",
-    "test",
-    "proxy_rfp_problem.pkl",
-)
-zinc_task_instance_file = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "data",
-    "experiments",
-    "test",
-    "zinc_problem.pkl",
-)
-
-print(regex_task_instance_file)
-assert os.path.exists(regex_task_instance_file)
-assert os.path.exists(rfp_task_instance_file)
-assert os.path.exists(zinc_task_instance_file)
-
-import pickle
-
-with open(regex_task_instance_file, "rb+") as f:
-    regex_task_instance = pickle.load(f)
-with open(rfp_task_instance_file, "rb+") as f:
-    rfp_task_instance = pickle.load(f)
-with open(zinc_task_instance_file, "rb+") as f:
-    zinc_task_instance = pickle.load(f)
-
-
-def class2dict(data):
-    dicdadta = {}
-    for name in dir(data):
-        value = getattr(data, name)
-        if (not name.startswith("__")) and (not callable(value)):
-            dicdadta[name] = value
-    return dicdadta
-
-
-# assert 0, class2dict(zinc_task_instance)
-
-
 class REGEX(BaseProblem):
-    def __init__(
-        self,
-    ):
+    def __init__(self):
+        regex_task_instance_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data",
+            "experiments",
+            "test",
+            "regex_problem.pkl",
+        )
+        if not os.path.exists(regex_task_instance_file):
+            raise FileNotFoundError(f"Cannot find regex task instance file: {regex_task_instance_file}")
+            
+        with open(regex_task_instance_file, "rb+") as f:
+            self.task_instance = pickle.load(f)
+            
         super().__init__(
             name=self.__class__.__name__,
             problem_type="discrete",
-            n_obj=regex_task_instance.n_obj,
-            n_dim=regex_task_instance.n_var,
-            xl=regex_task_instance.xl,
-            xu=regex_task_instance.xu,
+            n_obj=self.task_instance.n_obj,
+            n_dim=self.task_instance.n_var,
+            xl=self.task_instance.xl,
+            xu=self.task_instance.xu,
         )
-        self.task_instance = regex_task_instance
         print(type(self.task_instance))
         self.__dict__.update(self.task_instance.__dict__)
 
@@ -82,18 +41,28 @@ class REGEX(BaseProblem):
 
 
 class RFP(BaseProblem):
-    def __init__(
-        self,
-    ):
+    def __init__(self):
+        rfp_task_instance_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data",
+            "experiments",
+            "test",
+            "proxy_rfp_problem.pkl",
+        )
+        if not os.path.exists(rfp_task_instance_file):
+            raise FileNotFoundError(f"Cannot find RFP task instance file: {rfp_task_instance_file}")
+            
+        with open(rfp_task_instance_file, "rb+") as f:
+            self.task_instance = pickle.load(f)
+            
         super().__init__(
             name=self.__class__.__name__,
             problem_type="discrete",
-            n_obj=rfp_task_instance.n_obj,
-            n_dim=rfp_task_instance.n_var,
-            xl=rfp_task_instance.xl,
-            xu=rfp_task_instance.xu,
+            n_obj=self.task_instance.n_obj,
+            n_dim=self.task_instance.n_var,
+            xl=self.task_instance.xl,
+            xu=self.task_instance.xu,
         )
-        self.task_instance = rfp_task_instance
         self.__dict__.update(self.task_instance.__dict__)
 
     def _evaluate(self, X, out, *args, **kwargs):
@@ -107,18 +76,28 @@ class RFP(BaseProblem):
 
 
 class ZINC(BaseProblem):
-    def __init__(
-        self,
-    ):
+    def __init__(self):
+        zinc_task_instance_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data",
+            "experiments",
+            "test",
+            "zinc_problem.pkl",
+        )
+        if not os.path.exists(zinc_task_instance_file):
+            raise FileNotFoundError(f"Cannot find ZINC task instance file: {zinc_task_instance_file}")
+            
+        with open(zinc_task_instance_file, "rb+") as f:
+            self.task_instance = pickle.load(f)
+            
         super().__init__(
             name=self.__class__.__name__,
             problem_type="discrete",
-            n_obj=zinc_task_instance.n_obj,
-            n_dim=zinc_task_instance.n_var,
-            xl=zinc_task_instance.xl,
-            xu=zinc_task_instance.xu,
+            n_obj=self.task_instance.n_obj,
+            n_dim=self.task_instance.n_var,
+            xl=self.task_instance.xl,
+            xu=self.task_instance.xu,
         )
-        self.task_instance = zinc_task_instance
         print(type(self.task_instance))
         self.__dict__.update(self.task_instance.__dict__)
 
@@ -130,6 +109,3 @@ class ZINC(BaseProblem):
 
     def get_ideal_point(self):
         return np.array([-2.17846752, -2.77324161])
-
-
-# assert 0, class2dict(ZINC())

@@ -37,20 +37,21 @@ class RecordCallback:
 
         if self.config["normalize_ys"]:
             y = self.task.denormalize_y(y)
-
-        # if self.config["to_logits"]:
-        #     x = self.task.to_integers(x)
         self.X.append(x)
         self.Y.append(y)
         x = self.task.denormalize_x(x, normalization_method='min-max')
+
+        if self.config["to_logits"]:
+            x = self.task.to_integers(x)
+
         y_real = self.task.predict(x)
         self.Y_real.append(y_real)
 
         if y_real.shape[1] <= 3:
             nadir_point = self.task.nadir_point
             if self.config["normalize_ys"]:
-                nadir_point = self.task.normalize_y(nadir_point)
-                y_real = self.task.normalize_y(y_real)
+                nadir_point = self.task.normalize_y(nadir_point, normalization_method='min-max')
+                y_real = self.task.normalize_y(y_real, normalization_method='min-max')
             nadir_point = nadir_point.reshape(
                 -1,
             )

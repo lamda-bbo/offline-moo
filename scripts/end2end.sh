@@ -24,9 +24,9 @@
 # seeds="1000 2000"
 # tasks="adaptec1 adaptec2 adaptec3 adaptec4 bigblue1 bigblue3"
 seeds="1000"
-tasks="adaptec1"
+tasks="regex"
 model="End2End"
-train_modes="Vallina"
+train_modes="GradNorm"
 # train_modes="Vallina GradNorm PcGrad"
 # "Vallina GradNorm PcGrad"
 
@@ -85,8 +85,8 @@ for seed in $seeds; do
             --model=${model} \
             --train_mode=${train_mode} \
             --task=${task} \
-            --use_wandb=False \
-            --retrain_model=False \
+            --use_wandb=True \
+            --retrain_model=True \
             --seed=${seed}" \
             "$gpu_allocation" & 
 
