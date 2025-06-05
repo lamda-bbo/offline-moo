@@ -150,7 +150,7 @@ If you have any questions, feel free to contact [Rongxi Tan](https://trxcc.githu
 
 ```
 @inproceedings{offline-moo,
-    author = {Ke Xue, Rong-Xi Tan, Xiaobin Huang, Chao Qian.},
+    author = {Ke Xue and Rong-Xi Tan and Xiaobin Huang and Chao Qian.},
     title = {Offline Multi-Objective Optimization},
     booktitle = {Proceedings of the 41st International Conference on Machine Learning (ICML'24)},
     year = {2024},
