@@ -77,9 +77,11 @@ class BaseProblem(Problem):
             elif self.name.lower().startswith("re"):
                 base_path = pareto_fronts_path
                 pf_path = os.path.join(base_path, f"reference_points_{self.name}.dat")
-                assert os.path.exists(
-                    pf_path
-                ), f"Path of Pareto fronts of {self.name} not found: {pf_path}"
+                if not os.path.exists(pf_path):
+                    return None 
+                # assert os.path.exists(
+                #     pf_path
+                # ), f"Path of Pareto fronts of {self.name} not found: {pf_path}"
 
                 with open(pf_path, "rb") as f:
                     cot = f.read().decode("utf-8").split("\n")

@@ -78,6 +78,7 @@ class DTLZ1(DTLZ):
             n_dim=n_dim,
             n_obj=n_obj,
             nadir_point=[507.46516068, 502.09050332, 516.68985527],
+            # nadir_point=[0.5, 0.5, 0.5],
             ideal_point=[5.26912179e-09, 1.94578236e-07, 1.76968514e-06],
         )
 
@@ -107,6 +108,7 @@ class DTLZ2(DTLZ):
             n_dim=n_dim,
             n_obj=n_obj,
             nadir_point=[2.51925352, 2.53011955, 2.66682285],
+            # nadir_point=[1,1,1],
             ideal_point=[8.14503680e-06, 8.10665237e-06, 3.76396814e-06],
         )
 
@@ -124,6 +126,7 @@ class DTLZ3(DTLZ):
             n_dim=n_dim,
             n_obj=n_obj,
             nadir_point=[1548.83497615, 1459.58638514, 1518.61926977],
+            # nadir_point=[1,1,1],
             ideal_point=[0.00024734, 0.00057021, 0.00393799],
         )
 
@@ -141,6 +144,7 @@ class DTLZ4(DTLZ):
             n_dim=n_dim,
             n_obj=n_obj,
             nadir_point=[2.75747516, 2.57674881, 2.52558196],
+            # nadir_point=[1,1,1],
             ideal_point=[0, 0, 0],
         )
         self.alpha = alpha
@@ -159,7 +163,8 @@ class DTLZ5(DTLZ):
             name=self.__class__.__name__,
             n_dim=n_dim,
             n_obj=n_obj,
-            nadir_point=[2.40756462, 2.36937324, 2.45008585],
+            # nadir_point=[2.40756462, 2.36937324, 2.45008585],
+            nadir_point=[3,3,3],
             ideal_point=[5.11293872e-06, 8.82751291e-06, 8.15403672e-06],
         )
 
@@ -180,7 +185,8 @@ class DTLZ6(DTLZ):
             name=self.__class__.__name__,
             n_dim=n_dim,
             n_obj=n_obj,
-            nadir_point=[8.90471718, 8.89404128, 8.88893072],
+            # nadir_point=[8.90471718, 8.89404128, 8.88893072],
+            nadir_point=[10, 10, 10],
             ideal_point=[9.56700075e-05, 9.51044735e-05, 5.57043760e-05],
         )
 
@@ -201,7 +207,8 @@ class DTLZ7(DTLZ):
             name=self.__class__.__name__,
             n_dim=n_dim,
             n_obj=n_obj,
-            nadir_point=[0.9999954, 0.99999772, 30.79227037],
+            nadir_point=[1.0, 1.0, 30.79227037],
+            # nadir_point=[1.0, 1.0, 30.0],
             ideal_point=[1.80047270e-08, 5.11191256e-07, 4.40902012e00],
         )
 

@@ -37,31 +37,42 @@ class RecordCallback:
 
         if self.config["normalize_ys"]:
             y = self.task.denormalize_y(y)
-
-        # if self.config["to_logits"]:
-        #     x = self.task.to_integers(x)
         self.X.append(x)
         self.Y.append(y)
-        x = self.task.denormalize_x(x, normalization_method='min-max')
+        x = self.task.denormalize_x(x, normalization_method='min-max') if self.config["normalize_xs"] else x
+
+        if self.config["to_logits"]:
+            x = self.task.to_integers(x)
+
         y_real = self.task.predict(x)
         self.Y_real.append(y_real)
+
+        metric_dict = {}
 
         if y_real.shape[1] <= 3:
             nadir_point = self.task.nadir_point
             if self.config["normalize_ys"]:
-                nadir_point = self.task.normalize_y(nadir_point)
-                y_real = self.task.normalize_y(y_real)
+                nadir_point = self.task.normalize_y(nadir_point, normalization_method='min-max')
+                y_real = self.task.normalize_y(y_real, normalization_method='min-max')
             nadir_point = nadir_point.reshape(
                 -1,
             )
             hv_value = hv(
                 nadir_point=nadir_point, y=y_real, task_name=self.config["task"]
             )
-            if self.config["use_wandb"]:
-                wandb.log(
-                    {"hypervolume/search_hist": hv_value, "search_step": self.n_gen}
-                )
+            metric_dict["hypervolume/search_hist"] = hv_value
 
+        pareto_front = self.task.problem.get_pareto_front()
+        if pareto_front is not None:
+            if self.config["normalize_ys"]:
+                pareto_front = self.task.normalize_y(pareto_front, normalization_method='min-max')
+                y_real = self.task.normalize_y(y_real, normalization_method='min-max')
+            igd_value = igd(pareto_front, y_real)
+            metric_dict["igd/search_hist"] = igd_value
+
+        if self.config["use_wandb"]:
+            metric_dict["search_step"] = self.n_gen
+            wandb.log(metric_dict)
         try:
             save_dir = os.path.join(self.save_dir, f"{algorithm.n_iter}")
         except:

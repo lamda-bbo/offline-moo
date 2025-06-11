@@ -23,15 +23,16 @@
 
 # seeds="1000 2000"
 # tasks="adaptec1 adaptec2 adaptec3 adaptec4 bigblue1 bigblue3"
-seeds="1000"
-tasks="adaptec1"
+seeds="5000"
+# tasks="zinc regex molecule re21 re22 re23 re24 re25 re31 re32 re33 re34 re35 re36 re37 re41 re42 re61 dtlz1 dtlz2 dtlz3 dtlz4 dtlz5 dtlz6 dtlz7 zdt1 zdt2 zdt3 zdt4 zdt6 vlmop1 vlmop2 vlmop3 omnitest nb201_test c10mop1 c10mop2 c10mop3 c10mop4 c10mop5 c10mop6 c10mop7 c10mop8 c10mop9 in1kmop1 in1kmop2 in1kmop3 in1kmop4 in1kmop5 in1kmop6 in1kmop7 in1kmop8 in1kmop9 bi_tsp_20 bi_tsp_50 bi_tsp_100 bi_tsp_500 tri_tsp_20 tri_tsp_50 tri_tsp_100 bi_cvrp_20 bi_cvrp_50 bi_cvrp_100 bi_kp_50 bi_kp_100 bi_kp_200 mo_hopper_v2 mo_swimmer_v2"
+tasks="nb201_test c10mop1 c10mop2 c10mop3 c10mop4 c10mop5 c10mop6 c10mop7 c10mop8 c10mop9 in1kmop1 in1kmop2 in1kmop3 in1kmop4 in1kmop5 in1kmop6 in1kmop7 in1kmop8 in1kmop9"
 model="End2End"
-train_modes="Vallina"
 # train_modes="Vallina GradNorm PcGrad"
+train_modes="PcGrad"
 # "Vallina GradNorm PcGrad"
 
-MAX_JOBS=4
-AVAILABLE_GPUS="0 1 2 3"
+MAX_JOBS=18
+AVAILABLE_GPUS="0 1 2 3 4 5"
 MAX_RETRIES=0
 
 get_gpu_allocation() {
@@ -85,8 +86,9 @@ for seed in $seeds; do
             --model=${model} \
             --train_mode=${train_mode} \
             --task=${task} \
-            --use_wandb=False \
+            --use_wandb=True \
             --retrain_model=False \
+            --solver_n_gen=200 \
             --seed=${seed}" \
             "$gpu_allocation" & 
 

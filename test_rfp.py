@@ -24,7 +24,7 @@ def analyze_single_task(
 
     task = ob.make(full_name)
     n_objectives = task.y.shape[1]
-    total_samples = len(task.x)
+    total_samples = len(task.x_test)
 
     print(f"Number of objectives: {n_objectives}")
     print(f"Total samples: {total_samples}")
@@ -39,7 +39,7 @@ def analyze_single_task(
     for i in range(num_batches):
         start_idx = i * batch_size
         end_idx = min((i + 1) * batch_size, total_samples)
-        x_batch = task.x[start_idx:end_idx]
+        x_batch = task.x_test[start_idx:end_idx]
 
         try:
             futures = predict_batch.remote(task, x_batch)
@@ -72,7 +72,7 @@ def analyze_single_task(
         obj_predictions = full_predictions[:, obj_idx]
 
         valid_mask = ~np.isnan(obj_predictions)
-        obj_diff = np.abs(task.y[valid_mask, obj_idx] - obj_predictions[valid_mask])
+        obj_diff = np.abs(task.y_test[valid_mask, obj_idx] - obj_predictions[valid_mask])
 
         obj_stats = {
             "max_difference": float(np.max(obj_diff)) if len(obj_diff) > 0 else None,
@@ -106,13 +106,12 @@ def analyze_single_task(
     if update_needed:
         save_dir = f"./data/{small_name}"
         os.makedirs(save_dir, exist_ok=True)
-        np.save(f"{save_dir}/new_ground_truth.npy", full_predictions)
-        # 保存有效的x值
+        np.save(f"{save_dir}/new_ground_truth_test.npy", full_predictions)
         valid_x = task.x[valid_indices]
-        np.save(f"{save_dir}/new_valid_x.npy", valid_x)
+        np.save(f"{save_dir}/new_valid_x_test.npy", valid_x)
         print(f"\nTask {small_name} requires ground truth update:")
-        print(f"New ground truth saved to: {save_dir}/new_ground_truth.npy")
-        print(f"Valid x values saved to: {save_dir}/new_valid_x.npy")
+        print(f"New ground truth saved to: {save_dir}/new_ground_truth_test.npy")
+        print(f"Valid x values saved to: {save_dir}/new_valid_x_test.npy")
         print(f"Number of valid samples: {len(valid_indices)}")
 
     return result

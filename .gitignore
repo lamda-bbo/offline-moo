@@ -24,4 +24,5 @@
 /test.**
 /**-test-hv.csv
 
+**/.vscode
 **/__pycache__
