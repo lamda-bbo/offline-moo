@@ -3,6 +3,9 @@ import json
 import os
 import sys
 
+import swanlab
+swanlab.sync_wandb()
+
 import numpy as np
 import pandas as pd
 import wandb
@@ -36,6 +39,13 @@ def run(config: dict):
     )
     config["results_dir"] = results_dir
 
+    # current_seed = f"seed{config['seed']}"
+
+    # for root, _, files in os.walk(results_dir):
+    #     if ("hv_results.json" in files or "hv_results.csv" in files) and current_seed in root:
+    #         print(f"Results file already exists for {current_seed} in {root}. Skipping execution.")
+    #         return
+
     ts = datetime.datetime.utcnow() + datetime.timedelta(hours=+8)
     ts_name = f"-ts-{ts.year}-{ts.month}-{ts.day}_{ts.hour}-{ts.minute}-{ts.second}"
     run_name = f"{config['model']}-{config['train_mode']}-seed{config['seed']}-{config['task']}"
@@ -48,12 +58,12 @@ def run(config: dict):
             wandb.login(key=config["wandb_api"])
 
         wandb.init(
-            project="Offline-MOO",
+            project="Offline-MOO-Formal",
             name=run_name + ts_name,
             config=config,
             group=f"{config['model']}-{config['train_mode']}",
             job_type=config["run_type"],
-            mode="online",
+            mode="offline",
             dir=os.path.join(config["results_dir"], ".."),
         )
 
@@ -172,25 +182,26 @@ def run(config: dict):
         **genetic_operators,
     )
 
+    pass_x = task.normalize_x(task.denormalize_x(X), normalization_method="min-max") if config["normalize_xs"] else X
+    pass_y = task.normalize_y(task.denormalize_y(y), normalization_method="min-max") if config["normalize_ys"] else y
+
     res = solver.solve(
         surrogate_problem,
-        X=task.normalize_x(task.denormalize_x(X), normalization_method="min-max"),
-        Y=task.normalize_y(task.denormalize_y(y), normalization_method="min-max"),
+        X=pass_x,
+        Y=pass_y,
     )
 
     res_x = res["x"]
     # if config["to_logits"]:
     #     res_x = res_x.reshape(-1, n_dim, n_classes)
-    res_x = task.denormalize_x(res_x, normalization_method="min-max")
+    res_x = task.denormalize_x(res_x, normalization_method="min-max") if config["normalize_xs"] else res_x
     # if config["normalize_xs"]:
     #     task.map_denormalize_x()
     #     res_x = task.denormalize_x(res_x)
     if config["to_logits"]:
         res_x = task.to_integers(res_x)
-
+        
     res_y = task.predict(res_x)
-    np.save(file="res_x.npy", arr=res_x)
-    np.save(file="res_y.npy", arr=res_y)
     visible_masks = np.ones(len(res_y))
     visible_masks[np.where(np.logical_or(np.isinf(res_y), np.isnan(res_y)))[0]] = 0
     visible_masks[np.where(np.logical_or(np.isinf(res_x), np.isnan(res_x)))[0]] = 0

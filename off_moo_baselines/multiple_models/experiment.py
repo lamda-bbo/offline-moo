@@ -4,6 +4,9 @@ import os
 import sys
 from copy import deepcopy
 
+import swanlab
+swanlab.sync_wandb()
+
 import numpy as np
 import pandas as pd
 import torch
@@ -50,12 +53,12 @@ def run(config: dict):
             wandb.login(key=config["wandb_api"])
 
         wandb.init(
-            project="Offline-MOO",
+            project="Offline-MOO-Formal",
             name=run_name + ts_name,
             config=config,
             group=f"{config['model']}-{config['train_mode']}",
             job_type=config["run_type"],
-            mode="online",
+            mode="offline",
             dir=os.path.join(config["results_dir"], ".."),
         )
 
@@ -150,6 +153,7 @@ def run(config: dict):
         n_var=n_dim,
         n_obj=n_obj,
         model=model,
+        task=task,
     )
 
     # if config["task"] in ScientificDesignSequenceDict.values():
@@ -186,14 +190,17 @@ def run(config: dict):
         **genetic_operators,
     )
 
+    pass_x = task.normalize_x(task.denormalize_x(X), normalization_method="min-max") if config["normalize_xs"] else X
+    pass_y = task.normalize_y(task.denormalize_y(y), normalization_method="min-max") if config["normalize_ys"] else y
+
     res = solver.solve(
         surrogate_problem,
-        X=task.normalize_x(task.denormalize_x(X), normalization_method="min-max"),
-        Y=task.normalize_y(task.denormalize_y(y), normalization_method="min-max"),
+        X=pass_x,
+        Y=pass_y,
     )
 
     res_x = res["x"]
-    res_x = task.denormalize_x(res_x, normalization_method='min-max')
+    res_x = task.denormalize_x(res_x, normalization_method="min-max") if config["normalize_xs"] else res_x
     # if config["to_logits"]:
     #     res_x = res_x.reshape(-1, n_dim, n_classes)
     # if config["normalize_xs"]:

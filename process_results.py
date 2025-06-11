@@ -26,18 +26,18 @@ os.makedirs(AVG_RANK_LATEST_DIR, exist_ok=True)
 
 MODEL2MODES = {
     "End2End": ["Vallina", "GradNorm", "PcGrad"],
-    "MultiHead": ["Vallina", "GradNorm", "PcGrad"],
-    "MultipleModels": ["Vallina", "COM", "IOM", "RoMA", "ICT", "TriMentoring"],
+    # "MultiHead": ["Vallina", "GradNorm", "PcGrad"],
+    # "MultipleModels": ["Vallina", "COM", "IOM", "RoMA", "ICT", "TriMentoring"],
     # "MOBO": ["Vallina", "ParEGO", "JES"],
 }
 
 TASK_SET_PARTITION = {
-    # "Synthetic": SyntheticFunction,
-    # "MONAS": MONAS,
-    # "MORL": MORL,
-    # "MOCO": MOCO,
-    # "Sci-Design": ScientificDesign,
-    # "RE Suite": RESuite,
+    "Synthetic": SyntheticFunction,
+    "MONAS": MONAS,
+    "MORL": MORL,
+    "MOCO": MOCO,
+    "Sci-Design": ScientificDesign,
+    "RE Suite": RESuite,
     "Placement": Placement
 }
 
@@ -56,20 +56,22 @@ def find_and_read_latest_files(root_dir, target_filenames=["hv_results.csv", "hv
                     timestamp_str, "%Y-%m-%d_%H-%M-%S"
                 )
 
-                # 检查所有可能的文件名
                 for filename in target_filenames:
                     file_path = os.path.join(root, dir_name, filename)
                     if os.path.exists(file_path):
                         if seed not in results or results[seed][1] < timestamp:
                             results[seed] = (file_path, timestamp)
 
-    # 读取每个最新的文件
     data = {}
     for key, (file_path, _) in results.items():
         if file_path.endswith('.csv'):
             data[key] = pd.read_csv(file_path)
         elif file_path.endswith('.json'):
-            data[key] = pd.read_json(file_path)
+            try:
+                data[key] = pd.read_json(file_path)
+            except ValueError:
+                series_data = pd.read_json(file_path, typ='series')
+                data[key] = series_data.to_frame().T
             
     return data
 
@@ -420,6 +422,62 @@ def calculate_mean_rank():
     avg_rank_50th.to_csv(os.path.join(AVG_RANK_LATEST_DIR, "average_rank_50th.csv"))
 
 
+def check_missing_seeds(root_dir, expected_seeds=None):
+    """检查哪些seed没有生成结果文件"""
+    found_seeds = set()
+    directory_seeds = set()
+    
+    for root, dirs, files in os.walk(root_dir):
+        for dir_name in dirs:
+            match = re.search(
+                r"seed(\d+).*?(\d{4}-\d{1,2}-\d{1,2}_\d{1,2}-\d{1,2}-\d{1,2})", dir_name
+            )
+            if match:
+                seed = match.group(1)
+                directory_seeds.add(seed)
+                
+                # 检查是否有结果文件
+                has_results = False
+                for filename in ["hv_results.csv", "hv_results.json"]:
+                    file_path = os.path.join(root, dir_name, filename)
+                    if os.path.exists(file_path):
+                        has_results = True
+                        break
+                
+                if has_results:
+                    found_seeds.add(seed)
+    
+    missing_seeds = directory_seeds - found_seeds
+    
+    print(f"总共找到的seed目录: {len(directory_seeds)}")
+    print(f"有结果文件的seed: {len(found_seeds)} - {sorted(found_seeds)}")
+    print(f"缺失结果文件的seed: {len(missing_seeds)} - {sorted(missing_seeds)}")
+    
+    if expected_seeds:
+        expected_set = set(str(s) for s in expected_seeds)
+        not_started = expected_set - directory_seeds
+        if not_started:
+            print(f"完全没有开始的seed: {sorted(not_started)}")
+    
+    return {
+        'found_seeds': sorted(found_seeds),
+        'missing_seeds': sorted(missing_seeds),
+        'directory_seeds': sorted(directory_seeds)
+    }
+
+# 在main函数中调用
 if __name__ == "__main__":
+    # 检查每个任务的缺失seed
+    for task_type, task_set in TASK_SET_PARTITION.items():
+        print(f"\n=== 检查 {task_type} 任务集 ===")
+        for task in task_set:
+            for model, modes in MODEL2MODES.items():
+                for mode in modes:
+                    folder_name = f"{model}-{mode}-{task}"
+                    current_results_dir = os.path.join(RESULT_DIR, folder_name)
+                    if os.path.exists(current_results_dir):
+                        print(f"\n检查 {folder_name}:")
+                        check_missing_seeds(current_results_dir)
+    
     calculate_performance()
     calculate_mean_rank()

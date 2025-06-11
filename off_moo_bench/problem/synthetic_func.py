@@ -263,6 +263,7 @@ class OmniTest(SyntheticProblem):
             lbound=torch.zeros(n_dim).float(),
             ubound=torch.ones(n_dim).float() * 6,
             nadir_point=[2, 2],
+            # nadir_point=[ 1.2246468e-15, -3.6739404e-16],
             ideal_point=[-2, -2],
         )
         self.func = self.get_func()
@@ -368,7 +369,8 @@ class ZDT1(SyntheticProblem):
             n_obj=2,
             lbound=torch.zeros(n_dim).float(),
             ubound=torch.ones(n_dim).float(),
-            nadir_point=[0.99999809, 7.8250663],
+            nadir_point=[1., 7.8250663],
+            # nadir_point=[1., 1.],
             ideal_point=[7.27727072e-07, 2.38306515e-01],
         )
         self.func = self.get_func()
@@ -391,7 +393,8 @@ class ZDT2(SyntheticProblem):
             n_obj=2,
             lbound=torch.zeros(n_dim).float(),
             ubound=torch.ones(n_dim).float(),
-            nadir_point=[0.99999706, 9.74316166],
+            nadir_point=[1., 9.74316166],
+            # nadir_point=[1., 1.],
             ideal_point=[3.21854609e-09, 8.08941746e-02],
         )
         self.func = self.get_func()
@@ -415,7 +418,8 @@ class ZDT3(SyntheticProblem):
             n_obj=2,
             lbound=torch.zeros(n_dim).float(),
             ubound=torch.ones(n_dim).float(),
-            nadir_point=[0.99999954, 9.83643758],
+            nadir_point=[1., 9.83643758],
+            # nadir_point=[0.85183287, 1.        ],
             ideal_point=[3.85619704e-07, -7.69222414e-01],
         )
         self.func = self.get_func()
@@ -448,7 +452,8 @@ class ZDT4(SyntheticProblem):
             n_obj=2,
             lbound=xl,
             ubound=xu,
-            nadir_point=[0.99980978, 273.25533168],
+            nadir_point=[1., 273.25533168],
+            # nadir_point=[1., 1.],
             ideal_point=[0, 1.58235196],
         )
         self.func = self.get_func()
@@ -476,6 +481,7 @@ class ZDT6(SyntheticProblem):
             lbound=torch.zeros(n_dim).float(),
             ubound=torch.ones(n_dim).float(),
             nadir_point=[1.0, 9.34365208],
+            # nadir_point=[1.        , 0.92116522],
             ideal_point=[0.28077532, 0.07205017],
         )
         self.func = self.get_func()
@@ -512,6 +518,7 @@ class RE21(SyntheticProblem):
             ).float(),
             ubound=torch.ones(n_dim).float() * 3 * tmp_val,
             nadir_point=[2.97123988e03, 4.85512338e-02],
+            # nadir_point=[2086.36956042, 0.00341421356237],
             ideal_point=[1.23920758e03, 2.98607537e-03],
         )
         self.func = self.get_func()
@@ -543,6 +550,7 @@ class RE22(SyntheticProblem):
             lbound=torch.tensor([0.2, 0.0, 0.0]).float(),
             ubound=torch.tensor([15, 20, 40]).float(),
             nadir_point=[8.29079443e02, 2.40721725e06],
+            # nadir_point=[361.262944647, 180.01547],
             ideal_point=[5.88238115, 0.0],
         )
 
@@ -673,6 +681,7 @@ class RE23(SyntheticProblem):
             lbound=torch.tensor([1, 1, 10, 10]).float(),
             ubound=torch.tensor([100, 100, 200, 240]).float(),
             nadir_point=[713710.875, 1288669.78054],
+            # nadir_point=[5852.05896876, 1288669.78054],
             ideal_point=[15.9018007813, 0.0],
         )
         self.func = self.get_func()
@@ -729,6 +738,7 @@ class RE24(SyntheticProblem):
             lbound=torch.tensor([0.5, 0.5]).float(),
             ubound=torch.tensor([4, 50]).float(),
             nadir_point=[5997.8316325, 43.67584229],
+            # nadir_point=[481.608088535, 44.2819047619],
             ideal_point=[60.65314083, 0.0],
         )
 
@@ -772,6 +782,7 @@ class RE25(SyntheticProblem):
             lbound=torch.tensor([1, 0.6, 0.09]).float(),
             ubound=torch.tensor([70, 3, 0.5]).float(),
             nadir_point=[1.24795202e02, 1.00387350e07],
+            # nadir_point=[0.40397042546, 2224669.22419],
             ideal_point=[0.03759284, 0.0],
         )
 
@@ -891,6 +902,7 @@ class RE31(SyntheticProblem):
             lbound=torch.tensor([0.00001, 0.00001, 1.0]).float(),
             ubound=torch.tensor([100.0, 100.0, 3.0]).float(),
             nadir_point=[8.08852742e02, 6.89337582e06, 6.79345000e06],
+            # nadir_point=[500.002668442, 8246211.25124, 19359919.7502],
             ideal_point=[0.02500048, 0.33336024, 0.0],
         )
 
@@ -931,6 +943,7 @@ class RE32(SyntheticProblem):
             lbound=torch.tensor([0.125, 0.1, 0.1, 0.125]).float(),
             ubound=torch.tensor([5.0, 10.0, 10.0, 5.0]).float(),
             nadir_point=[2.90661885e02, 1.65524628e04, 3.88265024e08],
+            # nadir_point=[37.7831517014, 17561.6, 425062976.628],
             ideal_point=[0.01366746, 0.00043994, 0.0],
         )
 
@@ -1008,6 +1021,7 @@ class RE33(SyntheticProblem):
             lbound=torch.tensor([55, 75, 1000, 11]).float(),
             ubound=torch.tensor([80, 110, 3000, 20]).float(),
             nadir_point=[8.01164324, 8.83604223, 2343.29711914],
+            # nadir_point=[5.3067, 3.12833430979, 25.0],
             ideal_point=[-0.721525, 1.13907203907, 0.0],
         )
         self.func = self.get_func()
@@ -1060,6 +1074,7 @@ class RE34(SyntheticProblem):
             lbound=torch.ones(n_dim).float(),
             ubound=torch.ones(n_dim).float() * 3,
             nadir_point=[1.70251811e03, 1.16807224e01, 2.63918844e-01],
+            # nadir_point=[1695.2002035, 10.7454, 0.26399999965],
             ideal_point=[1.66171457e03, 6.14473949e00, 4.00202874e-02],
         )
         self.func = self.get_func()
@@ -1120,6 +1135,7 @@ class RE35(SyntheticProblem):
             lbound=torch.tensor([2.6, 0.7, 17, 7.3, 7.3, 2.9, 5.0]).float(),
             ubound=torch.tensor([3.6, 0.8, 28, 8.3, 8.3, 3.9, 5.5]).float(),
             nadir_point=[7050.78959905, 1696.66697789, 397.83456421],
+            # nadir_point=[6634.56208, 1695.96387746, 397.358927317],
             ideal_point=[2364.91273887, 694.31805919, 0.0],
         )
 
@@ -1195,6 +1211,7 @@ class RE36(SyntheticProblem):
             lbound=torch.ones(n_dim).float() * 12,
             ubound=torch.ones(n_dim).float() * 60,
             nadir_point=[10.21185714, 60.0, 0.97335988],
+            # nadir_point=[5.931, 56.0, 0.355720675227],
             ideal_point=[3.87449393e-03, 1.30000000e01, 0.00000000e00],
         )
 
@@ -1221,16 +1238,6 @@ class RE36(SyntheticProblem):
             keepdim=True,
         )[0]
 
-        # def f2(x):
-        #     print(torch.stack([torch.round(x[:, 0]),
-        #                          torch.round(x[:, 1]),
-        #                          torch.round(x[:, 2]),
-        #                          torch.round(x[:, 3])], dim=1))
-        #     assert 0, torch.max(torch.stack([torch.round(x[:, 0]),
-        #                          torch.round(x[:, 1]),
-        #                          torch.round(x[:, 2]),
-        #                          torch.round(x[:, 3])], dim=1), dim=1)
-
         def f3(x):
             g1 = 0.5 - (f1(x) / 6.931)
             g1 = g1.float()
@@ -1251,6 +1258,7 @@ class RE37(SyntheticProblem):
             lbound=torch.tensor([0, 0, 0, 0]).float(),
             ubound=torch.tensor([1, 1, 1, 1]).float(),
             nadir_point=[0.98949120096, 0.956587924661, 0.987530948586],
+            # nadir_point=[0.98949120096, 0.956587924661, 0.987530948586],
             ideal_point=[0.00889341391106, 0.00488, -0.431499999825],
         )
         self.func = self.get_func()
@@ -1337,6 +1345,7 @@ class RE41(SyntheticProblem):
             lbound=torch.tensor([0.5, 0.45, 0.5, 0.5, 0.875, 0.4, 0.4]).float(),
             ubound=torch.tensor([1.5, 1.35, 1.5, 1.5, 2.625, 1.2, 1.2]).float(),
             nadir_point=[42.64892315, 4.42692892, 13.07735381, 13.44858932],
+            # nadir_point=[39.2905121788, 4.42725, 13.09138125, 9.49401929991],
             ideal_point=[15.87368122, 3.58726077, 10.6748894, 0.0],
         )
 
@@ -1432,6 +1441,7 @@ class RE42(SyntheticProblem):
             lbound=torch.tensor([150, 20, 13, 10, 14, 0.63]).float(),
             ubound=torch.tensor([274.32, 32.31, 25, 11.71, 18, 0.75]).float(),
             nadir_point=[-2.63907595e02, 1.99048970e04, 2.85467850e04, 1.49821739e01],
+            # nadir_point=[-1010.5229595219643, 13827.138456300128, 2611.9668107424536, 12.437669929732023],
             ideal_point=[-2503.83371142, 4017.64399443, 2089.36081316, 0.0],
         )
         self.func = self.get_func()
@@ -1563,6 +1573,9 @@ class RE61(SyntheticProblem):
                 3.57719742e05,
                 9.96603359e04,
             ],
+            # nadir_point=[
+            #     80896.9128355, 1350.0, 2853468.96494, 7076861.67064, 87748.6339553, 2.50994535821
+            # ],
             ideal_point=[
                 63840.2774,
                 30.0,
