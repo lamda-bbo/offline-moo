@@ -185,8 +185,8 @@ class C10MOP1(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=c10mop(1),
-            # nadir_point=[3.49158645e-01, 3.13890660e07],
-            nadir_point=[0.1534, 3.2427e7],
+            nadir_point=[3.49158645e-01, 3.13890660e07],
+            # nadir_point=[0.1534, 3.2427e7],
             ideal_point=[5.27844429e-02, 3.01074000e05],
         )
 
@@ -195,8 +195,8 @@ class C10MOP2(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=c10mop(2),
-            # nadir_point=[9.04947914e-01, 3.05153380e07, 8.96841524e09],
-            nadir_point=[0.1577, 3.2427e7, 9.5450e9],
+            nadir_point=[9.04947914e-01, 3.05153380e07, 8.96841524e09],
+            # nadir_point=[0.1577, 3.2427e7, 9.5450e9],
             ideal_point=[5.27844429e-02, 4.17813000e05, 1.35138890e08],
         )
 
@@ -280,8 +280,8 @@ class C10MOP8(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=c10mop(8),
-            # nadir_point=[2.60839215e-01, 1.55274600e06],
-            nadir_point=[0.2750, 1.6724e6],
+            nadir_point=[2.60839215e-01, 1.55274600e06],
+            # nadir_point=[0.2750, 1.6724e6],
             ideal_point=[4.85086515e-02, 3.92426000e05],
         )
 
@@ -290,8 +290,8 @@ class C10MOP9(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=c10mop(9),
-            # nadir_point=[2.71840124e-01, 1.48977000e06, 2.46631744e08],
-            nadir_point=[0.2750, 1.6724e6, 2.7034e8],
+            nadir_point=[2.71840124e-01, 1.48977000e06, 2.46631744e08],
+            # nadir_point=[0.2750, 1.6724e6, 2.7034e8],
             ideal_point=[4.92413696e-02, 4.13290000e05, 8.20435840e07],
         )
 
@@ -300,8 +300,8 @@ class IN1KMOP1(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=in1kmop(1),
-            # nadir_point=[2.8064380e-01, 3.9453704e07],
-            nadir_point=[0.3124, 4.4114e7],
+            nadir_point=[2.8064380e-01, 3.9453704e07],
+            # nadir_point=[0.3124, 4.4114e7],
             ideal_point=[1.63165165e-01, 6.53928000e06],
         )
 
@@ -310,8 +310,8 @@ class IN1KMOP2(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=in1kmop(2),
-            # nadir_point=[2.79503105e-01, 1.15401719e10],
-            nadir_point=[0.3124, 1.4577e10],
+            nadir_point=[2.79503105e-01, 1.15401719e10],
+            # nadir_point=[0.3124, 1.4577e10],
             ideal_point=[1.62489554e-01, 6.33771744e08],
         )
 
@@ -320,8 +320,8 @@ class IN1KMOP3(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=in1kmop(3),
-            # nadir_point=[2.80709580e-01, 3.86586880e07, 1.26246722e10],
-            nadir_point=[0.3124, 4.4114e7, 1.4577e10],
+            nadir_point=[2.80709580e-01, 3.86586880e07, 1.26246722e10],
+            # nadir_point=[0.3124, 4.4114e7, 1.4577e10],
             ideal_point=[1.60220631e-01, 6.53928000e06, 6.33771744e08],
         )
 
@@ -330,8 +330,8 @@ class IN1KMOP4(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=in1kmop(4),
-            # nadir_point=[1.83413892e-01, 7.24852720e07],
-            nadir_point=[0.1832, 7.4134e7],
+            nadir_point=[1.83413892e-01, 7.24852720e07],
+            # nadir_point=[0.1832, 7.4134e7],
             ideal_point=[1.76191352e-01, 4.16878960e07],
         )
 
@@ -340,8 +340,8 @@ class IN1KMOP5(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=in1kmop(5),
-            # nadir_point=[1.83367384e-01, 1.48670599e10],
-            nadir_point=[0.1832, 1.5403e10],
+            nadir_point=[1.83367384e-01, 1.48670599e10],
+            # nadir_point=[0.1832, 1.5403e10],
             ideal_point=[1.76416579e-01, 8.84410415e09],
         )
 
@@ -350,8 +350,8 @@ class IN1KMOP6(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=in1kmop(6),
-            # nadir_point=[1.83166683e-01, 7.09963360e07, 1.47570987e10],
-            nadir_point=[0.1832, 7.4134e7, 1.5403e10],
+            nadir_point=[1.83166683e-01, 7.09963360e07, 1.47570987e10],
+            # nadir_point=[0.1832, 7.4134e7, 1.5403e10],
             ideal_point=[1.76592023e-01, 4.16878960e07, 8.84410415e09],
         )
 
@@ -360,8 +360,8 @@ class IN1KMOP7(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=in1kmop(7),
-            # nadir_point=[2.64243178e-01, 9.97696000e06],
-            nadir_point=[0.2980, 1.0198e7],
+            nadir_point=[2.64243178e-01, 9.97696000e06],
+            # nadir_point=[0.2980, 1.0198e7],
             ideal_point=[1.68749369e-01, 4.60245600e06],
         )
 
@@ -370,8 +370,8 @@ class IN1KMOP8(MONASProblem):
     def __init__(self):
         super().__init__(
             benchmark=in1kmop(8),
-            # nadir_point=[2.65494391e-01, 1.00460160e07, 1.33675395e09],
-            nadir_point=[0.2980, 1.0198e7, 1.3768e9],
+            nadir_point=[2.65494391e-01, 1.00460160e07, 1.33675395e09],
+            # nadir_point=[0.2980, 1.0198e7, 1.3768e9],
             ideal_point=[1.67638303e-01, 4.60245600e06, 2.06589072e08],
         )
 
@@ -432,8 +432,8 @@ class NASBench201Test(BaseProblem):
         return objs
 
     def get_nadir_point(self):
-        # return np.array([90.288, 1.531546, 11.69270039])
-        nadir_point=[0.9000, 1.0735e6,  27.078],
+        return np.array([90.288, 1.531546, 11.69270039])
+        # nadir_point=[0.9000, 1.0735e6,  27.078],
         return np.array(nadir_point)
 
     def get_ideal_point(self):
